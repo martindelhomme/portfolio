@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fencing - Martin Delhomme</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sand: #EAE4D9; --sand-mid: #D8D0C2; --sand-dark: #C4BAA8;
+    --ink: #1C1C1A; --ink-mid: #4A4740; --ink-light: #7A756C;
+    --accent: #BDE0C8; --accent-dark: #8AC4A0;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--sand); color: var(--ink); }
+
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 48px; background: var(--accent); border-bottom: 1px solid var(--accent-dark);
+  }
+  .nav-logo { font-family: 'DM Serif Display', serif; font-size: 17px; text-decoration: none; color: var(--ink); }
+  .nav-right { display: flex; gap: 32px; }
+  .nav-right a { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; text-decoration: none; color: var(--ink-mid); transition: color 0.15s; }
+  .nav-right a:hover { color: var(--ink); }
+
+  .page-header { background: var(--accent); padding: 120px 48px 60px; border-bottom: 2px solid var(--ink); }
+  .breadcrumb { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 20px; }
+  .breadcrumb a { color: var(--ink-light); text-decoration: none; }
+  .breadcrumb a:hover { color: var(--ink); }
+  .page-title { font-family: 'DM Serif Display', serif; font-size: clamp(44px, 7vw, 86px); line-height: 0.95; letter-spacing: -0.025em; margin-bottom: 20px; }
+  .page-sub { font-size: 15px; color: var(--ink-mid); max-width: 520px; line-height: 1.7; }
+
+  /* STATS BAR */
+  .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid var(--sand-mid); background: var(--ink); gap: 1px; }
+  .stat { background: var(--sand); padding: 36px 32px; }
+  .stat-num { font-family: 'DM Serif Display', serif; font-size: 38px; line-height: 1; margin-bottom: 6px; }
+  .stat-label { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-light); }
+
+  .section { padding: 64px 48px; border-bottom: 1px solid var(--sand-mid); }
+  .section-label { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 32px; }
+  .section-text { font-size: 15px; line-height: 1.75; color: var(--ink-mid); max-width: 640px; }
+  .section-text p { margin-bottom: 14px; }
+
+  /* RESULTS TABLE */
+  .results-table { width: 100%; border-collapse: collapse; margin-top: 32px; }
+  .results-table th { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-light); text-align: left; padding: 10px 16px; border-bottom: 2px solid var(--ink); }
+  .results-table td { font-size: 14px; padding: 14px 16px; border-bottom: 1px solid var(--sand-mid); color: var(--ink-mid); }
+  .results-table td:first-child { color: var(--ink); font-weight: 500; }
+  .results-table tr:hover td { background: var(--accent); }
+  .badge { display: inline-block; font-family: 'Space Mono', monospace; font-size: 8px; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 8px; border-radius: 1px; }
+  .badge-gold { background: #EDD98A; color: var(--ink); }
+  .badge-silver { background: var(--sand-mid); color: var(--ink); }
+  .badge-bronze { background: #D4A574; color: var(--ink); }
+
+  /* PHOTO GRID */
+  .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin-top: 32px; }
+  .photo-placeholder { background: var(--sand-mid); aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center; font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-light); }
+
+  /* WEAPON PROFILE */
+  .weapon-profile { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; background: var(--ink); margin-top: 32px; }
+  .wp-block { background: var(--sand); padding: 32px 28px; }
+  .wp-label { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 8px; }
+  .wp-value { font-family: 'DM Serif Display', serif; font-size: 22px; margin-bottom: 8px; }
+  .wp-desc { font-size: 13px; color: var(--ink-mid); line-height: 1.6; }
+
+  footer { padding: 20px 48px; border-top: 1px solid var(--sand-mid); display: flex; justify-content: space-between; }
+  footer a { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-light); text-decoration: none; }
+  footer a:hover { color: var(--ink); }
+
+  @media (max-width: 860px) {
+    nav { padding: 16px 24px; }
+    .page-header { padding: 100px 24px 48px; }
+    .stats-bar { grid-template-columns: repeat(2, 1fr); }
+    .section { padding: 48px 24px; }
+    .weapon-profile { grid-template-columns: 1fr; }
+    .photo-grid { grid-template-columns: repeat(2, 1fr); }
+    footer { padding: 18px 24px; flex-direction: column; gap: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">Martin Delhomme</a>
+  <div class="nav-right">
+    <a href="finance.html">Finance & Markets</a>
+    <a href="sport.html">Sport Analytics</a>
+    <a href="challenges.html">Personal Challenges</a>
+    <a href="mailto:martin.delhomme@gmail.com">Contact</a>
+  </div>
+</nav>
+
+<header class="page-header">
+  <div class="breadcrumb">
+    <a href="index.html">Portfolio</a> /
+    <a href="sport.html">Sport Analytics</a> /
+    Fencing
+  </div>
+  <h1 class="page-title">Fencing</h1>
+  <p class="page-sub">High-level competitive fencer. Results, palmares and competition history - a discipline built on precision, strategy and years of training.</p>
+</header>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stat">
+    <div class="stat-num">[X]</div>
+    <div class="stat-label">Years competing</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">[X]</div>
+    <div class="stat-label">National ranking</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">[X]</div>
+    <div class="stat-label">Competitions</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">[X]</div>
+    <div class="stat-label">Podiums</div>
+  </div>
+</div>
+
+<!-- BACKGROUND -->
+<section class="section">
+  <div class="section-label">Background</div>
+  <div class="section-text">
+    <p>[Your fencing story - when you started, your weapon (epee / foil / sabre), your club, your level and competitive history. What the sport means to you and how it connects to your analytical mindset.]</p>
+    <p>[Current competitive status - are you still active? Training structure, goals.]</p>
+  </div>
+  <div class="weapon-profile">
+    <div class="wp-block">
+      <div class="wp-label">Weapon</div>
+      <div class="wp-value">[Epee / Foil / Sabre]</div>
+      <div class="wp-desc">[One line about your weapon and why you chose it or what suits your style.]</div>
+    </div>
+    <div class="wp-block">
+      <div class="wp-label">Club</div>
+      <div class="wp-value">[Club name]</div>
+      <div class="wp-desc">[City, country, brief context about the club level.]</div>
+    </div>
+    <div class="wp-block">
+      <div class="wp-label">Level</div>
+      <div class="wp-value">[National / Regional / International]</div>
+      <div class="wp-desc">[Highest level reached in competition.]</div>
+    </div>
+    <div class="wp-block">
+      <div class="wp-label">Style</div>
+      <div class="wp-value">[Offensive / Defensive / Counter]</div>
+      <div class="wp-desc">[Brief description of your fencing style and strengths.]</div>
+    </div>
+  </div>
+</section>
+
+<!-- RESULTS -->
+<section class="section">
+  <div class="section-label">Palmares & Results</div>
+  <table class="results-table">
+    <thead>
+      <tr>
+        <th>Competition</th>
+        <th>Level</th>
+        <th>Year</th>
+        <th>Result</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>[Competition name]</td>
+        <td>[National / International]</td>
+        <td>[Year]</td>
+        <td><span class="badge badge-gold">1st</span></td>
+        <td>[Short note]</td>
+      </tr>
+      <tr>
+        <td>[Competition name]</td>
+        <td>[Regional]</td>
+        <td>[Year]</td>
+        <td><span class="badge badge-silver">2nd</span></td>
+        <td>[Short note]</td>
+      </tr>
+      <tr>
+        <td>[Competition name]</td>
+        <td>[National]</td>
+        <td>[Year]</td>
+        <td><span class="badge badge-bronze">3rd</span></td>
+        <td>[Short note]</td>
+      </tr>
+      <tr>
+        <td>[Add your results]</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ANALYTICS LINK -->
+<section class="section">
+  <div class="section-label">Analytics</div>
+  <div class="section-text">
+    <p>The analytical side of fencing is explored in the Sport Analytics section - in particular the <a href="project.html?id=sport-olympics" style="color:var(--ink); font-weight:500;">2024 Paris Olympics Analysis</a>, where data and video were used to support opponent analysis for a French epee fencer.</p>
+    <p>Fencing remains one of the least data-rich Olympic sports - most of the work here involves building the methodology from scratch.</p>
+  </div>
+</section>
+
+<!-- PHOTOS -->
+<section class="section">
+  <div class="section-label">Photos</div>
+  <div class="photo-grid">
+    <div class="photo-placeholder">Add photo</div>
+    <div class="photo-placeholder">Add photo</div>
+    <div class="photo-placeholder">Add photo</div>
+    <div class="photo-placeholder">Add photo</div>
+    <div class="photo-placeholder">Add photo</div>
+    <div class="photo-placeholder">Add photo</div>
+  </div>
+</section>
+
+<footer>
+  <a href="sport.html"><- Sport Analytics</a>
+  <a href="sport-running.html">Running & Marathon -></a>
+</footer>
+
+</body>
+</html>
