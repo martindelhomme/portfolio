@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amazon KDP Book — Martin Delhomme</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sand: #EDE8DF;
+    --sand-dark: #D9D2C5;
+    --ink: #1A1A18;
+    --ink-light: #4A4A44;
+    --accent-bg: #F0E0A0;
+    --accent: #5A4A00;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--sand); color: var(--ink); }
+
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 48px;
+    background: var(--accent-bg);
+    border-bottom: 1px solid #d4c060;
+  }
+  .nav-name { font-family: 'DM Serif Display', serif; font-size: 18px; text-decoration: none; color: var(--ink); }
+  .nav-links { display: flex; gap: 36px; }
+  .nav-links a { font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none; color: var(--ink-light); }
+  .nav-links a:hover { color: var(--ink); }
+
+  /* ARTICLE HEADER */
+  .article-header {
+    background: var(--accent-bg);
+    padding: 160px 48px 80px;
+    border-bottom: 2px solid var(--ink);
+  }
+  .breadcrumb { font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 24px; }
+  .breadcrumb a { color: var(--ink-light); text-decoration: none; }
+  .breadcrumb a:hover { color: var(--ink); }
+  .breadcrumb span { margin: 0 8px; }
+  .article-category { display: inline-block; font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; padding: 6px 14px; border: 1px solid var(--ink); margin-bottom: 24px; }
+  .article-title { font-family: 'DM Serif Display', serif; font-size: clamp(40px, 6vw, 72px); line-height: 1.05; letter-spacing: -0.02em; margin-bottom: 16px; max-width: 800px; }
+  .article-subtitle { font-family: 'DM Serif Display', serif; font-style: italic; font-size: 22px; color: var(--ink-light); max-width: 640px; line-height: 1.4; margin-bottom: 40px; }
+  .article-meta {
+    display: flex; gap: 40px; align-items: center;
+    padding-top: 32px;
+    border-top: 1px solid rgba(0,0,0,0.15);
+  }
+  .meta-item { }
+  .meta-label { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 4px; }
+  .meta-value { font-size: 14px; font-weight: 500; }
+
+  /* ARTICLE BODY */
+  .article-body {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 0;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 80px 48px;
+  }
+  .article-nav {
+    padding-right: 48px;
+    position: sticky;
+    top: 100px;
+    align-self: start;
+  }
+  .article-nav-label { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 16px; }
+  .article-nav ul { list-style: none; }
+  .article-nav li { margin-bottom: 10px; }
+  .article-nav a { font-size: 13px; color: var(--ink-light); text-decoration: none; line-height: 1.4; transition: color 0.2s; }
+  .article-nav a:hover { color: var(--ink); }
+
+  .article-content { max-width: 680px; }
+  .content-section { margin-bottom: 60px; }
+  .section-eyebrow { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 12px; }
+  .section-heading { font-family: 'DM Serif Display', serif; font-size: 28px; margin-bottom: 20px; line-height: 1.2; }
+  .section-body { font-size: 16px; line-height: 1.75; color: var(--ink-light); }
+  .section-body p { margin-bottom: 16px; }
+  .section-body strong { color: var(--ink); font-weight: 500; }
+
+  /* CALLOUT BOX */
+  .callout {
+    background: var(--accent-bg);
+    border-left: 3px solid var(--ink);
+    padding: 24px 28px;
+    margin: 32px 0;
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    line-height: 1.5;
+  }
+
+  /* STEPS */
+  .steps { margin: 32px 0; }
+  .step {
+    display: grid;
+    grid-template-columns: 48px 1fr;
+    gap: 16px;
+    padding: 20px 0;
+    border-top: 1px solid var(--sand-dark);
+  }
+  .step:last-child { border-bottom: 1px solid var(--sand-dark); }
+  .step-num { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--ink-light); padding-top: 2px; }
+  .step-content { }
+  .step-title { font-weight: 500; margin-bottom: 4px; }
+  .step-desc { font-size: 14px; color: var(--ink-light); line-height: 1.6; }
+
+  /* TAKEAWAYS */
+  .takeaways {
+    background: var(--ink);
+    color: var(--sand);
+    padding: 48px;
+    margin: 60px 0 0;
+  }
+  .takeaways-label { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(237,232,223,0.5); margin-bottom: 24px; }
+  .takeaways-title { font-family: 'DM Serif Display', serif; font-size: 24px; margin-bottom: 28px; }
+  .takeaway-list { list-style: none; }
+  .takeaway-list li {
+    font-size: 15px;
+    line-height: 1.6;
+    padding: 14px 0;
+    border-top: 1px solid rgba(237,232,223,0.15);
+    padding-left: 20px;
+    position: relative;
+  }
+  .takeaway-list li::before { content: '→'; position: absolute; left: 0; color: var(--accent-bg); }
+
+  /* NAVIGATION BETWEEN ARTICLES */
+  .article-footer-nav {
+    display: flex;
+    justify-content: space-between;
+    padding: 48px;
+    border-top: 2px solid var(--ink);
+    margin-top: 0;
+  }
+  .nav-prev, .nav-next { text-decoration: none; color: var(--ink); }
+  .nav-direction { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 6px; }
+  .nav-title { font-family: 'DM Serif Display', serif; font-size: 18px; }
+
+  footer { display: flex; justify-content: space-between; align-items: center; padding: 28px 48px; border-top: 1px solid var(--sand-dark); }
+  footer a { font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-light); text-decoration: none; }
+
+  @media (max-width: 900px) {
+    nav { padding: 16px 24px; }
+    .article-header { padding: 120px 24px 60px; }
+    .article-body { grid-template-columns: 1fr; padding: 48px 24px; }
+    .article-nav { display: none; }
+    .takeaways { padding: 32px 24px; }
+    .article-footer-nav { padding: 32px 24px; flex-direction: column; gap: 24px; }
+    footer { padding: 24px; flex-direction: column; gap: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-name">Martin Delhomme</a>
+  <div class="nav-links">
+    <a href="finance.html">Finance</a>
+    <a href="sport.html">Sport</a>
+    <a href="challenges.html">Challenges</a>
+    <a href="mailto:martin.delhomme@gmail.com">Contact</a>
+  </div>
+</nav>
+
+<header class="article-header">
+  <div class="breadcrumb">
+    <a href="index.html">Home</a><span>/</span>
+    <a href="challenges.html">Personal Challenges</a><span>/</span>
+    Amazon KDP Book
+  </div>
+  <span class="article-category">Learning / Delivery</span>
+  <h1 class="article-title">Amazon KDP Book — English Version</h1>
+  <p class="article-subtitle">From manuscript to published — no prior experience in formatting, publishing, or the Amazon ecosystem.</p>
+  <div class="article-meta">
+    <div class="meta-item">
+      <div class="meta-label">Category</div>
+      <div class="meta-value">Personal Challenges</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-label">Tools</div>
+      <div class="meta-value">Word, KDP, Kindle Previewer</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-label">Status</div>
+      <div class="meta-value">✓ Published</div>
+    </div>
+  </div>
+</header>
+
+<div class="article-body">
+  <aside class="article-nav">
+    <div class="article-nav-label">Contents</div>
+    <ul>
+      <li><a href="#context">Context & Motivation</a></li>
+      <li><a href="#objective">Objective</a></li>
+      <li><a href="#execution">Approach & Execution</a></li>
+      <li><a href="#outcome">Outcome</a></li>
+      <li><a href="#takeaways">What This Shows</a></li>
+    </ul>
+  </aside>
+
+  <main class="article-content">
+    <section class="content-section" id="context">
+      <div class="section-eyebrow">01 · Context & Motivation</div>
+      <h2 class="section-heading">Why this project started</h2>
+      <div class="section-body">
+        <p>[Your context here — what was the book about, why did you write it, what problem or opportunity did you identify? Keep it to 3-4 lines. Explain what was missing, broken, or non-existent that made this worth doing.]</p>
+        <p>[Why did this project matter to you specifically? What gap were you filling?]</p>
+      </div>
+      <div class="callout">
+        "[One powerful sentence that captures the essence of why you started this — in your own words, not a marketing tagline.]"
+      </div>
+    </section>
+
+    <section class="content-section" id="objective">
+      <div class="section-eyebrow">02 · Objective</div>
+      <h2 class="section-heading">One clear goal</h2>
+      <div class="section-body">
+        <p>Deliver a publication-ready book in English, formatted to Amazon KDP and Kindle standards, listed and available for purchase on Amazon — built entirely without external help or prior publishing experience.</p>
+      </div>
+    </section>
+
+    <section class="content-section" id="execution">
+      <div class="section-eyebrow">03 · Approach & Execution</div>
+      <h2 class="section-heading">How it was built</h2>
+      <div class="section-body">
+        <p>No prior experience in publishing, formatting, or the Amazon ecosystem. The project was broken down into discrete, learnable steps — each one a small problem to solve before moving to the next.</p>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">01</div>
+          <div class="step-content">
+            <div class="step-title">Manuscript & structure</div>
+            <div class="step-desc">[How you wrote and organized the content. Format, length, chapters, approach to writing in English.]</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">02</div>
+          <div class="step-content">
+            <div class="step-title">KDP formatting standards</div>
+            <div class="step-desc">[Learning the technical requirements: margins, fonts, image resolution, ISBN, cover specs. What surprised you.]</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">03</div>
+          <div class="step-content">
+            <div class="step-title">Cover design & metadata</div>
+            <div class="step-desc">[How you approached the cover, the title, the description, categories and keywords on Amazon.]</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">04</div>
+          <div class="step-content">
+            <div class="step-title">Review & publication</div>
+            <div class="step-desc">[The Kindle Previewer process, the review cycle, corrections, and the final publish step.]</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="content-section" id="outcome">
+      <div class="section-eyebrow">04 · Outcome</div>
+      <h2 class="section-heading">What happened</h2>
+      <div class="section-body">
+        <p>[Concrete and factual: the book is live on Amazon, the link, any sales or reviews if relevant. What the final product looks like. What worked, what you'd do differently.]</p>
+      </div>
+    </section>
+
+    <div class="takeaways" id="takeaways">
+      <div class="takeaways-label">05 · What This Shows</div>
+      <div class="takeaways-title">Transferable value</div>
+      <ul class="takeaway-list">
+        <li>Ability to learn fast in an unfamiliar domain — publishing is a process like any other, it just needed to be mapped.</li>
+        <li>End-to-end project ownership: from blank page to a product listed on a global platform, with no external dependencies.</li>
+        <li>Attention to detail under constraints — KDP formatting is unforgiving on margins, styles and file structure.</li>
+        <li>Long-term commitment: writing a full manuscript in a second language requires sustained discipline over weeks.</li>
+        <li>[Your fourth or fifth takeaway — what specific professional skill does this project demonstrate?]</li>
+      </ul>
+    </div>
+  </main>
+</div>
+
+<div class="article-footer-nav">
+  <a href="challenges.html" class="nav-prev">
+    <div class="nav-direction">← Back</div>
+    <div class="nav-title">Personal Challenges</div>
+  </a>
+  <a href="#" class="nav-next">
+    <div class="nav-direction" style="text-align:right">Next project →</div>
+    <div class="nav-title">Coming soon</div>
+  </a>
+</div>
+
+<footer>
+  <a href="index.html">← Back home</a>
+  <a href="mailto:martin.delhomme@gmail.com">martin.delhomme@gmail.com</a>
+</footer>
+
+</body>
+</html>

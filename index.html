@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Martin Delhomme</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sand: #EDE8DF;
+    --sand-dark: #D9D2C5;
+    --ink: #1A1A18;
+    --ink-light: #4A4A44;
+    --finance-blue: #C8D8E8;
+    --sport-green: #C8E8D0;
+    --challenge-yellow: #F0E0A0;
+    --accent: #2A4A6A;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--sand);
+    color: var(--ink);
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 48px;
+    background: var(--sand);
+    border-bottom: 1px solid var(--sand-dark);
+  }
+  .nav-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    letter-spacing: 0.01em;
+    text-decoration: none;
+    color: var(--ink);
+  }
+  .nav-links { display: flex; gap: 36px; }
+  .nav-links a {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--ink-light);
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--ink); }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding-top: 80px;
+  }
+  .hero-left {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 80px 48px 80px 48px;
+  }
+  .hero-eyebrow {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin-bottom: 24px;
+  }
+  .hero-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(52px, 6vw, 80px);
+    line-height: 1.0;
+    letter-spacing: -0.02em;
+    margin-bottom: 32px;
+  }
+  .hero-name em {
+    font-style: italic;
+    color: var(--accent);
+  }
+  .hero-desc {
+    font-size: 17px;
+    color: var(--ink-light);
+    max-width: 440px;
+    line-height: 1.7;
+    margin-bottom: 48px;
+  }
+  .hero-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 48px;
+  }
+  .tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border: 1px solid var(--ink);
+    border-radius: 2px;
+  }
+  .hero-cta {
+    display: flex; gap: 16px; align-items: center;
+  }
+  .btn-primary {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 14px 28px;
+    background: var(--ink);
+    color: var(--sand);
+    text-decoration: none;
+    border-radius: 2px;
+    transition: opacity 0.2s;
+  }
+  .btn-primary:hover { opacity: 0.8; }
+  .btn-secondary {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    text-decoration: none;
+    border-bottom: 1px solid var(--ink-light);
+    padding-bottom: 2px;
+    transition: color 0.2s;
+  }
+  .btn-secondary:hover { color: var(--ink); }
+
+  .hero-right {
+    background: var(--sand-dark);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 48px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    background: var(--ink);
+  }
+  .stat-block {
+    background: var(--sand);
+    padding: 28px 24px;
+  }
+  .stat-number {
+    font-family: 'DM Serif Display', serif;
+    font-size: 36px;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .stat-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+  }
+  .hero-location {
+    position: absolute;
+    top: 32px; right: 32px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+  }
+
+  /* SECTIONS */
+  .sections-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    background: var(--ink);
+    border-top: 2px solid var(--ink);
+    border-bottom: 2px solid var(--ink);
+  }
+  .section-card {
+    text-decoration: none;
+    color: var(--ink);
+    display: block;
+    padding: 52px 40px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+  }
+  .section-card:hover { transform: translateY(-4px); }
+  .section-card.finance { background: var(--finance-blue); }
+  .section-card.sport { background: var(--sport-green); }
+  .section-card.challenge { background: var(--challenge-yellow); }
+
+  .section-number {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--ink-light);
+    margin-bottom: 36px;
+  }
+  .section-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+  .section-desc {
+    font-size: 14px;
+    color: var(--ink-light);
+    line-height: 1.6;
+    margin-bottom: 36px;
+  }
+  .section-arrow {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--ink);
+    padding-bottom: 2px;
+    display: inline-block;
+  }
+
+  /* BIO STRIP */
+  .bio-strip {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 0;
+    padding: 80px 48px;
+    border-bottom: 1px solid var(--sand-dark);
+  }
+  .bio-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    padding-top: 4px;
+  }
+  .bio-content { }
+  .bio-text {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    line-height: 1.5;
+    max-width: 700px;
+    margin-bottom: 32px;
+  }
+  .skills-row {
+    display: flex; flex-wrap: wrap; gap: 8px;
+  }
+  .skill-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    background: var(--sand-dark);
+    border-radius: 2px;
+  }
+
+  /* FOOTER */
+  footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 28px 48px;
+    border-top: 1px solid var(--sand-dark);
+  }
+  footer a {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    text-decoration: none;
+  }
+  footer a:hover { color: var(--ink); }
+
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; }
+    .hero-right { min-height: 40vh; }
+    .sections-grid { grid-template-columns: 1fr; }
+    nav { padding: 16px 24px; }
+    .nav-links { gap: 20px; }
+    .hero-left { padding: 60px 24px; }
+    .bio-strip { grid-template-columns: 1fr; gap: 24px; padding: 60px 24px; }
+    footer { padding: 24px; flex-direction: column; gap: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-name">Martin Delhomme</a>
+  <div class="nav-links">
+    <a href="finance.html">Finance</a>
+    <a href="sport.html">Sport</a>
+    <a href="challenges.html">Challenges</a>
+    <a href="mailto:martin.delhomme@gmail.com">Contact</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-left">
+    <div class="hero-eyebrow">Operations · Analytics · Performance</div>
+    <h1 class="hero-name">Martin<br><em>Delhomme</em></h1>
+    <p class="hero-desc">Finance professional turned data analyst. 6+ years in asset management across Europe and Canada. This site is a working document — finance projects, sport analytics, and personal challenges, all driven by structure and measurable outcomes.</p>
+    <div class="hero-tags">
+      <span class="tag">Investment Operations</span>
+      <span class="tag">Risk Control</span>
+      <span class="tag">Python · VBA · SQL</span>
+      <span class="tag">Bloomberg</span>
+      <span class="tag">CFA L1 Candidate</span>
+    </div>
+    <div class="hero-cta">
+      <a href="#sections" class="btn-primary">Explore the work</a>
+      <a href="#" class="btn-secondary">Download CV</a>
+    </div>
+  </div>
+  <div class="hero-right">
+    <span class="hero-location">📍 Toronto, Ontario</span>
+    <div class="hero-stats">
+      <div class="stat-block">
+        <div class="stat-number">6+</div>
+        <div class="stat-label">Years in finance</div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-number">3</div>
+        <div class="stat-label">Countries</div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-number">∞</div>
+        <div class="stat-label">km running</div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-number">1</div>
+        <div class="stat-label">Book published</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="sections" class="sections-grid">
+  <a href="finance.html" class="section-card finance">
+    <div class="section-number">01 / Finance & Markets</div>
+    <h2 class="section-title">Operations, Risk & Data</h2>
+    <p class="section-desc">Projects and analyses from 6+ years in asset management. Reconciliation automation, risk dashboards, process optimization — applied finance, not theory.</p>
+    <span class="section-arrow">Explore →</span>
+  </a>
+  <a href="sport.html" class="section-card sport">
+    <div class="section-number">02 / Sport Analytics</div>
+    <h2 class="section-title">Data Meets Performance</h2>
+    <p class="section-desc">Personal training data from running and fencing, cross-sport analysis on baseball, marathon pacing models. Analytical thinking applied to athletic performance.</p>
+    <span class="section-arrow">Explore →</span>
+  </a>
+  <a href="challenges.html" class="section-card challenge">
+    <div class="section-number">03 / Personal Challenges</div>
+    <h2 class="section-title">Structure Beyond Work</h2>
+    <p class="section-desc">Long-term projects built from zero: an Amazon KDP book, marathon preparation, skill acquisition. What gets measured gets done.</p>
+    <span class="section-arrow">Explore →</span>
+  </a>
+</section>
+
+<section class="bio-strip">
+  <div class="bio-label">Background</div>
+  <div class="bio-content">
+    <p class="bio-text">"Finance professional with a data analyst mindset. I work at the intersection of markets, operational efficiency and structured thinking — in the office and outside."</p>
+    <div class="skills-row">
+      <span class="skill-tag">Advanced Excel</span>
+      <span class="skill-tag">VBA</span>
+      <span class="skill-tag">Python</span>
+      <span class="skill-tag">SQL</span>
+      <span class="skill-tag">Power BI</span>
+      <span class="skill-tag">Bloomberg</span>
+      <span class="skill-tag">Master Finance & Investments</span>
+      <span class="skill-tag">Sports Analytics — U. Michigan</span>
+      <span class="skill-tag">CFA L1 Candidate</span>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <a href="mailto:martin.delhomme@gmail.com">martin.delhomme@gmail.com</a>
+  <a href="https://linkedin.com" target="_blank">LinkedIn ↗</a>
+</footer>
+
+</body>
+</html>
