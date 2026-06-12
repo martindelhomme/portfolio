@@ -5,15 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Personal Challenges — Martin Delhomme</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&family=Space+Mono&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=Space+Mono&display=swap" rel="stylesheet">
 <style>
   :root {
-    --sand: #EDE8DF;
-    --sand-dark: #D9D2C5;
-    --ink: #1A1A18;
-    --ink-light: #4A4A44;
-    --accent-bg: #F0E0A0;
-    --accent: #5A4A00;
+    --sand:      #EAE4D9;
+    --sand-mid:  #D8D0C2;
+    --sand-dark: #C4BAA8;
+    --ink:       #1C1C1A;
+    --ink-mid:   #4A4740;
+    --ink-light: #7A756C;
+    --accent:    #EDD98A;
+    --accent-dark: #D4BC50;
   }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
@@ -22,134 +24,120 @@
   nav {
     position: fixed; top: 0; left: 0; right: 0; z-index: 100;
     display: flex; align-items: center; justify-content: space-between;
-    padding: 20px 48px;
-    background: var(--accent-bg);
-    border-bottom: 1px solid #d4c060;
+    padding: 18px 48px;
+    background: var(--accent);
+    border-bottom: 1px solid var(--accent-dark);
   }
-  .nav-name { font-family: 'DM Serif Display', serif; font-size: 18px; text-decoration: none; color: var(--ink); }
-  .nav-links { display: flex; gap: 36px; }
-  .nav-links a { font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none; color: var(--ink-light); }
-  .nav-links a:hover, .nav-links a.active { color: var(--ink); border-bottom: 1px solid var(--ink); }
+  .nav-logo { font-family: 'DM Serif Display', serif; font-size: 17px; text-decoration: none; color: var(--ink); }
+  .nav-right { display: flex; gap: 32px; }
+  .nav-right a { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; text-decoration: none; color: var(--ink-mid); transition: color 0.15s; }
+  .nav-right a:hover, .nav-right a.active { color: var(--ink); }
 
-  .page-hero {
-    background: var(--accent-bg);
-    padding: 160px 48px 80px;
+  .page-header {
+    background: var(--accent);
+    padding: 120px 48px 60px;
     border-bottom: 2px solid var(--ink);
   }
-  .breadcrumb { font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 20px; }
+  .breadcrumb { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 20px; }
   .breadcrumb a { color: var(--ink-light); text-decoration: none; }
-  .page-title { font-family: 'DM Serif Display', serif; font-size: clamp(48px, 7vw, 88px); line-height: 1.0; letter-spacing: -0.02em; margin-bottom: 24px; }
-  .page-subtitle { font-size: 17px; color: var(--ink-light); max-width: 600px; line-height: 1.7; }
+  .breadcrumb a:hover { color: var(--ink); }
+  .page-title { font-family: 'DM Serif Display', serif; font-size: clamp(44px, 7vw, 86px); line-height: 0.95; letter-spacing: -0.025em; margin-bottom: 20px; }
+  .page-sub { font-size: 15px; color: var(--ink-mid); max-width: 520px; line-height: 1.7; }
 
-  /* PHILOSOPHY */
+  /* PHILOSOPHY LINE */
   .philosophy {
-    padding: 60px 48px;
-    border-bottom: 1px solid var(--sand-dark);
+    padding: 52px 48px;
     display: grid;
-    grid-template-columns: 1fr 2fr;
-    gap: 48px;
+    grid-template-columns: 220px 1fr;
+    border-bottom: 1px solid var(--sand-mid);
+    gap: 0;
   }
-  .phil-label { font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-light); padding-top: 4px; }
-  .phil-text { font-family: 'DM Serif Display', serif; font-size: 22px; line-height: 1.5; }
+  .phil-label { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-light); padding-top: 5px; }
+  .phil-text { font-family: 'DM Serif Display', serif; font-size: 20px; line-height: 1.5; max-width: 640px; }
 
   /* PROJECTS */
-  .projects-section { padding: 80px 48px; }
-  .section-label { font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 40px; }
-  .projects-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; background: var(--ink); }
-  .project-card {
-    background: var(--sand);
-    padding: 36px 32px;
-    text-decoration: none;
-    color: var(--ink);
-    display: flex;
-    flex-direction: column;
-    transition: background 0.2s;
-  }
-  .project-card:hover { background: var(--accent-bg); }
-  .project-type { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 16px; }
-  .project-title { font-family: 'DM Serif Display', serif; font-size: 20px; line-height: 1.2; margin-bottom: 12px; }
-  .project-desc { font-size: 13px; line-height: 1.6; color: var(--ink-light); flex: 1; margin-bottom: 20px; }
-  .project-tags { display: flex; flex-wrap: wrap; gap: 6px; }
-  .project-tag { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase; padding: 4px 10px; background: var(--sand-dark); }
-  .project-arrow { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 20px; }
-  .coming-soon { background: var(--sand-dark); opacity: 0.6; cursor: default; }
-  .coming-soon:hover { background: var(--sand-dark); }
+  .section { padding: 64px 48px; border-bottom: 1px solid var(--sand-mid); }
+  .section-label { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 40px; }
 
-  footer { display: flex; justify-content: space-between; align-items: center; padding: 28px 48px; border-top: 1px solid var(--sand-dark); }
-  footer a { font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-light); text-decoration: none; }
+  .project-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--ink); margin-top: 40px; }
+  .p-card { background: var(--sand); padding: 32px 28px; text-decoration: none; color: var(--ink); display: flex; flex-direction: column; min-height: 260px; transition: background 0.18s; }
+  .p-card:hover { background: var(--accent); }
+  .p-card.locked { opacity: 0.5; cursor: default; }
+  .p-card.locked:hover { background: var(--sand); }
+  .p-type { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 14px; }
+  .p-title { font-family: 'DM Serif Display', serif; font-size: 18px; line-height: 1.2; margin-bottom: 10px; }
+  .p-desc { font-size: 13px; line-height: 1.6; color: var(--ink-mid); flex: 1; margin-bottom: 18px; }
+  .p-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 14px; }
+  .p-tag { font-family: 'Space Mono', monospace; font-size: 8px; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 9px; background: var(--sand-mid); }
+  .p-link { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-light); margin-top: auto; }
+  .p-card:not(.locked):hover .p-link { color: var(--ink); }
 
-  @media (max-width: 900px) {
+  footer { padding: 20px 48px; border-top: 1px solid var(--sand-mid); display: flex; justify-content: space-between; align-items: center; }
+  footer a { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-light); text-decoration: none; }
+  footer a:hover { color: var(--ink); }
+
+  @media (max-width: 860px) {
     nav { padding: 16px 24px; }
-    .page-hero { padding: 120px 24px 60px; }
-    .philosophy { grid-template-columns: 1fr; padding: 40px 24px; }
-    .projects-section { padding: 60px 24px; }
-    .projects-grid { grid-template-columns: 1fr; }
-    footer { padding: 24px; flex-direction: column; gap: 12px; }
+    .page-header { padding: 100px 24px 48px; }
+    .philosophy { grid-template-columns: 1fr; gap: 16px; padding: 40px 24px; }
+    .section { padding: 48px 24px; }
+    .project-grid { grid-template-columns: 1fr; }
+    footer { padding: 18px 24px; flex-direction: column; gap: 8px; }
   }
 </style>
 </head>
 <body>
 
 <nav>
-  <a href="index.html" class="nav-name">Martin Delhomme</a>
-  <div class="nav-links">
-    <a href="finance.html">Finance</a>
-    <a href="sport.html">Sport</a>
-    <a href="challenges.html" class="active">Challenges</a>
+  <a href="index.html" class="nav-logo">Martin Delhomme</a>
+  <div class="nav-right">
+    <a href="finance.html">Finance & Markets</a>
+    <a href="sport.html">Sport Analytics</a>
+    <a href="challenges.html" class="active">Personal Challenges</a>
     <a href="mailto:martin.delhomme@gmail.com">Contact</a>
   </div>
 </nav>
 
-<div class="page-hero">
-  <div class="breadcrumb"><a href="index.html">Home</a> / Personal Challenges</div>
+<header class="page-header">
+  <div class="breadcrumb"><a href="index.html">Portfolio</a> &nbsp;/&nbsp; Personal Challenges</div>
   <h1 class="page-title">Personal<br>Challenges</h1>
-  <p class="page-subtitle">Projects built from zero, outside of any job description. Structure, consistency and measurable objectives — the same mindset that drives the professional work, applied to long-term personal goals.</p>
-</div>
+  <p class="page-sub">Projects built from scratch, outside any job description. Structure, consistency and measurable objectives — applied beyond the office.</p>
+</header>
 
-<div class="philosophy">
-  <div class="phil-label">Philosophy</div>
-  <div class="phil-text">"Every project here started with nothing. No template, no external validation — just a clear objective, a plan, and execution over time. The process is the point."</div>
-</div>
 
-<section class="projects-section">
+<section class="section">
   <div class="section-label">Projects</div>
-  <div class="projects-grid">
-    <a href="project-challenge-a.html" class="project-card">
-      <div class="project-type">Learning / Delivery</div>
-      <div class="project-title">Amazon KDP Book — English Version</div>
-      <div class="project-desc">Wrote, formatted and published a book on Amazon KDP in English — no prior publishing experience. From manuscript to publication-ready format, navigating Kindle standards from scratch.</div>
-      <div class="project-tags">
-        <span class="project-tag">KDP</span>
-        <span class="project-tag">Writing</span>
-        <span class="project-tag">End-to-end</span>
-      </div>
-      <div class="project-arrow">Read the story →</div>
+  <div class="project-grid">
+
+    <a href="project.html?id=challenge-book" class="p-card">
+      <div class="p-type">Learning / End-to-End Delivery</div>
+      <div class="p-title">Amazon KDP Book — English Version</div>
+      <div class="p-desc">Wrote, formatted and published a book on Amazon KDP in English with no prior publishing experience. From manuscript to Kindle-ready format, from scratch.</div>
+      <div class="p-tags"><span class="p-tag">KDP</span><span class="p-tag">Writing</span><span class="p-tag">End-to-end</span></div>
+      <div class="p-link">Read the story →</div>
     </a>
-    <div class="project-card coming-soon">
-      <div class="project-type">Long-term Goal</div>
-      <div class="project-title">First Marathon</div>
-      <div class="project-desc">From structured training to race day. A documented build-up with data tracking, pacing strategy, and a clear target time. Progress documented as it happens.</div>
-      <div class="project-tags">
-        <span class="project-tag">Running</span>
-        <span class="project-tag">Training</span>
-      </div>
-      <div class="project-arrow">Coming soon</div>
+
+    <div class="p-card locked">
+      <div class="p-type">Long-Term Goal</div>
+      <div class="p-title">First Marathon</div>
+      <div class="p-desc">From structured training to race day. A documented build-up with data tracking, pacing strategy and a target time. Progress updated as it happens.</div>
+      <div class="p-tags"><span class="p-tag">Running</span><span class="p-tag">Training</span></div>
+      <div class="p-link">Coming soon</div>
     </div>
-    <div class="project-card coming-soon">
-      <div class="project-type">Skill Acquisition</div>
-      <div class="project-title">This Website</div>
-      <div class="project-desc">Building a personal site from scratch as a project in itself: structure, design, content strategy, and GitHub deployment. No Canva, no drag-and-drop.</div>
-      <div class="project-tags">
-        <span class="project-tag">HTML/CSS</span>
-        <span class="project-tag">GitHub Pages</span>
-      </div>
-      <div class="project-arrow">Coming soon</div>
+
+    <div class="p-card locked">
+      <div class="p-type">Skill Acquisition</div>
+      <div class="p-title">This Website</div>
+      <div class="p-desc">Building a personal site in HTML/CSS as a project in itself — structure, design, content and GitHub Pages deployment. No Canva, no drag-and-drop.</div>
+      <div class="p-tags"><span class="p-tag">HTML / CSS</span><span class="p-tag">GitHub Pages</span></div>
+      <div class="p-link">Coming soon</div>
     </div>
+
   </div>
 </section>
 
 <footer>
-  <a href="index.html">← Back home</a>
+  <a href="index.html">← Portfolio</a>
   <a href="mailto:martin.delhomme@gmail.com">martin.delhomme@gmail.com</a>
 </footer>
 
