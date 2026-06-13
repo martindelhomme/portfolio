@@ -72,6 +72,8 @@
 
   @media (max-width: 860px) {
     nav { padding: 16px 24px; }
+    .nav-right { display: none; }
+    .nav-burger { display: flex; }
     .page-header { padding: 100px 24px 48px; }
     .stats-bar { grid-template-columns: repeat(2, 1fr); }
     .section { padding: 48px 24px; }
@@ -79,6 +81,18 @@
     .photo-grid { grid-template-columns: repeat(2, 1fr); }
     footer { padding: 18px 24px; flex-direction: column; gap: 8px; }
   }
+
+  .nav-logo { white-space: nowrap; }
+  .nav-right a { white-space: nowrap; }
+  .nav-burger { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 4px; background: none; border: none; }
+  .nav-burger span { display: block; width: 22px; height: 2px; background: var(--ink); transition: all 0.2s; }
+  .nav-mobile {
+    display: none; position: fixed; top: 57px; left: 0; right: 0; z-index: 99;
+    background: var(--accent); border-bottom: 2px solid var(--ink); flex-direction: column;
+  }
+  .nav-mobile.open { display: flex; }
+  .nav-mobile a { font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; text-decoration: none; color: var(--ink-mid); padding: 18px 24px; border-bottom: 1px solid rgba(0,0,0,0.1); transition: background 0.15s; }
+  .nav-mobile a:hover { background: rgba(0,0,0,0.06); color: var(--ink); }
 </style>
 </head>
 <body>
@@ -91,7 +105,16 @@
     <a href="challenges.html">Personal Challenges</a>
     <a href="mailto:martin.delhomme@gmail.com">Contact</a>
   </div>
+  <button class="nav-burger" id="burger" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
 </nav>
+<div class="nav-mobile" id="nav-mobile">
+  <a href="finance.html">Finance & Markets</a>
+  <a href="sport.html">Sport Analytics</a>
+  <a href="challenges.html">Personal Challenges</a>
+  <a href="mailto:martin.delhomme@gmail.com">Contact</a>
+</div>
 
 <header class="page-header">
   <div class="breadcrumb">
@@ -226,6 +249,13 @@
   <a href="sport.html"><- Sport Analytics</a>
   <a href="sport-running.html">Running & Marathon -></a>
 </footer>
+
+
+<script>
+document.getElementById('burger').addEventListener('click', function() {
+  document.getElementById('nav-mobile').classList.toggle('open');
+});
+</script>
 
 </body>
 </html>
