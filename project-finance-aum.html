@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Automating Monthly AUM Reporting - Martin Delhomme</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sand: #EAE4D9; --sand-mid: #D8D0C2; --sand-dark: #C4BAA8;
+    --ink: #1C1C1A; --ink-mid: #4A4740; --ink-light: #7A756C;
+    --accent: #BDD0E0; --accent-dark: #8AAEC8;
+    --gold: #EDD98A; --green: #BDE0C8;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--sand); color: var(--ink); }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 48px; background: var(--accent); border-bottom: 1px solid var(--accent-dark);
+  }
+  .nav-logo { font-family: 'DM Serif Display', serif; font-size: 17px; text-decoration: none; color: var(--ink); white-space: nowrap; }
+  .nav-right { display: flex; gap: 32px; }
+  .nav-right a { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; text-decoration: none; color: var(--ink-mid); white-space: nowrap; transition: color 0.15s; }
+  .nav-right a:hover { color: var(--ink); }
+  .nav-burger { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 4px; background: none; border: none; }
+  .nav-burger span { display: block; width: 22px; height: 2px; background: var(--ink); }
+  .nav-mobile { display: none; position: fixed; top: 57px; left: 0; right: 0; z-index: 99; background: var(--accent); border-bottom: 2px solid var(--ink); flex-direction: column; }
+  .nav-mobile.open { display: flex; }
+  .nav-mobile a { font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; text-decoration: none; color: var(--ink-mid); padding: 18px 24px; border-bottom: 1px solid rgba(0,0,0,0.1); }
+  .nav-mobile a:hover { background: rgba(0,0,0,0.06); color: var(--ink); }
+
+  /* PAGE HEADER */
+  .page-header { background: var(--accent); padding: 120px 48px 60px; border-bottom: 2px solid var(--ink); }
+  .breadcrumb { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 20px; }
+  .breadcrumb a { color: var(--ink-light); text-decoration: none; }
+  .breadcrumb a:hover { color: var(--ink); }
+  .project-tag { display: inline-block; font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; border: 1px solid var(--ink); padding: 5px 12px; margin-bottom: 22px; }
+  .page-title { font-family: 'DM Serif Display', serif; font-size: clamp(38px, 5vw, 72px); line-height: 1.0; letter-spacing: -0.02em; margin-bottom: 14px; }
+  .page-subtitle { font-family: 'DM Serif Display', serif; font-style: italic; font-size: 19px; color: var(--ink-mid); max-width: 680px; line-height: 1.45; margin-bottom: 36px; }
+  .meta-row { display: flex; gap: 40px; flex-wrap: wrap; padding-top: 24px; border-top: 1px solid rgba(28,28,26,0.15); }
+  .meta-label { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 4px; }
+  .meta-value { font-size: 13px; font-weight: 500; }
+
+  /* MAIN WRAPPER */
+  .article-wrapper { max-width: 900px; padding: 64px 48px; }
+
+  /* INLINE TOC */
+  .toc-inline { margin-bottom: 56px; padding: 24px 28px; border: 1px solid var(--sand-dark); background: var(--sand-mid); }
+  .toc-inline-label { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 14px; }
+  .toc-inline ul { list-style: none; display: flex; flex-wrap: wrap; gap: 8px 24px; }
+  .toc-inline a { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-mid); text-decoration: none; border-bottom: 1px solid var(--sand-dark); padding-bottom: 1px; transition: color 0.15s; }
+  .toc-inline a:hover { color: var(--ink); border-bottom-color: var(--ink); }
+
+  /* CONTENT SECTIONS */
+  .content-section { margin-bottom: 64px; }
+  .cs-eyebrow { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 10px; }
+  .cs-heading { font-family: 'DM Serif Display', serif; font-size: 28px; margin-bottom: 20px; line-height: 1.15; }
+  .cs-body { font-size: 16px; line-height: 1.8; color: var(--ink-mid); }
+  .cs-body p { margin-bottom: 16px; }
+  .cs-body p:last-child { margin-bottom: 0; }
+  .cs-body strong { color: var(--ink); font-weight: 500; }
+
+  /* CALLOUT */
+  .callout { border-left: 3px solid var(--ink); padding: 18px 24px; margin: 24px 0; background: rgba(28,28,26,0.04); font-family: 'DM Serif Display', serif; font-style: italic; font-size: 18px; line-height: 1.55; color: var(--ink); }
+
+  /* STEPS */
+  .steps { margin: 24px 0; }
+  .step { display: grid; grid-template-columns: 48px 1fr; gap: 16px; padding: 20px 0; border-top: 1px solid var(--sand-mid); }
+  .step:last-child { border-bottom: 1px solid var(--sand-mid); }
+  .step-num { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--ink-light); padding-top: 2px; }
+  .step-title { font-weight: 500; font-size: 15px; margin-bottom: 5px; color: var(--ink); }
+  .step-desc { font-size: 14px; color: var(--ink-mid); line-height: 1.65; }
+
+  /* BEFORE / AFTER */
+  .before-after { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; background: var(--ink); margin: 24px 0; }
+  .ba-block { padding: 28px 24px; }
+  .ba-block.before { background: #f0e8e0; }
+  .ba-block.after  { background: var(--green); }
+  .ba-label { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 14px; }
+  .ba-item { font-size: 14px; color: var(--ink-mid); line-height: 1.65; padding: 7px 0 7px 16px; border-bottom: 1px solid rgba(28,28,26,0.08); position: relative; }
+  .ba-item:last-child { border-bottom: none; }
+  .ba-item::before { content: '-'; position: absolute; left: 0; color: var(--ink-light); }
+  .ba-block.after .ba-item::before { content: '+'; color: #1E5C32; font-weight: 700; }
+
+  /* STAT BLOCKS */
+  .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; background: var(--ink); margin: 24px 0; }
+  .stat-block { background: var(--sand); padding: 26px 22px; }
+  .stat-block.accent { background: var(--accent); }
+  .stat-num { font-family: 'DM Serif Display', serif; font-size: 40px; line-height: 1; margin-bottom: 7px; }
+  .stat-lbl { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-light); }
+
+  /* RESULT BOX */
+  .result-box { background: var(--gold); border: 2px solid var(--ink); padding: 28px 32px; margin: 24px 0; }
+  .result-box-label { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 10px; }
+  .result-box-text { font-family: 'DM Serif Display', serif; font-size: 21px; line-height: 1.4; }
+
+  /* TAKEAWAYS */
+  .takeaways { background: var(--ink); color: var(--sand); padding: 48px; margin-top: 24px; }
+  .tk-eyebrow { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(234,228,217,0.4); margin-bottom: 14px; }
+  .tk-heading { font-family: 'DM Serif Display', serif; font-size: 24px; margin-bottom: 24px; }
+  .tk-list { list-style: none; }
+  .tk-list li { font-size: 15px; line-height: 1.7; padding: 14px 0 14px 22px; border-top: 1px solid rgba(234,228,217,0.1); position: relative; color: rgba(234,228,217,0.85); }
+  .tk-list li::before { content: '-'; position: absolute; left: 0; color: var(--gold); font-weight: 700; }
+
+  /* BOTTOM NAV */
+  .project-nav { display: flex; justify-content: space-between; padding: 40px 48px; border-top: 2px solid var(--ink); gap: 24px; }
+  .pnav-link { text-decoration: none; color: var(--ink); }
+  .pnav-dir { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 5px; }
+  .pnav-title { font-family: 'DM Serif Display', serif; font-size: 18px; }
+
+  footer { padding: 20px 48px; border-top: 1px solid var(--sand-mid); display: flex; justify-content: space-between; }
+  footer a { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-light); text-decoration: none; }
+  footer a:hover { color: var(--ink); }
+
+  /* MOBILE */
+  @media (max-width: 760px) {
+    nav { padding: 16px 20px; }
+    .nav-right { display: none; }
+    .nav-burger { display: flex; }
+
+    .page-header { padding: 86px 20px 36px; }
+    .page-title { font-size: 34px; }
+    .page-subtitle { font-size: 16px; }
+    .meta-row { gap: 20px; }
+
+    .article-wrapper { padding: 36px 20px 48px; }
+    .toc-inline ul { flex-direction: column; gap: 10px; }
+
+    .content-section { margin-bottom: 48px; }
+    .cs-heading { font-size: 24px; }
+    .cs-body { font-size: 15px; }
+    .callout { font-size: 16px; padding: 14px 18px; }
+
+    .before-after { grid-template-columns: 1fr; }
+
+    .stat-row { grid-template-columns: repeat(3, 1fr); }
+    .stat-block { padding: 16px 12px; }
+    .stat-num { font-size: 28px; }
+
+    .step { grid-template-columns: 36px 1fr; gap: 10px; }
+    .step-title { font-size: 14px; }
+    .step-desc { font-size: 13px; }
+
+    .result-box { padding: 20px; }
+    .result-box-text { font-size: 18px; }
+
+    .takeaways { padding: 32px 20px; }
+    .tk-heading { font-size: 21px; }
+    .tk-list li { font-size: 14px; }
+
+    .project-nav { padding: 28px 20px; flex-direction: column; gap: 20px; }
+    footer { padding: 16px 20px; flex-direction: column; gap: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">Martin Delhomme</a>
+  <div class="nav-right">
+    <a href="finance.html">Finance & Markets</a>
+    <a href="sport.html">Sport Analytics</a>
+    <a href="challenges.html">Personal Challenges</a>
+    <a href="mailto:martin.delhomme@gmail.com">Contact</a>
+  </div>
+  <button class="nav-burger" id="burger" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+<div class="nav-mobile" id="nav-mobile">
+  <a href="finance.html">Finance & Markets</a>
+  <a href="sport.html">Sport Analytics</a>
+  <a href="challenges.html">Personal Challenges</a>
+  <a href="mailto:martin.delhomme@gmail.com">Contact</a>
+</div>
+
+<!-- HEADER -->
+<header class="page-header">
+  <div class="breadcrumb">
+    <a href="index.html">Home</a> /
+    <a href="finance.html">Finance & Markets</a> /
+    AUM Reporting Automation
+  </div>
+  <span class="project-tag">Automation - VBA - Amundi Canada</span>
+  <h1 class="page-title">Automating Monthly<br>AUM Reporting</h1>
+  <p class="page-subtitle">Turning a repetitive monthly manual process into a reliable, repeatable workflow - from hours to minutes.</p>
+  <div class="meta-row">
+    <div class="meta-item"><div class="meta-label">Company</div><div class="meta-value">Amundi Canada</div></div>
+    <div class="meta-item"><div class="meta-label">Tools</div><div class="meta-value">VBA, Excel, Outlook</div></div>
+    <div class="meta-item"><div class="meta-label">Type</div><div class="meta-value">Process Automation</div></div>
+    <div class="meta-item"><div class="meta-label">Impact</div><div class="meta-value">1-2h -> a few minutes</div></div>
+  </div>
+</header>
+
+<!-- BODY -->
+<div class="article-wrapper">
+
+  <!-- TOC -->
+  <nav class="toc-inline" aria-label="Contents">
+    <div class="toc-inline-label">Contents</div>
+    <ul>
+      <li><a href="#context">Context</a></li>
+      <li><a href="#objective">Objective</a></li>
+      <li><a href="#analysis">Analysis</a></li>
+      <li><a href="#implementation">Implementation</a></li>
+      <li><a href="#outcome">Outcome</a></li>
+      <li><a href="#takeaway">Key Takeaway</a></li>
+    </ul>
+  </nav>
+
+  <!-- 01 CONTEXT -->
+  <section class="content-section" id="context">
+    <div class="cs-eyebrow">01 - Context</div>
+    <h2 class="cs-heading">A monthly process running entirely on manual work</h2>
+    <div class="cs-body">
+      <p>As part of my role in fund operations at Amundi Canada, a monthly Assets Under Management (AUM) reporting process was performed manually. The workflow involved downloading source files, converting formats, mapping fund and client identifiers, updating reporting templates, and saving the final reports in the correct location.</p>
+      <p>None of the individual tasks were particularly complex - but the process was <strong>repetitive, time-consuming, and required the same manual actions every single month.</strong> Any deviation in the source files or naming conventions could introduce errors that were difficult to catch downstream.</p>
+    </div>
+    <div class="callout">"The problem was not complexity - it was repetition. The same sequence of actions, every month, with no value added by doing them manually."</div>
+  </section>
+
+  <!-- 02 OBJECTIVE -->
+  <section class="content-section" id="objective">
+    <div class="cs-eyebrow">02 - Objective</div>
+    <h2 class="cs-heading">Reduce manual work without compromising output quality</h2>
+    <div class="cs-body">
+      <p>The goal was to reduce the amount of manual work involved while maintaining exactly the same output and reporting standards. Beyond saving time, I wanted to make the process <strong>more reliable and easier to repeat</strong> - particularly important in a regulated environment where consistency matters.</p>
+      <p>A secondary objective was scalability: if reporting frequency increased or new clients were added, the solution needed to accommodate that without significant rework.</p>
+    </div>
+  </section>
+
+  <!-- 03 ANALYSIS -->
+  <section class="content-section" id="analysis">
+    <div class="cs-eyebrow">03 - Analysis</div>
+    <h2 class="cs-heading">Mapping the workflow before building anything</h2>
+    <div class="cs-body">
+      <p>Before writing a single line of code, I mapped the workflow step by step to understand where time was actually being spent. This diagnostic phase was the most important part of the project.</p>
+      <p>The finding was clear: most of the effort was not in analyzing the data itself, but in <strong>repetitive operational tasks</strong> - retrieving files, renaming documents, converting formats, updating templates, and moving information between sources. Once broken down into smaller steps, it became straightforward to identify which actions could be standardized and automated.</p>
+    </div>
+
+    <div class="before-after">
+      <div class="ba-block before">
+        <div class="ba-label">Before - Manual Process</div>
+        <div class="ba-item">Download source files manually each month</div>
+        <div class="ba-item">Convert file formats by hand</div>
+        <div class="ba-item">Map fund and client identifiers manually</div>
+        <div class="ba-item">Copy data into reporting templates</div>
+        <div class="ba-item">Apply file naming conventions manually</div>
+        <div class="ba-item">Save and distribute reports</div>
+      </div>
+      <div class="ba-block after">
+        <div class="ba-label">After - Automated Workflow</div>
+        <div class="ba-item">Source files imported automatically</div>
+        <div class="ba-item">Format conversion handled by the tool</div>
+        <div class="ba-item">Mappings applied from a maintained reference table</div>
+        <div class="ba-item">Templates populated and formatted automatically</div>
+        <div class="ba-item">Standardized naming applied at generation</div>
+        <div class="ba-item">Reports saved to correct location in one step</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 IMPLEMENTATION -->
+  <section class="content-section" id="implementation">
+    <div class="cs-eyebrow">04 - Implementation</div>
+    <h2 class="cs-heading">Building the solution in VBA</h2>
+    <div class="cs-body">
+      <p>Using VBA, I developed a workflow that automated most of the reporting process end to end. The solution was designed to be maintainable - not just functional once, but easy to update when client lists or reporting requirements changed.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-content">
+          <div class="step-title">Source data import</div>
+          <div class="step-desc">The tool automatically retrieves the monthly source files from the designated location, handles format conversion, and prepares the data for processing - eliminating the first and most error-prone manual step.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-content">
+          <div class="step-title">Fund and client mapping</div>
+          <div class="step-desc">A reference table maps fund identifiers to client names and reporting codes. The tool applies these mappings automatically, making it easy to add or update entries without touching the core logic.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-content">
+          <div class="step-title">Template population</div>
+          <div class="step-desc">The reporting template is populated with the processed data, maintaining the required formatting and structure. No manual copy-paste, no formatting corrections.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <div class="step-content">
+          <div class="step-title">File naming and saving</div>
+          <div class="step-desc">Standardized naming conventions are applied automatically at generation. Files are saved to the correct folder structure without manual intervention.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">05</div>
+        <div class="step-content">
+          <div class="step-title">Outlook integration and exception handling</div>
+          <div class="step-desc">One of the more technically involved aspects was integrating with Outlook for distribution, and building robust exception handling - so the tool could flag issues clearly rather than fail silently.</div>
+        </div>
+      </div>
+    </div>
+    <div class="cs-body" style="margin-top: 16px;">
+      <p>The most challenging aspect was not understanding the process itself, but <strong>translating the workflow into a robust technical solution</strong> - learning how to interact with Outlook, manage file structures programmatically, and handle edge cases while keeping the tool easy to maintain.</p>
+    </div>
+  </section>
+
+  <!-- 05 OUTCOME -->
+  <section class="content-section" id="outcome">
+    <div class="cs-eyebrow">05 - Outcome</div>
+    <h2 class="cs-heading">From hours to minutes</h2>
+
+    <div class="stat-row">
+      <div class="stat-block accent">
+        <div class="stat-num">~2h</div>
+        <div class="stat-lbl">Time before</div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-num">~5min</div>
+        <div class="stat-lbl">Time after</div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-num">0</div>
+        <div class="stat-lbl">Manual steps remaining</div>
+      </div>
+    </div>
+
+    <div class="result-box">
+      <div class="result-box-label">Impact</div>
+      <div class="result-box-text">Monthly AUM reporting reduced from <strong>1-2 hours of manual work</strong> to a few minutes of execution time - with improved consistency, easier maintenance, and the scalability to support more frequent reporting if needed.</div>
+    </div>
+
+    <div class="cs-body">
+      <p>Beyond the time saved, the process became more consistent. Human error in format conversion, file naming or template population was eliminated. And because the mapping logic is held in a maintainable reference table, adding new clients or adapting to new reporting requirements is a matter of updating a row - not rebuilding the workflow.</p>
+    </div>
+  </section>
+
+  <!-- 06 TAKEAWAY -->
+  <div class="takeaways" id="takeaway">
+    <div class="tk-eyebrow">06 - Key Takeaway</div>
+    <div class="tk-heading">Understand the workflow before automating it</div>
+    <ul class="tk-list">
+      <li>The most valuable part of the project was not the automation itself, but understanding the workflow well enough to simplify it. Once the process was mapped and structured, the technical implementation became a series of solvable problems.</li>
+      <li>In operational finance, the biggest efficiency gains rarely come from analytical complexity - they come from identifying repetitive manual steps and removing them systematically.</li>
+      <li>Building for maintainability matters as much as building for functionality. A tool that works once but breaks when a client is added is not a solution.</li>
+      <li>VBA remains highly effective in environments where Excel is the primary tool - no new infrastructure required, no learning curve for end users, immediate adoption.</li>
+    </ul>
+  </div>
+
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="project-nav">
+  <a href="finance.html" class="pnav-link">
+    <div class="pnav-dir"><- Back</div>
+    <div class="pnav-title">Finance & Markets</div>
+  </a>
+  <span></span>
+</div>
+
+<footer>
+  <a href="index.html"><- Portfolio</a>
+  <a href="mailto:martin.delhomme@gmail.com">martin.delhomme@gmail.com</a>
+</footer>
+
+<script>
+document.getElementById('burger').addEventListener('click', function() {
+  document.getElementById('nav-mobile').classList.toggle('open');
+});
+</script>
+
+</body>
+</html>
