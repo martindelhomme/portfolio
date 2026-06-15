@@ -3,199 +3,227 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Martin Delhomme - Portfolio</title>
+<title>2024 Paris Olympics Analysis - Martin Delhomme</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=Space+Mono&display=swap" rel="stylesheet">
 <style>
   :root {
-    --sand:      #EAE4D9;
-    --sand-mid:  #D8D0C2;
-    --sand-dark: #C4BAA8;
-    --ink:       #1C1C1A;
-    --ink-mid:   #4A4740;
-    --ink-light: #7A756C;
-    --blue:      #BDD0E0;
-    --green:     #BDE0C8;
-    --yellow:    #EDD98A;
-    --accent:    #2A4A6A;
+    --sand: #EAE4D9; --sand-mid: #D8D0C2; --sand-dark: #C4BAA8;
+    --ink: #1C1C1A; --ink-mid: #4A4740; --ink-light: #7A756C;
+    --accent: #BDE0C8; --accent-dark: #8AC4A0;
+    --gold: #EDD98A; --blue: #BDD0E0;
   }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
-  body { font-family: 'DM Sans', sans-serif; background: var(--sand); color: var(--ink); min-height: 100vh; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--sand); color: var(--ink); }
 
-  /* NAV */
+  /* ── NAV ── */
   nav {
     position: fixed; top: 0; left: 0; right: 0; z-index: 100;
     display: flex; align-items: center; justify-content: space-between;
-    padding: 18px 48px;
-    background: var(--sand);
-    border-bottom: 1px solid var(--sand-mid);
+    padding: 18px 48px; background: var(--accent); border-bottom: 1px solid var(--accent-dark);
   }
   .nav-logo { font-family: 'DM Serif Display', serif; font-size: 17px; text-decoration: none; color: var(--ink); white-space: nowrap; }
-  .nav-right { display: flex; gap: 32px; align-items: center; }
-  .nav-right a { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; text-decoration: none; color: var(--ink-mid); transition: color 0.15s; white-space: nowrap; }
+  .nav-right { display: flex; gap: 32px; }
+  .nav-right a { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; text-decoration: none; color: var(--ink-mid); white-space: nowrap; transition: color 0.15s; }
   .nav-right a:hover { color: var(--ink); }
   .nav-burger { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 4px; background: none; border: none; }
-  .nav-burger span { display: block; width: 22px; height: 2px; background: var(--ink); transition: all 0.2s; }
-  .nav-mobile {
-    display: none; position: fixed; top: 57px; left: 0; right: 0; z-index: 99;
-    background: var(--sand); border-bottom: 2px solid var(--ink);
-    flex-direction: column;
-  }
+  .nav-burger span { display: block; width: 22px; height: 2px; background: var(--ink); }
+  .nav-mobile { display: none; position: fixed; top: 57px; left: 0; right: 0; z-index: 99; background: var(--accent); border-bottom: 2px solid var(--ink); flex-direction: column; }
   .nav-mobile.open { display: flex; }
-  .nav-mobile a { font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; text-decoration: none; color: var(--ink-mid); padding: 18px 24px; border-bottom: 1px solid var(--sand-mid); transition: background 0.15s; }
-  .nav-mobile a:hover { background: var(--sand-mid); color: var(--ink); }
+  .nav-mobile a { font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; text-decoration: none; color: var(--ink-mid); padding: 18px 24px; border-bottom: 1px solid rgba(0,0,0,0.1); }
+  .nav-mobile a:hover { background: rgba(0,0,0,0.06); color: var(--ink); }
 
-  /* HERO - 2 col grid */
-  .hero {
-    min-height: 100vh;
+  /* ── PAGE HEADER ── */
+  .page-header { background: var(--accent); padding: 120px 64px 64px; border-bottom: 2px solid var(--ink); }
+  .breadcrumb { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 20px; }
+  .breadcrumb a { color: var(--ink-light); text-decoration: none; }
+  .breadcrumb a:hover { color: var(--ink); }
+  .project-tag { display: inline-block; font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; border: 1px solid var(--ink); padding: 5px 12px; margin-bottom: 24px; }
+  .page-title { font-family: 'DM Serif Display', serif; font-size: clamp(40px, 5.5vw, 76px); line-height: 1.0; letter-spacing: -0.02em; margin-bottom: 16px; }
+  .page-subtitle { font-family: 'DM Serif Display', serif; font-style: italic; font-size: 20px; color: var(--ink-mid); max-width: 700px; line-height: 1.45; margin-bottom: 40px; }
+  .meta-row { display: flex; gap: 48px; flex-wrap: wrap; padding-top: 28px; border-top: 1px solid rgba(28,28,26,0.15); }
+  .meta-label { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 5px; }
+  .meta-value { font-size: 14px; font-weight: 500; }
+
+  /* ── BODY: sidebar + content ── */
+  .article-body {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    padding-top: 57px; /* nav height */
-  }
-  .hero-left {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    padding: 80px 48px 64px;
-    position: relative;
-  }
-  .hero-left::before {
-    content: '';
-    position: absolute; inset: 0;
-    background-image:
-      linear-gradient(var(--sand-mid) 1px, transparent 1px),
-      linear-gradient(90deg, var(--sand-mid) 1px, transparent 1px);
-    background-size: 80px 80px;
-    opacity: 0.35;
-    pointer-events: none;
-  }
-  .hero-inner { position: relative; z-index: 1; }
-
-  .hero-label {
-    font-family: 'Space Mono', monospace; font-size: 10px;
-    letter-spacing: 0.16em; text-transform: uppercase;
-    color: var(--ink-light); margin-bottom: 20px;
-  }
-  h1 {
-    font-family: 'DM Serif Display', serif;
-    font-size: clamp(56px, 7vw, 100px);
-    line-height: 0.95; letter-spacing: -0.03em; margin-bottom: 32px;
-  }
-  h1 em { font-style: italic; color: var(--accent); }
-
-  .hero-bio {
-    font-size: 15px; line-height: 1.75;
-    color: var(--ink-mid); max-width: 480px; margin-bottom: 40px;
+    grid-template-columns: 220px 1fr;
+    gap: 0;
+    max-width: 1400px;
   }
 
-  .hero-actions { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
-  .btn-dark {
-    font-family: 'Space Mono', monospace; font-size: 10px;
-    letter-spacing: 0.12em; text-transform: uppercase;
-    padding: 13px 26px; background: var(--ink); color: var(--sand);
-    text-decoration: none; border-radius: 1px; transition: opacity 0.15s;
+  /* ── TOC SIDEBAR ── */
+  .toc {
+    padding: 56px 32px 56px 64px;
+    position: sticky; top: 57px; align-self: start;
+    height: calc(100vh - 57px); overflow-y: auto;
+    border-right: 1px solid var(--sand-mid);
   }
-  .btn-dark:hover { opacity: 0.75; }
-  .btn-ghost {
-    font-family: 'Space Mono', monospace; font-size: 10px;
-    letter-spacing: 0.12em; text-transform: uppercase;
-    color: var(--ink-mid); text-decoration: none;
-    border-bottom: 1px solid var(--sand-dark); padding-bottom: 2px;
-    transition: color 0.15s, border-color 0.15s;
-  }
-  .btn-ghost:hover { color: var(--ink); border-color: var(--ink); }
-  .linkedin-link {
-    font-family: 'Space Mono', monospace; font-size: 10px;
-    letter-spacing: 0.12em; text-transform: uppercase;
-    color: var(--ink-light); text-decoration: none;
-    display: flex; align-items: center; gap: 8px; transition: color 0.15s;
-  }
-  .linkedin-link:hover { color: var(--ink); }
-  .linkedin-link svg { width: 14px; height: 14px; fill: currentColor; }
+  .toc-label { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 20px; }
+  .toc ul { list-style: none; }
+  .toc li { margin-bottom: 10px; }
+  .toc a { font-size: 13px; color: var(--ink-light); text-decoration: none; display: block; border-left: 2px solid transparent; padding-left: 10px; line-height: 1.4; transition: color 0.15s, border-color 0.15s; }
+  .toc a:hover, .toc a.active { color: var(--ink); border-left-color: var(--ink); }
 
-  /* HERO RIGHT - stats */
-  .hero-right {
-    background: var(--sand-mid);
-    display: flex; flex-direction: column;
-    justify-content: flex-end;
-    padding: 48px;
-    position: relative;
+  /* ── MAIN CONTENT ── */
+  .content {
+    padding: 64px 80px 64px 64px;
+    max-width: 900px;
   }
-  .hero-location {
-    position: absolute; top: 32px; right: 32px;
-    font-family: 'Space Mono', monospace; font-size: 10px;
-    letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-light);
+
+  .content-section { margin-bottom: 72px; }
+  .cs-eyebrow { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 10px; }
+  .cs-heading { font-family: 'DM Serif Display', serif; font-size: 30px; margin-bottom: 20px; line-height: 1.15; }
+  .cs-body { font-size: 16px; line-height: 1.8; color: var(--ink-mid); }
+  .cs-body p { margin-bottom: 16px; }
+  .cs-body p:last-child { margin-bottom: 0; }
+  .cs-body strong { color: var(--ink); font-weight: 500; }
+
+  /* ── CALLOUT ── */
+  .callout {
+    border-left: 3px solid var(--ink); padding: 20px 28px; margin: 28px 0;
+    background: rgba(28,28,26,0.04);
+    font-family: 'DM Serif Display', serif; font-style: italic; font-size: 18px; line-height: 1.55;
   }
-  .hero-stats {
-    display: grid; grid-template-columns: 1fr 1fr;
-    gap: 2px; background: var(--ink);
-  }
+
+  /* ── 4-PROFILE GRID ── */
+  .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; background: var(--ink); margin: 28px 0; }
+  .profile-block { background: var(--sand); padding: 28px 24px; }
+  .profile-block.auriane { background: var(--gold); }
+  .pb-label { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 8px; }
+  .pb-value { font-family: 'DM Serif Display', serif; font-size: 19px; margin-bottom: 6px; }
+  .pb-desc { font-size: 13px; color: var(--ink-mid); line-height: 1.55; }
+
+  /* ── STEPS ── */
+  .steps { margin: 28px 0; }
+  .step { display: grid; grid-template-columns: 52px 1fr; gap: 16px; padding: 20px 0; border-top: 1px solid var(--sand-mid); }
+  .step:last-child { border-bottom: 1px solid var(--sand-mid); }
+  .step-num { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--ink-light); padding-top: 2px; }
+  .step-title { font-weight: 500; font-size: 15px; margin-bottom: 5px; color: var(--ink); }
+  .step-desc { font-size: 14px; color: var(--ink-mid); line-height: 1.65; }
+
+  /* ── STAT BLOCKS ── */
+  .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; background: var(--ink); margin: 28px 0; }
   .stat-block { background: var(--sand); padding: 28px 24px; }
-  .stat-number { font-family: 'DM Serif Display', serif; font-size: 36px; line-height: 1; margin-bottom: 6px; }
-  .stat-label { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-light); }
+  .stat-block.accent { background: var(--accent); }
+  .stat-num { font-family: 'DM Serif Display', serif; font-size: 40px; line-height: 1; margin-bottom: 8px; }
+  .stat-lbl { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-light); }
 
-  /* CARDS */
-  .cards {
-    display: grid; grid-template-columns: repeat(3, 1fr);
-    border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink);
-  }
-  .card {
-    display: block; text-decoration: none; color: var(--ink);
-    padding: 48px 40px 52px; position: relative; overflow: hidden;
-    transition: padding-left 0.25s ease;
-  }
-  .card + .card { border-left: 1px solid var(--ink); }
-  .card:hover { padding-left: 52px; }
-  .card.finance    { background: var(--blue); }
-  .card.sport      { background: var(--green); }
-  .card.challenges { background: var(--yellow); }
-  .card::before {
-    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
-    background: var(--ink); transform: scaleX(0); transform-origin: left;
-    transition: transform 0.2s ease;
-  }
-  .card:hover::before { transform: scaleX(1); }
-  .card-num { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 32px; }
-  .card-title { font-family: 'DM Serif Display', serif; font-size: 26px; line-height: 1.1; margin-bottom: 14px; }
-  .card-desc { font-size: 13px; line-height: 1.65; color: var(--ink-mid); margin-bottom: 36px; max-width: 280px; }
-  .card-cta { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; display: inline-flex; align-items: center; gap: 8px; }
-  .card-cta::after { content: 'Explore'; }
-  .card:hover .card-cta::after { content: 'Explore -'; }
+  /* ── DATA TABLE (master dataset) ── */
+  .data-label { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 12px; margin-top: 28px; }
+  .table-wrapper { overflow-x: auto; border: 1px solid var(--sand-dark); }
+  .data-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .data-table th { font-family: 'Space Mono', monospace; font-size: 8.5px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-light); text-align: left; padding: 10px 12px; border-bottom: 2px solid var(--ink); white-space: nowrap; background: var(--sand-mid); position: sticky; top: 0; }
+  .data-table td { padding: 10px 12px; border-bottom: 1px solid var(--sand-mid); white-space: nowrap; }
+  .data-table td:first-child { color: var(--ink); font-weight: 500; }
+  .data-table tr:hover td { background: rgba(189,224,200,0.25); }
+  .badge { display: inline-block; font-family: 'Space Mono', monospace; font-size: 8px; letter-spacing: 0.06em; padding: 3px 8px; border-radius: 1px; font-weight: 600; }
+  .badge-gc { background: var(--gold); color: var(--ink); }
+  .badge-gd { background: var(--blue); color: var(--ink); }
+  .badge-dc { background: var(--sand-dark); color: var(--ink); }
+  .rank-good { color: #1E5C32; font-weight: 600; }
+  .rank-mid { color: var(--ink-mid); }
+  .rank-low { color: #8A3A3A; }
+  .table-note { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--ink-light); margin-top: 10px; }
 
-  /* ABOUT STRIP */
-  .about-strip {
-    display: grid; grid-template-columns: 220px 1fr;
-    padding: 64px 48px; border-bottom: 1px solid var(--sand-mid);
-  }
-  .about-label { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-light); padding-top: 5px; }
-  .about-quote { font-family: 'DM Serif Display', serif; font-size: 20px; line-height: 1.5; max-width: 680px; margin-bottom: 28px; }
-  .skills-list { display: flex; flex-wrap: wrap; gap: 8px; }
-  .skill { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; padding: 5px 11px; background: var(--sand-mid); border-radius: 1px; color: var(--ink-mid); }
+  /* ── INDIVIDUAL FILE (Bezhura example) ── */
+  .example-file { border: 2px solid var(--ink); margin: 28px 0; overflow: hidden; }
+  .example-file-header { background: var(--ink); color: var(--sand); padding: 12px 18px; font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+  .example-file-body { overflow-x: auto; }
+  .example-table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+  .example-table th { font-family: 'Space Mono', monospace; font-size: 8px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-light); text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--sand-dark); white-space: nowrap; background: var(--sand-mid); }
+  .example-table td { padding: 8px 10px; border-bottom: 1px solid var(--sand-mid); color: var(--ink-mid); white-space: nowrap; vertical-align: top; }
+  .example-table td:first-child { color: var(--ink); font-weight: 600; font-size: 10px; font-family: 'Space Mono', monospace; letter-spacing: 0.06em; background: var(--sand); }
+  .win { color: #1E5C32; font-weight: 500; }
+  .loss { color: #8A3A3A; }
+  .yt-link { color: var(--ink); font-size: 10px; font-family: 'Space Mono', monospace; letter-spacing: 0.06em; text-decoration: none; border-bottom: 1px solid var(--sand-dark); }
+  .yt-link:hover { border-bottom-color: var(--ink); }
 
-  /* CONTACT */
-  .contact { padding: 64px 48px; display: flex; justify-content: space-between; align-items: center; gap: 32px; flex-wrap: wrap; }
-  .contact-heading { font-family: 'DM Serif Display', serif; font-size: 36px; margin-bottom: 8px; }
-  .contact-sub { font-size: 14px; color: var(--ink-mid); }
-  .contact-right { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+  /* ── RESULT BOX ── */
+  .result-box { background: var(--gold); border: 2px solid var(--ink); padding: 32px 36px; margin: 28px 0; }
+  .result-box-label { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 12px; }
+  .result-box-text { font-family: 'DM Serif Display', serif; font-size: 22px; line-height: 1.4; }
 
-  /* FOOTER */
-  footer { padding: 20px 48px; border-top: 1px solid var(--sand-mid); display: flex; justify-content: space-between; align-items: center; }
-  footer span { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-light); }
+  /* ── TAKEAWAYS ── */
+  .takeaways { background: var(--ink); color: var(--sand); padding: 56px 64px; margin-top: 72px; }
+  .tk-eyebrow { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(234,228,217,0.4); margin-bottom: 16px; }
+  .tk-heading { font-family: 'DM Serif Display', serif; font-size: 26px; margin-bottom: 28px; }
+  .tk-list { list-style: none; }
+  .tk-list li { font-size: 15px; line-height: 1.7; padding: 14px 0 14px 24px; border-top: 1px solid rgba(234,228,217,0.1); position: relative; color: rgba(234,228,217,0.85); }
+  .tk-list li::before { content: '-'; position: absolute; left: 0; color: var(--gold); font-weight: 700; }
 
+  /* ── BOTTOM NAV ── */
+  .project-nav { display: flex; justify-content: space-between; padding: 48px 64px; border-top: 2px solid var(--ink); gap: 24px; }
+  .pnav-link { text-decoration: none; color: var(--ink); }
+  .pnav-dir { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 6px; }
+  .pnav-title { font-family: 'DM Serif Display', serif; font-size: 19px; }
+
+  footer { padding: 22px 64px; border-top: 1px solid var(--sand-mid); display: flex; justify-content: space-between; }
+  footer a { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-light); text-decoration: none; }
+  footer a:hover { color: var(--ink); }
+
+  /* ══════════════════════════════════════════
+     MOBILE
+  ══════════════════════════════════════════ */
   @media (max-width: 860px) {
-    nav { padding: 16px 24px; }
+    nav { padding: 16px 20px; }
     .nav-right { display: none; }
     .nav-burger { display: flex; }
-    .hero { grid-template-columns: 1fr; }
-    .hero-left { padding: 80px 24px 48px; }
-    .hero-right { min-height: 320px; padding: 32px 24px; }
-    .cards { grid-template-columns: 1fr; }
-    .card + .card { border-left: none; border-top: 1px solid var(--ink); }
-    .card:hover { padding-left: 40px; }
-    .about-strip { grid-template-columns: 1fr; gap: 16px; padding: 48px 24px; }
-    .contact { padding: 48px 24px; flex-direction: column; align-items: flex-start; }
-    footer { padding: 18px 24px; flex-direction: column; gap: 8px; }
+
+    /* header */
+    .page-header { padding: 88px 20px 40px; }
+    .page-title { font-size: 36px; }
+    .page-subtitle { font-size: 17px; }
+    .meta-row { gap: 24px; }
+
+    /* body: single column, no sidebar */
+    .article-body { grid-template-columns: 1fr; }
+    .toc { display: none; }
+    .content { padding: 36px 20px 48px; max-width: 100%; }
+
+    /* sections */
+    .content-section { margin-bottom: 48px; }
+    .cs-heading { font-size: 24px; }
+    .cs-body { font-size: 15px; }
+
+    /* profile grid: 1 col on small screens */
+    .profile-grid { grid-template-columns: 1fr; }
+
+    /* stat row: 3 cols still work but smaller padding */
+    .stat-row { grid-template-columns: repeat(3, 1fr); }
+    .stat-block { padding: 18px 14px; }
+    .stat-num { font-size: 28px; }
+
+    /* tables: scroll horizontally, keep compact */
+    .table-wrapper { -webkit-overflow-scrolling: touch; }
+    .data-table { font-size: 11px; }
+    .data-table th { font-size: 8px; padding: 8px 8px; }
+    .data-table td { padding: 8px 8px; }
+
+    .example-file-header { font-size: 8px; }
+    .example-table { font-size: 10.5px; }
+    .example-table td, .example-table th { padding: 6px 8px; }
+
+    /* steps */
+    .step { grid-template-columns: 36px 1fr; gap: 10px; }
+
+    /* takeaways */
+    .takeaways { padding: 36px 20px; margin-top: 48px; }
+    .tk-heading { font-size: 22px; }
+    .tk-list li { font-size: 14px; }
+
+    /* result box */
+    .result-box { padding: 24px 20px; }
+    .result-box-text { font-size: 19px; }
+
+    /* bottom nav */
+    .project-nav { padding: 32px 20px; flex-direction: column; gap: 20px; }
+    footer { padding: 18px 20px; flex-direction: column; gap: 8px; }
+
+    /* callout */
+    .callout { font-size: 16px; padding: 16px 18px; }
   }
 </style>
 </head>
@@ -220,108 +248,349 @@
   <a href="mailto:martin.delhomme@gmail.com">Contact</a>
 </div>
 
-<!-- HERO -->
-<section class="hero">
-  <div class="hero-left">
-    <div class="hero-inner">
-      <p class="hero-label">Portfolio - Toronto, Ontario</p>
-      <h1>Martin<br><em>Delhomme</em></h1>
-      <p class="hero-bio">
-        Operations Associate with 6+ years experience in finance, with expertise in Investments, Operations and Risk across Europe and Canada. Data-driven analyst focused on financial markets, and sport performance analytics on my free time. Based in Toronto, Ontario.
-      </p>
-      <div class="hero-actions">
-        <a href="#work" class="btn-dark">View the work</a>
-        <a href="#" class="btn-ghost">Download CV</a>
-        <a href="https://www.linkedin.com/in/martin-delhomme-0809a810a/?locale=en-US" target="_blank" class="linkedin-link">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-          LinkedIn
-        </a>
-      </div>
-    </div>
+<!-- ── HEADER ── -->
+<header class="page-header">
+  <div class="breadcrumb">
+    <a href="index.html">Portfolio</a> /
+    <a href="sport.html">Sport Analytics</a> /
+    2024 Paris Olympics
   </div>
-  <div class="hero-right">
-    <span class="hero-location"></span>
-    <div class="hero-stats">
-      <div class="stat-block">
-        <div class="stat-number">6+</div>
-        <div class="stat-label">Years in finance</div>
-      </div>
-      <div class="stat-block">
-        <div class="stat-number">2</div>
-        <div class="stat-label">Articles published</div>
-      </div>
-    </div>
+  <span class="project-tag">Fencing Analytics - Personal Initiative</span>
+  <h1 class="page-title">2024 Paris Olympics<br>Opponent Analysis</h1>
+  <p class="page-subtitle">Using data and video to build a scouting system for one of the world's top epee fencers, ahead of the Olympic Games.</p>
+  <div class="meta-row">
+    <div class="meta-item"><div class="meta-label">Sport</div><div class="meta-value">Women's Epee</div></div>
+    <div class="meta-item"><div class="meta-label">Scope</div><div class="meta-value">35 opponents analysed</div></div>
+    <div class="meta-item"><div class="meta-label">Tools</div><div class="meta-value">Excel, FIE data, Fencing Worldwide, YouTube</div></div>
+    <div class="meta-item"><div class="meta-label">Type</div><div class="meta-value">Personal initiative</div></div>
   </div>
-</section>
+</header>
 
-<!-- CARDS -->
-<section id="work" class="cards">
-  <a href="finance.html" class="card finance">
-    <div class="card-num">01 / Finance & Markets</div>
-    <div class="card-title">Finance &<br>Markets</div>
-    <p class="card-desc">Operations, Risk and Investment. 6+ years across Hedge Fund and Asset Management companies in France, Ireland and Canada.</p>
-    <span class="card-cta"></span>
-  </a>
-  <a href="sport.html" class="card sport">
-    <div class="card-num">02 / Sport Analytics</div>
-    <div class="card-title">Sport<br>Analytics</div>
-    <p class="card-desc">Personal data from running and fencing, external analyses on the 2024 Paris Olympics and other sports. Python, Strava, Statcast.</p>
-    <span class="card-cta"></span>
-  </a>
-  <a href="challenges.html" class="card challenges">
-    <div class="card-num">03 / Personal Challenges</div>
-    <div class="card-title">Personal<br>Challenges</div>
-    <p class="card-desc">Projects built from zero: from an Amazon KDP book to a marathon preparation, with skill acquisition. What gets measured gets done.</p>
-    <span class="card-cta"></span>
-  </a>
-</section>
+<!-- ── BODY ── -->
+<div class="article-body">
 
-<!-- ABOUT STRIP -->
-<section class="about-strip">
-  <div class="about-label">Background</div>
-  <div class="about-right">
-    <p class="about-quote">"I work at the intersection of markets, data analysis and operational efficiency, with a strong experience in roles combining financial insight, analytics and process improvement."</p>
-    <div class="skills-list">
-      <span class="skill">CFA L1 Candidate</span>     
-      <span class="skill">Advanced Excel</span>
-      <span class="skill">VBA</span>
-      <span class="skill">Python</span>
-      <span class="skill">SQL</span>
-      <span class="skill">Bloomberg</span>
-      <span class="skill">Master Finance & Investments</span>
-      <span class="skill">Bloomberg Market Concepts</span>
-      <span class="skill">Sports Analytics</span>
+  <aside class="toc">
+    <div class="toc-label">Contents</div>
+    <ul>
+      <li><a href="#context">Context</a></li>
+      <li><a href="#approach">The Approach</a></li>
+      <li><a href="#profiles">4-Profile Framework</a></li>
+      <li><a href="#data">Data Collection</a></li>
+      <li><a href="#individual">Individual Files</a></li>
+      <li><a href="#video">Video Compilation</a></li>
+      <li><a href="#outcome">Outcome</a></li>
+      <li><a href="#takeaways">What This Shows</a></li>
+    </ul>
+  </aside>
+
+  <main class="content">
+
+    <!-- 01 CONTEXT -->
+    <section class="content-section" id="context">
+      <div class="cs-eyebrow">01 - Context</div>
+      <h2 class="cs-heading">A personal initiative for a world-class fencer</h2>
+      <div class="cs-body">
+        <p>Auriane Mallo-Breton and I trained at the same club before she joined the INSEP, France's national high-performance sports institute. A high-level fencer throughout her career and a regular member of the French national team, she was one of the top contenders heading into the Paris 2024 Olympics.</p>
+        <p>This project was entirely my initiative. No one asked for it. Coming from both a data background and years of competitive fencing experience, I saw an opportunity to apply structured analysis to a domain where almost none exists: <strong>opponent scouting in elite fencing.</strong></p>
+      </div>
+      <div class="callout">"Fencing has almost no public data infrastructure. No shot charts, no tracking, no stats feeds. Building a scouting system meant starting from scratch — defining the framework, finding the data, and processing it manually."</div>
+    </section>
+
+    <!-- 02 APPROACH -->
+    <section class="content-section" id="approach">
+      <div class="cs-eyebrow">02 - Approach</div>
+      <h2 class="cs-heading">Building the methodology from zero</h2>
+      <div class="cs-body">
+        <p>The scope: analyse all <strong>35 qualified opponents</strong> for the Women's Epee individual event at Paris 2024 — the 35 best fencers in the world. The goal was to give Auriane and her coach structured data and video support they could use in preparation.</p>
+        <p>The data pipeline involved three sources: the <strong>FIE (International Fencing Federation)</strong> website for official rankings and results, <strong>Fencing Worldwide</strong> for detailed round-by-round match data, and official competition live streams on <strong>YouTube</strong> for video footage.</p>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">01</div>
+          <div class="step-content">
+            <div class="step-title">Define the scope and time window</div>
+            <div class="step-desc">9 international competitions over the last 18 months. Beyond that, results distort the picture of current form. Only World Cup or Grand Prix level competitions counted.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">02</div>
+          <div class="step-content">
+            <div class="step-title">Classify every opponent by profile</div>
+            <div class="step-desc">The FIE only records handedness. Grip type (pistol vs. French) is not tracked publicly anywhere. Each opponent's grip had to be determined manually through video review.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">03</div>
+          <div class="step-content">
+            <div class="step-title">Build individual result files</div>
+            <div class="step-desc">For each opponent: a dedicated Excel file tracking every round of every competition — opponent faced, score, win/loss, and the profile of the opponent they faced.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">04</div>
+          <div class="step-content">
+            <div class="step-title">Filter for relevant matchups</div>
+            <div class="step-desc">Since Auriane is left-handed with a pistol grip (GC), the key data was how each opponent performed against GC fencers — the rarest and most specific matchup in the sport.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">05</div>
+          <div class="step-content">
+            <div class="step-title">Compile video for each opponent</div>
+            <div class="step-desc">Located YouTube timestamps within 4-hour live streams, identified the correct piste, and compiled 3-4 match clips per opponent — focusing on bouts against left-handed or pistol grip fencers.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 FRAMEWORK -->
+    <section class="content-section" id="profiles">
+      <div class="cs-eyebrow">03 - Framework</div>
+      <h2 class="cs-heading">The 4-profile system</h2>
+      <div class="cs-body">
+        <p>In epee fencing, two variables define the tactical matchup: <strong>dominant hand</strong> (left or right) and <strong>grip type</strong> (pistol "crosse" or French "droite"). This creates four distinct profiles, each requiring a different tactical approach.</p>
+        <p>Auriane fences as a <strong>left-handed pistol grip (GC)</strong> fencer — the rarest profile among world-class competitors, which makes opponent experience against this profile particularly scarce and valuable to analyse.</p>
+      </div>
+      <div class="profile-grid">
+        <div class="profile-block auriane">
+          <div class="pb-label">GC - Gauche Crosse</div>
+          <div class="pb-value">Left-handed, Pistol grip</div>
+          <div class="pb-desc">Auriane's profile. Rarest at elite level. Tactical priority for all opponent analysis.</div>
+        </div>
+        <div class="profile-block">
+          <div class="pb-label">GD - Gauche Droite</div>
+          <div class="pb-value">Left-handed, French grip</div>
+          <div class="pb-desc">Secondary reference when GC matchup data was insufficient for a given opponent.</div>
+        </div>
+        <div class="profile-block">
+          <div class="pb-label">DC - Droite Crosse</div>
+          <div class="pb-value">Right-handed, Pistol grip</div>
+          <div class="pb-desc">Mirror profile to GC. Some tactical overlap in grip mechanics.</div>
+        </div>
+        <div class="profile-block">
+          <div class="pb-label">DD - Droite Droite</div>
+          <div class="pb-value">Right-handed, French grip</div>
+          <div class="pb-desc">Most common profile at elite level. Typically excluded from primary analysis.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 DATA -->
+    <section class="content-section" id="data">
+      <div class="cs-eyebrow">04 - Data</div>
+      <h2 class="cs-heading">35 opponents, 9 competitions</h2>
+      <div class="cs-body">
+        <p>The master file tracked every qualified fencer across all 9 competitions with their profile classification. Rankings show finishing position at each event — green = top 15, red = outside top 50.</p>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat-block accent">
+          <div class="stat-num">35</div>
+          <div class="stat-lbl">Opponents analysed</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-num">9</div>
+          <div class="stat-lbl">Competitions tracked</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-num">4</div>
+          <div class="stat-lbl">Tactical profiles</div>
+        </div>
+      </div>
+
+      <div class="data-label">Master dataset - Recap Perf Adversaires (extract, 10 of 35)</div>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Fencer</th>
+              <th>NAT</th>
+              <th>Profile</th>
+              <th>Sharjah</th>
+              <th>Cali</th>
+              <th>Nanjing</th>
+              <th>Budapest</th>
+              <th>Barcelone</th>
+              <th>Doha</th>
+              <th>Vancouver</th>
+              <th>Legnano</th>
+              <th>World Ch.</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Vivian Kong</td><td>HKG</td><td><span class="badge badge-gc">GC</span></td><td class="rank-good">1</td><td class="rank-mid">17</td><td class="rank-mid">17</td><td class="rank-good">5</td><td class="rank-good">1</td><td class="rank-good">1</td><td class="rank-mid">33</td><td class="rank-mid">33</td><td class="rank-good">5</td></tr>
+            <tr><td>Pauline Brunner</td><td>SUI</td><td><span class="badge badge-gc">GC</span></td><td class="rank-good">2</td><td class="rank-mid">54</td><td class="rank-mid">25</td><td class="rank-mid">61</td><td class="rank-mid">71</td><td class="rank-low">135</td><td class="rank-mid">26</td><td class="rank-good">2</td><td class="rank-low">99</td></tr>
+            <tr><td>Sera Song</td><td>KOR</td><td><span class="badge badge-gd">GD</span></td><td class="rank-mid">33</td><td class="rank-good">9</td><td class="rank-good">2</td><td class="rank-mid">17</td><td class="rank-good">2</td><td class="rank-good">10</td><td class="rank-mid">18</td><td class="rank-good">9</td><td class="rank-good">9</td></tr>
+            <tr><td>Nathalie Moellhaussen</td><td>BRA</td><td><span class="badge badge-gd">GD</span></td><td class="rank-mid">17</td><td class="rank-good">3</td><td class="rank-mid">-</td><td class="rank-good">3</td><td class="rank-good">6</td><td class="rank-mid">17</td><td class="rank-mid">17</td><td class="rank-mid">34</td><td class="rank-good">10</td></tr>
+            <tr><td>Nelli Differt</td><td>EST</td><td><span class="badge badge-dc">DC</span></td><td class="rank-good">11</td><td class="rank-good">5</td><td class="rank-mid">20</td><td class="rank-good">9</td><td class="rank-good">11</td><td class="rank-good">11</td><td class="rank-mid">39</td><td class="rank-mid">19</td><td class="rank-good">13</td></tr>
+            <tr><td>Marie-Flo Candassamy</td><td>FRA</td><td><span class="badge badge-dc">DC</span></td><td class="rank-good">9</td><td class="rank-mid">18</td><td class="rank-good">9</td><td class="rank-good">3</td><td class="rank-mid">17</td><td class="rank-good">5</td><td class="rank-mid">33</td><td class="rank-mid">-</td><td class="rank-good">1</td></tr>
+            <tr><td>Coraline Vitalis</td><td>FRA</td><td><span class="badge badge-dc">DC</span></td><td class="rank-mid">37</td><td class="rank-mid">20</td><td class="rank-mid">19</td><td class="rank-mid">20</td><td class="rank-mid">33</td><td class="rank-mid">36</td><td class="rank-good">1</td><td class="rank-mid">36</td><td class="rank-good">14</td></tr>
+            <tr><td>Dzhoan Bezhura</td><td>UKR</td><td><span class="badge badge-dc">DC</span></td><td class="rank-mid">30</td><td class="rank-good">14</td><td class="rank-low">78</td><td class="rank-low">80</td><td class="rank-mid">27</td><td class="rank-mid">29</td><td class="rank-good">12</td><td class="rank-mid">23</td><td class="rank-mid">-</td></tr>
+            <tr><td>Renata Knapik</td><td>POL</td><td><span class="badge badge-gc">GC</span></td><td class="rank-mid">41</td><td class="rank-low">68</td><td class="rank-good">14</td><td class="rank-mid">20</td><td class="rank-good">3</td><td class="rank-mid">40</td><td class="rank-mid">21</td><td class="rank-good">7</td><td class="rank-mid">33</td></tr>
+            <tr><td>Eszter Muhari</td><td>HUN</td><td><span class="badge badge-gc">GC</span></td><td class="rank-mid">36</td><td class="rank-mid">34</td><td class="rank-mid">34</td><td class="rank-good">1</td><td class="rank-good">3</td><td class="rank-good">11</td><td class="rank-mid">22</td><td class="rank-good">12</td><td class="rank-mid">54</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="table-note">Rankings = finishing position at each competition. Green = top 15. Red = outside top 50.</p>
+    </section>
+
+    <!-- 05 INDIVIDUAL FILES -->
+    <section class="content-section" id="individual">
+      <div class="cs-eyebrow">05 - Individual Files</div>
+      <h2 class="cs-heading">One file per opponent, round by round</h2>
+      <div class="cs-body">
+        <p>For each of the 35 opponents, a dedicated Excel file tracked every match of every competition — opponent faced, their profile, score, and result. The goal: isolate all bouts where the opponent had faced a GC fencer, extracting the most tactically relevant reference data.</p>
+        <p>Below is an extract from the Bezhura (UKR) file — a right-handed pistol grip (DC) fencer compiled across 6 competitions, with YouTube timestamps for video review:</p>
+      </div>
+      <div class="example-file">
+        <div class="example-file-header">
+          <span>Bezhura_Resultats.xlsx - Droitiere Poignee Crosse (DC)</span>
+          <span>UKR - World Rank ~25</span>
+        </div>
+        <div class="example-file-body">
+          <table class="example-table">
+            <thead>
+              <tr>
+                <th>Round</th>
+                <th>Sharjah</th>
+                <th>Cali</th>
+                <th>Barcelone</th>
+                <th>Doha</th>
+                <th>Vancouver</th>
+                <th>Legnano</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Rank</td>
+                <td class="rank-mid">30th</td>
+                <td class="rank-good">14th</td>
+                <td class="rank-mid">27th</td>
+                <td class="rank-mid">29th</td>
+                <td class="rank-good">12th</td>
+                <td class="rank-mid">23rd</td>
+              </tr>
+              <tr>
+                <td>T64</td>
+                <td class="win">W vs Cisneros (DD) 15-13</td>
+                <td class="win">W vs Brovko 11-10</td>
+                <td>-</td>
+                <td class="win">W vs Liu 15-8</td>
+                <td class="win">W vs Kang (GC) 15-11</td>
+                <td class="win">W vs Brotvinnik 15-4</td>
+              </tr>
+              <tr>
+                <td>T32</td>
+                <td class="loss">L vs Ndolo (GC) 15-13</td>
+                <td class="win">W vs Candassamy (DC) 12-11</td>
+                <td class="loss">L vs Kong (GC) 15-10</td>
+                <td class="loss">L vs Isola (DD) 15-8</td>
+                <td class="win">W vs Song (GD) 13-12</td>
+                <td class="loss">L vs Sun (GD) 15-13</td>
+              </tr>
+              <tr>
+                <td>T16</td>
+                <td>-</td>
+                <td class="loss">L vs Di Tella (DD) 15-8</td>
+                <td>-</td>
+                <td>-</td>
+                <td class="loss">L vs Nabeth (GD) 15-7</td>
+                <td>-</td>
+              </tr>
+              <tr>
+                <td>Video</td>
+                <td><a class="yt-link" href="https://youtu.be/1A-iaQeOgRY?t=14399" target="_blank">YouTube 4h00 -></a></td>
+                <td>-</td>
+                <td><a class="yt-link" href="https://www.youtube.com/live/uLij6RLI3fQ?t=10995" target="_blank">YouTube 3h03 -></a></td>
+                <td>-</td>
+                <td><a class="yt-link" href="https://www.youtube.com/live/RB05DuDzegA?t=12993" target="_blank">YouTube 3h36 -></a></td>
+                <td><a class="yt-link" href="https://www.youtube.com/live/DXntDDn0MzI?t=10490" target="_blank">YouTube 2h54 -></a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="cs-body" style="margin-top:16px;">
+        <p>Each file was then filtered to highlight GC matchups specifically. Where GC data was scarce, GD bouts were added as secondary reference. Win/loss rates against each profile were calculated to identify tactical patterns.</p>
+      </div>
+    </section>
+
+    <!-- 06 VIDEO -->
+    <section class="content-section" id="video">
+      <div class="cs-eyebrow">06 - Video Work</div>
+      <h2 class="cs-heading">Turning 4-hour livestreams into tactical clips</h2>
+      <div class="cs-body">
+        <p>Competition fencing is broadcast as multi-hour livestreams covering 10+ simultaneous bouts across different pistes. Finding the right match meant cross-referencing competition schedules, piste assignments and timecodes — then manually scrubbing through the stream.</p>
+        <p>For each opponent with sufficient GC/GD matchup data, a <strong>video compilation of 3-4 bouts</strong> was assembled — specifically selecting bouts against the most tactically relevant profiles. These compilations gave Auriane and her coach direct visual reference for each opponent's patterns against a profile similar to her own.</p>
+        <p>The process was manual and time-intensive by nature: <strong>no fencing platform offers this level of matchup-filtered video access.</strong> This is what building a scouting system in an un-digitised sport looks like.</p>
+      </div>
+    </section>
+
+    <!-- 07 OUTCOME -->
+    <section class="content-section" id="outcome">
+      <div class="cs-eyebrow">07 - Outcome</div>
+      <h2 class="cs-heading">Data delivered, result achieved</h2>
+      <div class="cs-body">
+        <p>The complete analysis — master dataset, individual opponent files, win/loss breakdowns by profile, and video compilations — was transmitted to Auriane and her coach ahead of the Games.</p>
+      </div>
+      <div class="result-box">
+        <div class="result-box-label">Paris 2024 Olympic Games Result</div>
+        <div class="result-box-text">Auriane Mallo-Breton finished as <strong>double silver medallist</strong> at the Paris 2024 Olympics — in both the individual and team Women's Epee events.</div>
+      </div>
+      <div class="cs-body">
+        <p>This result is the product of 15+ years of elite training, physical preparation and technical mastery. The data work here was one small support tool in a much larger preparation effort — and is presented as exactly that. What it does demonstrate is that <strong>structured opponent analysis has a place in fencing</strong>, even when the infrastructure to support it barely exists yet.</p>
+      </div>
+    </section>
+
+    <!-- 08 TAKEAWAYS -->
+    <div class="takeaways" id="takeaways">
+      <div class="tk-eyebrow">08 - What This Shows</div>
+      <div class="tk-heading">Analytical thinking applied to an unstructured domain</div>
+      <ul class="tk-list">
+        <li>Ability to build a structured analytical framework from scratch, with no existing template or data infrastructure to rely on.</li>
+        <li>End-to-end project execution: problem definition, data sourcing, classification methodology, file building, and video production — all self-directed.</li>
+        <li>Domain expertise matters: years of competitive fencing experience were essential to define the right framework, identify what data was relevant, and know what coaches actually need.</li>
+        <li>Resourcefulness with imperfect data: when clean data doesn't exist, the methodology adapts — secondary profiles, manual video review, cross-referencing multiple sources.</li>
+        <li>If you're a coach or club interested in this kind of opponent analysis work, feel free to reach out.</li>
+      </ul>
     </div>
-  </div>
-</section>
 
-<!-- CONTACT -->
-<section class="contact">
-  <div class="contact-left">
-    <div class="contact-heading">Get in touch</div>
-    <p class="contact-sub">Open to opportunities in Sport Analysis, Equity Research and Investment Analysis in North America.</p>
-  </div>
-  <div class="contact-right">
-    <a href="mailto:martin.delhomme@gmail.com" class="btn-dark">martin.delhomme@gmail.com</a>
-    <a href="https://www.linkedin.com/in/martin-delhomme-0809a810a/?locale=en-US" target="_blank" class="btn-ghost">LinkedIn</a>
-  </div>
-</section>
+  </main>
+</div>
+
+<div class="project-nav">
+  <a href="sport.html" class="pnav-link">
+    <div class="pnav-dir"><- Back</div>
+    <div class="pnav-title">Sport Analytics</div>
+  </a>
+  <a href="sport-fencing.html" class="pnav-link" style="text-align:right">
+    <div class="pnav-dir">Related -></div>
+    <div class="pnav-title">Fencing Profile</div>
+  </a>
+</div>
 
 <footer>
-  <span>Martin Delhomme - Portfolio</span>
-  <span>Toronto, Ontario - 2026</span>
+  <a href="index.html"><- Portfolio</a>
+  <a href="mailto:martin.delhomme@gmail.com">martin.delhomme@gmail.com</a>
 </footer>
 
 <script>
-// Burger menu
 document.getElementById('burger').addEventListener('click', function() {
   document.getElementById('nav-mobile').classList.toggle('open');
 });
 
-// Article counter — increment this number each time you publish a new article
-// Just change the number below (currently 0)
-const PUBLISHED_ARTICLES = 0;
-document.getElementById('article-count').textContent = PUBLISHED_ARTICLES;
+// TOC scroll spy
+const sections = document.querySelectorAll('.content-section, .takeaways');
+const tocLinks = document.querySelectorAll('.toc a');
+window.addEventListener('scroll', function() {
+  let current = '';
+  sections.forEach(s => {
+    if (window.scrollY >= s.offsetTop - 100) current = s.id;
+  });
+  tocLinks.forEach(a => {
+    a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+  });
+});
 </script>
 
 </body>
