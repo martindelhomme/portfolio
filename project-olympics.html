@@ -193,8 +193,7 @@
   <div class="meta-row">
     <div class="meta-item"><div class="meta-label">Sport</div><div class="meta-value">Women's Epee</div></div>
     <div class="meta-item"><div class="meta-label">Scope</div><div class="meta-value">35 opponents analysed</div></div>
-    <div class="meta-item"><div class="meta-label">Tools</div><div class="meta-value">Excel, FIE data, YouTube</div></div>
-    <div class="meta-item"><div class="meta-label">Type</div><div class="meta-value">Personal initiative</div></div>
+    <div class="meta-item"><div class="meta-label">Tools</div><div class="meta-value">Excel, FIE data, Fencing Worldwide, YouTube</div></div>
   </div>
 </header>
 
@@ -220,10 +219,10 @@
       <div class="cs-eyebrow">01 - Context</div>
       <h2 class="cs-heading">A personal initiative for a world-class fencer</h2>
       <div class="cs-body">
-        <p>Auriane Mallo-Breton and I trained at the same club before she joined the INSEP - France's national high-performance sports institute. A high-level fencer throughout her career and a regular member of the French national team, she was one of the top contenders heading into the Paris 2024 Olympics.</p>
+        <p>Auriane Mallo-Breton and I trained at the same club before she joined the INSEP, France's national high-performance sports institute. A high-level fencer throughout her career and a regular member of the French national team, she was one of the top contenders heading into the Paris 2024 Olympics.</p>
         <p>This project was entirely my initiative. No one asked for it. Coming from both a data background and years of competitive fencing experience, I saw an opportunity to apply structured analysis to a domain where almost none exists: <strong>opponent scouting in elite fencing.</strong></p>
       </div>
-      <div class="callout">"Fencing has almost no public data infrastructure. No shot charts, no tracking, no stats feeds. Building a scouting system meant starting from scratch - defining the framework, finding the data, and processing it manually."</div>
+      <div class="callout">"Fencing has almost no public data infrastructure. No shot charts, no tracking, no stats feeds. Building a scouting system meant starting from scratch, defining the framework, finding the data, and processing it manually."</div>
     </section>
 
     <!-- APPROACH -->
@@ -231,7 +230,7 @@
       <div class="cs-eyebrow">02 - Approach</div>
       <h2 class="cs-heading">Building the methodology from zero</h2>
       <div class="cs-body">
-        <p>The scope: analyse all <strong>35 qualified opponents</strong> for the Women's Epee individual event at Paris 2024 - the 35 best fencers in the world. The goal was to give Auriane and her coach structured data and video support they could use in preparation.</p>
+        <p>The scope: analyse all <strong>35 qualified opponents</strong> for the Women's Epee individual event at Paris 2024: the 35 best fencers in the world. The goal was to give Auriane and her coach structured data and video support they could use in preparation.</p>
         <p>The data pipeline involved three sources: the <strong>FIE (International Fencing Federation)</strong> website for official rankings and results, <strong>Fencing Worldwide</strong> for detailed round-by-round match data, and official competition live streams on <strong>YouTube</strong> for video footage.</p>
       </div>
       <div class="steps">
@@ -253,21 +252,21 @@
           <div class="step-num">03</div>
           <div class="step-content">
             <div class="step-title">Build individual result files</div>
-            <div class="step-desc">For each opponent, a dedicated Excel file tracking every round of every competition - opponent faced, score, win/loss, and crucially: the profile of the opponent they faced.</div>
+            <div class="step-desc">For each opponent, a dedicated Excel file tracking every round of every competition: opponent faced, score, win/loss, and crucially: the profile of the opponent they faced.</div>
           </div>
         </div>
         <div class="step">
           <div class="step-num">04</div>
           <div class="step-content">
             <div class="step-title">Filter for relevant matchups</div>
-            <div class="step-desc">Since Auriane is left-handed with a French grip (GC profile), the key data was how each opponent performed against left-handed French grip fencers - the rarest and most specific matchup in the sport.</div>
+            <div class="step-desc">Since Auriane is left-handed with a Pistol grip (GC profile), the key data was how each opponent performed against left-handed Pistol grip fencers, the rarest and most specific matchup in the sport.</div>
           </div>
         </div>
         <div class="step">
           <div class="step-num">05</div>
           <div class="step-content">
             <div class="step-title">Compile video for each opponent</div>
-            <div class="step-desc">Located YouTube timestamps within 4-hour live streams, identified the correct piste, and edited 3-4 match compilations per opponent - focusing on bouts against left-handed or French grip fencers.</div>
+            <div class="step-desc">Located YouTube timestamps within 4-hour live streams, identified the correct piste, and edited 3-4 match compilations per opponent, focusing on bouts against left-handed or pistol grip fencers.</div>
           </div>
         </div>
       </div>
@@ -278,28 +277,28 @@
       <div class="cs-eyebrow">03 - Framework</div>
       <h2 class="cs-heading">The 4-profile system</h2>
       <div class="cs-body">
-        <p>In epee fencing, two variables define the tactical matchup: <strong>dominant hand</strong> (left or right) and <strong>grip type</strong> (pistol "droite" or French "crosse"). This creates four distinct profiles, each requiring a different tactical approach.</p>
-        <p>Auriane fences as a <strong>left-handed French grip (GC)</strong> fencer - the rarest profile among world-class competitors, which makes opponent experience against this profile particularly scarce and valuable to analyse.</p>
+        <p>In epee fencing, two variables define the tactical matchup: <strong>dominant hand</strong> (left or right) and <strong>grip type</strong> (French "droite" or Pistol "crosse"). This creates four distinct profiles, each requiring a different tactical approach.</p>
+        <p>Auriane fences as a <strong>left-handed Pistol grip (GC)</strong> fencer - the rarest profile among world-class competitors, which makes opponent experience against this profile particularly scarce and valuable to analyse.</p>
       </div>
       <div class="profile-grid">
         <div class="profile-block auriane">
           <div class="pb-label">GC - Gauche Crosse</div>
-          <div class="pb-value">Left-handed, French grip</div>
+          <div class="pb-value">Left-handed, Pistol grip</div>
           <div class="pb-desc">Auriane's profile. Rarest at elite level. Tactical priority for opponent analysis.</div>
         </div>
         <div class="profile-block">
           <div class="pb-label">GD - Gauche Droite</div>
-          <div class="pb-value">Left-handed, Pistol grip</div>
+          <div class="pb-value">Left-handed, French grip</div>
           <div class="pb-desc">Secondary reference when GC data was insufficient for a given opponent.</div>
         </div>
         <div class="profile-block">
           <div class="pb-label">DC - Droite Crosse</div>
-          <div class="pb-value">Right-handed, French grip</div>
+          <div class="pb-value">Right-handed, Pistol grip</div>
           <div class="pb-desc">Mirror profile to GC. Some tactical overlap in grip mechanics.</div>
         </div>
         <div class="profile-block">
           <div class="pb-label">DD - Droite Droite</div>
-          <div class="pb-value">Right-handed, Pistol grip</div>
+          <div class="pb-value">Right-handed, French grip</div>
           <div class="pb-desc">Most common profile at elite level. Typically excluded from primary analysis.</div>
         </div>
       </div>
@@ -310,7 +309,7 @@
       <div class="cs-eyebrow">04 - Data</div>
       <h2 class="cs-heading">35 opponents, 9 competitions</h2>
       <div class="cs-body">
-        <p>The master file tracked every qualified fencer across all 9 competitions, with their profile classification. A sample of the dataset - showing rankings across competitions from the World Championship through Sharjah 2024:</p>
+        <p>The master file tracked every qualified fencer across all 9 competitions, with their profile classification. A sample of the dataset, showing rankings across competitions from the World Championship through Sharjah 2024:</p>
       </div>
 
       <div class="stat-row">
@@ -371,8 +370,8 @@
       <div class="cs-eyebrow">05 - Individual Files</div>
       <h2 class="cs-heading">One file per opponent, round by round</h2>
       <div class="cs-body">
-        <p>For each of the 35 opponents, a dedicated Excel file was built tracking every match of every competition - opponent faced, profile of that opponent, score, and result. The goal was to isolate all bouts where the opponent had faced a GC fencer, providing the most tactically relevant reference data.</p>
-        <p>Below is an extract from the Bezhura (UKR) file - a right-handed French grip (DC) fencer whose round-by-round data was compiled across 8 competitions:</p>
+        <p>For each of the 35 opponents, a dedicated Excel file was built tracking every match of every competition: opponent faced, profile of that opponent, score, and result. The goal was to isolate all bouts where the opponent had faced a GC fencer, providing the most tactically relevant reference data.</p>
+        <p>Below is an extract from the Bezhura (UKR) file, a right-handed pistol grip (DC) fencer whose round-by-round data was compiled across 8 competitions:</p>
       </div>
       <div class="example-file">
         <div class="example-file-header">
@@ -443,7 +442,7 @@
         </div>
       </div>
       <div class="cs-body" style="margin-top:16px;">
-        <p>Each file was then filtered to highlight GC matchups specifically - bouts against left-handed French grip fencers. Where GC data was scarce, GD (left-handed pistol) bouts were added as secondary reference. Win/loss rates against each profile were calculated to identify tactical patterns.</p>
+        <p>Each file was then filtered to highlight GC matchups specifically, bouts against left-handed pistol grip fencers. Where GC data was scarce, GD (left-handed french) bouts were added as secondary reference. Win/loss rates against each profile were calculated to identify tactical patterns.</p>
       </div>
     </section>
 
@@ -452,7 +451,7 @@
       <div class="cs-eyebrow">06 - Video Work</div>
       <h2 class="cs-heading">Turning 4-hour livestreams into tactical clips</h2>
       <div class="cs-body">
-        <p>Competition fencing is broadcast as multi-hour livestreams covering 10+ simultaneous bouts across different pistes. Finding the right match meant cross-referencing competition schedules, piste assignments, and timecodes - then manually scrubbing through the stream.</p>
+        <p>Competition fencing is broadcast as multi-hour livestreams covering 10+ simultaneous bouts across different pistes. Finding the right match meant cross-referencing competition schedules, piste assignments, and timecodes, then manually scrubbing through the stream.</p>
         <p>For each opponent with sufficient GC/GD matchup data, a <strong>video compilation of 3-4 bouts</strong> was assembled - specifically selecting bouts against the most tactically relevant opponents. These compilations gave Auriane and her coach direct visual reference for each opponent's patterns against a profile similar to her own.</p>
         <p>The process was manual and time-intensive by nature: <strong>no fencing data platform offers this level of matchup-filtered video access.</strong> This is what building a scouting system in an un-digitised sport looks like.</p>
       </div>
@@ -463,14 +462,14 @@
       <div class="cs-eyebrow">07 - Outcome</div>
       <h2 class="cs-heading">Data delivered, result achieved</h2>
       <div class="cs-body">
-        <p>The complete analysis - master dataset, individual opponent files, win/loss breakdowns by profile, and video compilations - was transmitted to Auriane and her coach ahead of the Games.</p>
+        <p>The complete analysis, including master dataset, individual opponent files, win/loss breakdowns by profile, and video compilations, was transmitted to Auriane and her coach ahead of the Olympics.</p>
       </div>
       <div class="result-box">
         <div class="result-box-label">Paris 2024 Olympic Games Result</div>
-        <div class="result-box-text">Auriane Mallo-Breton finished as <strong>double silver medallist</strong> at the Paris 2024 Olympics - in both the individual and team Women's Epee events.</div>
+        <div class="result-box-text">Auriane Mallo-Breton finished as <strong>double silver medallist</strong> at the Paris 2024 Olympics, in both the individual and team Women's Epee events.</div>
       </div>
       <div class="cs-body">
-        <p>This result is the product of 15+ years of elite training, physical preparation and technical mastery. The data work here was one small support tool in a much larger preparation effort - and is presented as exactly that. What it does demonstrate is that <strong>structured opponent analysis has a place in fencing</strong>, even when the infrastructure to support it barely exists yet.</p>
+        <p><strong>This result is the product of 15+ years of elite training, physical preparation and technical mastery. The data work here was one small support tool in a much larger preparation effort, and is presented as exactly that. What it does demonstrate is that structured opponent analysis has a place in fencing, even when the infrastructure to support it barely exists yet.</strong></p>
       </div>
     </section>
 
@@ -480,9 +479,9 @@
       <div class="tk-heading">Analytical thinking applied to an unstructured domain</div>
       <ul class="tk-list">
         <li>Ability to build a structured analytical framework from scratch, with no existing template or data infrastructure to rely on.</li>
-        <li>End-to-end project execution: problem definition, data sourcing, classification methodology, file building, and video production - all self-directed.</li>
+        <li>End-to-end project execution: problem definition, data sourcing, classification methodology, file building, and video production, all self-directed.</li>
         <li>Domain expertise matters: years of competitive fencing experience were essential to define the right framework, identify what data was relevant, and know what coaches actually need.</li>
-        <li>Resourcefulness with imperfect data: when clean data doesn't exist, the methodology adapts - secondary profiles, manual video review, cross-referencing multiple sources.</li>
+        <li>Resourcefulness with imperfect data: when clean data doesn't exist, the methodology adapts, secondary profiles, manual video review, cross-referencing multiple sources.</li>
         <li>If you're a coach or club interested in this kind of opponent analysis work, feel free to reach out.</li>
       </ul>
     </div>
