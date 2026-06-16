@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Margin Call Automation - Martin Delhomme</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sand: #EAE4D9; --sand-mid: #D8D0C2; --sand-dark: #C4BAA8;
+    --ink: #1C1C1A; --ink-mid: #4A4740; --ink-light: #7A756C;
+    --accent: #BDD0E0; --accent-dark: #8AAEC8;
+    --gold: #EDD98A; --green: #BDE0C8; --red-soft: #f0e0e0;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--sand); color: var(--ink); }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 48px; background: var(--accent); border-bottom: 1px solid var(--accent-dark);
+  }
+  .nav-logo { font-family: 'DM Serif Display', serif; font-size: 17px; text-decoration: none; color: var(--ink); white-space: nowrap; }
+  .nav-right { display: flex; gap: 32px; }
+  .nav-right a { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; text-decoration: none; color: var(--ink-mid); white-space: nowrap; transition: color 0.15s; }
+  .nav-right a:hover { color: var(--ink); }
+  .nav-burger { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 4px; background: none; border: none; }
+  .nav-burger span { display: block; width: 22px; height: 2px; background: var(--ink); }
+  .nav-mobile { display: none; position: fixed; top: 57px; left: 0; right: 0; z-index: 99; background: var(--accent); border-bottom: 2px solid var(--ink); flex-direction: column; }
+  .nav-mobile.open { display: flex; }
+  .nav-mobile a { font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; text-decoration: none; color: var(--ink-mid); padding: 18px 24px; border-bottom: 1px solid rgba(0,0,0,0.1); }
+  .nav-mobile a:hover { background: rgba(0,0,0,0.06); color: var(--ink); }
+
+  /* PAGE HEADER */
+  .page-header { background: var(--accent); padding: 120px 48px 60px; border-bottom: 2px solid var(--ink); }
+  .breadcrumb { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 20px; }
+  .breadcrumb a { color: var(--ink-light); text-decoration: none; }
+  .breadcrumb a:hover { color: var(--ink); }
+  .project-tag { display: inline-block; font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; border: 1px solid var(--ink); padding: 5px 12px; margin-bottom: 22px; }
+  .page-title { font-family: 'DM Serif Display', serif; font-size: clamp(38px, 5vw, 72px); line-height: 1.0; letter-spacing: -0.02em; margin-bottom: 14px; }
+  .page-subtitle { font-family: 'DM Serif Display', serif; font-style: italic; font-size: 19px; color: var(--ink-mid); max-width: 680px; line-height: 1.45; margin-bottom: 36px; }
+  .meta-row { display: flex; gap: 40px; flex-wrap: wrap; padding-top: 24px; border-top: 1px solid rgba(28,28,26,0.15); }
+  .meta-label { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 4px; }
+  .meta-value { font-size: 13px; font-weight: 500; }
+
+  /* MAIN WRAPPER */
+  .article-wrapper { max-width: 900px; padding: 64px 48px; }
+
+  /* INLINE TOC */
+  .toc-inline { margin-bottom: 56px; padding: 24px 28px; border: 1px solid var(--sand-dark); background: var(--sand-mid); }
+  .toc-inline-label { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 14px; }
+  .toc-inline ul { list-style: none; display: flex; flex-wrap: wrap; gap: 8px 24px; }
+  .toc-inline a { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-mid); text-decoration: none; border-bottom: 1px solid var(--sand-dark); padding-bottom: 1px; transition: color 0.15s; }
+  .toc-inline a:hover { color: var(--ink); border-bottom-color: var(--ink); }
+
+  /* CONTENT */
+  .content-section { margin-bottom: 64px; }
+  .cs-eyebrow { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 10px; }
+  .cs-heading { font-family: 'DM Serif Display', serif; font-size: 28px; margin-bottom: 20px; line-height: 1.15; }
+  .cs-body { font-size: 16px; line-height: 1.8; color: var(--ink-mid); }
+  .cs-body p { margin-bottom: 16px; }
+  .cs-body p:last-child { margin-bottom: 0; }
+  .cs-body strong { color: var(--ink); font-weight: 500; }
+
+  /* CALLOUT */
+  .callout { border-left: 3px solid var(--ink); padding: 18px 24px; margin: 24px 0; background: rgba(28,28,26,0.04); font-family: 'DM Serif Display', serif; font-style: italic; font-size: 18px; line-height: 1.55; color: var(--ink); }
+
+  /* RISK CALLOUT - red tint for emphasis */
+  .callout-risk { border-left: 3px solid #8A3A3A; padding: 18px 24px; margin: 24px 0; background: var(--red-soft); font-size: 15px; line-height: 1.7; color: var(--ink-mid); }
+  .callout-risk strong { color: #8A3A3A; }
+
+  /* STEPS */
+  .steps { margin: 24px 0; }
+  .step { display: grid; grid-template-columns: 48px 1fr; gap: 16px; padding: 20px 0; border-top: 1px solid var(--sand-mid); }
+  .step:last-child { border-bottom: 1px solid var(--sand-mid); }
+  .step-num { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--ink-light); padding-top: 2px; }
+  .step-title { font-weight: 500; font-size: 15px; margin-bottom: 5px; color: var(--ink); }
+  .step-desc { font-size: 14px; color: var(--ink-mid); line-height: 1.65; }
+
+  /* TOOL FEATURES - 2-col checklist */
+  .features-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; background: var(--ink); margin: 24px 0; }
+  .feature-block { background: var(--sand); padding: 22px 20px; }
+  .feature-block.highlight { background: var(--accent); }
+  .fb-label { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 8px; }
+  .fb-title { font-size: 15px; font-weight: 500; color: var(--ink); margin-bottom: 5px; }
+  .fb-desc { font-size: 13px; color: var(--ink-mid); line-height: 1.55; }
+
+  /* STAT BLOCKS */
+  .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; background: var(--ink); margin: 24px 0; }
+  .stat-block { background: var(--sand); padding: 26px 22px; }
+  .stat-block.accent { background: var(--accent); }
+  .stat-num { font-family: 'DM Serif Display', serif; font-size: 40px; line-height: 1; margin-bottom: 7px; }
+  .stat-lbl { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-light); }
+
+  /* RESULT BOX */
+  .result-box { background: var(--gold); border: 2px solid var(--ink); padding: 28px 32px; margin: 24px 0; }
+  .result-box-label { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 10px; }
+  .result-box-text { font-family: 'DM Serif Display', serif; font-size: 21px; line-height: 1.4; }
+
+  /* TAKEAWAYS */
+  .takeaways { background: var(--ink); color: var(--sand); padding: 48px; margin-top: 24px; }
+  .tk-eyebrow { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(234,228,217,0.4); margin-bottom: 14px; }
+  .tk-heading { font-family: 'DM Serif Display', serif; font-size: 24px; margin-bottom: 24px; }
+  .tk-list { list-style: none; }
+  .tk-list li { font-size: 15px; line-height: 1.7; padding: 14px 0 14px 22px; border-top: 1px solid rgba(234,228,217,0.1); position: relative; color: rgba(234,228,217,0.85); }
+  .tk-list li::before { content: '-'; position: absolute; left: 0; color: var(--gold); font-weight: 700; }
+
+  /* BOTTOM NAV */
+  .project-nav { display: flex; justify-content: space-between; padding: 40px 48px; border-top: 2px solid var(--ink); gap: 24px; }
+  .pnav-link { text-decoration: none; color: var(--ink); }
+  .pnav-dir { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 5px; }
+  .pnav-title { font-family: 'DM Serif Display', serif; font-size: 18px; }
+
+  footer { padding: 20px 48px; border-top: 1px solid var(--sand-mid); display: flex; justify-content: space-between; }
+  footer a { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-light); text-decoration: none; }
+  footer a:hover { color: var(--ink); }
+
+  /* MOBILE */
+  @media (max-width: 760px) {
+    nav { padding: 16px 20px; }
+    .nav-right { display: none; }
+    .nav-burger { display: flex; }
+    .page-header { padding: 86px 20px 36px; }
+    .page-title { font-size: 34px; }
+    .page-subtitle { font-size: 16px; }
+    .meta-row { gap: 20px; }
+    .article-wrapper { padding: 36px 20px 48px; }
+    .toc-inline ul { flex-direction: column; gap: 10px; }
+    .content-section { margin-bottom: 48px; }
+    .cs-heading { font-size: 24px; }
+    .cs-body { font-size: 15px; }
+    .callout { font-size: 16px; padding: 14px 18px; }
+    .callout-risk { font-size: 14px; padding: 14px 18px; }
+    .features-grid { grid-template-columns: 1fr; }
+    .stat-row { grid-template-columns: repeat(3, 1fr); }
+    .stat-block { padding: 16px 12px; }
+    .stat-num { font-size: 28px; }
+    .step { grid-template-columns: 36px 1fr; gap: 10px; }
+    .step-title { font-size: 14px; }
+    .step-desc { font-size: 13px; }
+    .result-box { padding: 20px; }
+    .result-box-text { font-size: 18px; }
+    .takeaways { padding: 32px 20px; }
+    .tk-heading { font-size: 21px; }
+    .tk-list li { font-size: 14px; }
+    .project-nav { padding: 28px 20px; flex-direction: column; gap: 20px; }
+    footer { padding: 16px 20px; flex-direction: column; gap: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">Martin Delhomme</a>
+  <div class="nav-right">
+    <a href="finance.html">Finance & Markets</a>
+    <a href="sport.html">Sport Analytics</a>
+    <a href="challenges.html">Personal Challenges</a>
+    <a href="mailto:martin.delhomme@gmail.com">Contact</a>
+  </div>
+  <button class="nav-burger" id="burger" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+<div class="nav-mobile" id="nav-mobile">
+  <a href="finance.html">Finance & Markets</a>
+  <a href="sport.html">Sport Analytics</a>
+  <a href="challenges.html">Personal Challenges</a>
+  <a href="mailto:martin.delhomme@gmail.com">Contact</a>
+</div>
+
+<header class="page-header">
+  <div class="breadcrumb">
+    <a href="index.html">Home</a> /
+    <a href="finance.html">Finance & Markets</a> /
+    Margin Call Automation
+  </div>
+  <span class="project-tag">Automation - VBA - Margin Call - CACEIS</span>
+  <h1 class="page-title">Margin Call Automation<br>Securities Lending & Repo</h1>
+  <p class="page-subtitle">Centralising and automating a critical daily risk workflow - from a fragmented manual process to a reliable morning routine.</p>
+  <div class="meta-row">
+    <div class="meta-item"><div class="meta-label">Company</div><div class="meta-value">CACEIS Luxembourg</div></div>
+    <div class="meta-item"><div class="meta-label">Tools</div><div class="meta-value">VBA, Excel, Outlook</div></div>
+    <div class="meta-item"><div class="meta-label">Type</div><div class="meta-value">Risk Workflow Automation</div></div>
+    <div class="meta-item"><div class="meta-label">Impact</div><div class="meta-value">60+ min -> ~15 min</div></div>
+  </div>
+</header>
+
+<div class="article-wrapper">
+
+  <nav class="toc-inline" aria-label="Contents">
+    <div class="toc-inline-label">Contents</div>
+    <ul>
+      <li><a href="#context">Context</a></li>
+      <li><a href="#objective">Objective</a></li>
+      <li><a href="#analysis">Analysis</a></li>
+      <li><a href="#solution">Solution</a></li>
+      <li><a href="#challenges">Challenges</a></li>
+      <li><a href="#outcome">Outcome</a></li>
+      <li><a href="#takeaway">Key Takeaway</a></li>
+    </ul>
+  </nav>
+
+  <!-- 01 CONTEXT -->
+  <section class="content-section" id="context">
+    <div class="cs-eyebrow">01 - Context</div>
+    <h2 class="cs-heading">A critical daily risk process running on manual work</h2>
+    <div class="cs-body">
+      <p>At CACEIS, the front office manages securities lending and repo activity across multiple brokers. In exchange for lent securities, collateral is received in the form of cash or securities. Every morning, all collateral positions across approximately <strong>20 brokers</strong> needed to be valued to assess exposure versus the securities lent - determining whether we were over- or under-collateralised, and whether a margin call was required.</p>
+      <p>This process was critical from a risk perspective. Incorrect or delayed valuation could lead to unhedged exposure in the event of a counterparty default.</p>
+    </div>
+    <div class="callout-risk">
+      <strong>Why it matters:</strong> Historical events such as the Lehman Brothers collapse underlined the importance of accurate and timely collateral monitoring - particularly in stressed environments like COVID, where market moves can rapidly shift collateral values and expose firms to unexpected counterparty risk.
+    </div>
+  </section>
+
+  <!-- 02 OBJECTIVE -->
+  <section class="content-section" id="objective">
+    <div class="cs-eyebrow">02 - Objective</div>
+    <h2 class="cs-heading">Fast, accurate and early - every morning</h2>
+    <div class="cs-body">
+      <p>The objective was to ensure that daily exposure calculations and margin calls were produced <strong>quickly, accurately, and early in the morning</strong> - giving enough time to reconcile discrepancies with counterparties and avoid unwanted risk exposure before markets moved.</p>
+      <p>Secondary objectives were consistency across the team and scalability: the solution needed to work reliably regardless of who ran it, and accommodate changes in the broker list or threshold rules without rebuilding the workflow.</p>
+    </div>
+  </section>
+
+  <!-- 03 ANALYSIS -->
+  <section class="content-section" id="analysis">
+    <div class="cs-eyebrow">03 - Analysis</div>
+    <h2 class="cs-heading">A fragmented, high-risk manual process</h2>
+    <div class="cs-body">
+      <p>Previously, the process was distributed across several team members, each responsible for different brokers. This structure increased the risk of inconsistencies, human error, and delayed reconciliation - exactly the wrong conditions for a process where accuracy is non-negotiable.</p>
+      <p>The main inefficiencies came from <strong>repetitive operational tasks</strong>: valuing positions, comparing exposures against thresholds, identifying breaches, and preparing counterparty communications. None of these steps added analytical value - they were execution, not thinking.</p>
+    </div>
+    <div class="callout">"The fragmentation was the core problem. When the same process runs differently across team members, consistency and control become impossible to guarantee."</div>
+  </section>
+
+  <!-- 04 SOLUTION -->
+  <section class="content-section" id="solution">
+    <div class="cs-eyebrow">04 - Solution</div>
+    <h2 class="cs-heading">A centralised VBA tool for the full workflow</h2>
+    <div class="cs-body">
+      <p>Using VBA, I developed an automated Excel-based tool that centralised and standardised the entire process - from data aggregation to counterparty communication. The solution was designed to be run each morning by any team member with consistent output.</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-block highlight">
+        <div class="fb-label">Data</div>
+        <div class="fb-title">Collateral aggregation & valuation</div>
+        <div class="fb-desc">Automatically aggregates collateral positions across all brokers and applies current market values to calculate exposure.</div>
+      </div>
+      <div class="feature-block">
+        <div class="fb-label">Risk</div>
+        <div class="fb-title">Exposure calculation & threshold flags</div>
+        <div class="fb-desc">Compares collateral value against securities lent, identifies over- and under-collateralised positions, and flags any threshold breaches.</div>
+      </div>
+      <div class="feature-block">
+        <div class="fb-label">Operations</div>
+        <div class="fb-title">Margin call allocation & balancing</div>
+        <div class="fb-desc">Calculates and allocates margin calls across brokers based on exposure positions, with a built-in rule determining which side initiates the call.</div>
+      </div>
+      <div class="feature-block">
+        <div class="fb-label">Reporting</div>
+        <div class="fb-title">Daily reports & draft emails</div>
+        <div class="fb-desc">Generates daily reports for each responsible team member and prepares draft Outlook emails to counterparties when a margin call is required.</div>
+      </div>
+    </div>
+
+    <div class="cs-body" style="margin-top: 16px;">
+      <p>A key rule embedded in the logic was that the <strong>margin call sender depended on the direction of the exposure</strong> - ensuring consistency in communication flow regardless of who ran the tool that morning.</p>
+    </div>
+  </section>
+
+  <!-- 05 CHALLENGES -->
+  <section class="content-section" id="challenges">
+    <div class="cs-eyebrow">05 - Challenges</div>
+    <h2 class="cs-heading">Robustness in a risk-sensitive environment</h2>
+    <div class="cs-body">
+      <p>The main challenge was not building the tool - it was ensuring the <strong>accuracy and robustness of the data</strong>. Given the operational risk involved, even small errors could result in missed exposures or incorrect margin calls sent to counterparties.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-content">
+          <div class="step-title">Multiple validation checkpoints</div>
+          <div class="step-desc">Validation steps were introduced throughout the process to catch data issues before they propagated - including cross-checks between aggregated positions and source data totals.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-content">
+          <div class="step-title">Exception handling</div>
+          <div class="step-desc">The tool needed to handle missing data, format inconsistencies across broker files, and edge cases in threshold logic without failing silently or producing incorrect output.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-content">
+          <div class="step-title">Outlook integration</div>
+          <div class="step-desc">Integrating VBA with Outlook for automated draft email generation added technical complexity - particularly ensuring the correct counterparty contacts and email formats were applied consistently.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <div class="step-content">
+          <div class="step-title">Workflow stability across scenarios</div>
+          <div class="step-desc">The tool needed to remain stable whether run on a quiet day with no margin calls or a volatile morning with multiple threshold breaches across brokers simultaneously.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06 OUTCOME -->
+  <section class="content-section" id="outcome">
+    <div class="cs-eyebrow">06 - Outcome</div>
+    <h2 class="cs-heading">A reliable morning routine in 15 minutes</h2>
+
+    <div class="stat-row">
+      <div class="stat-block accent">
+        <div class="stat-num">60+</div>
+        <div class="stat-lbl">Minutes before</div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-num">~15</div>
+        <div class="stat-lbl">Minutes after</div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-num">20</div>
+        <div class="stat-lbl">Brokers covered</div>
+      </div>
+    </div>
+
+    <div class="result-box">
+      <div class="result-box-label">Impact</div>
+      <div class="result-box-text">Daily margin call process reduced from <strong>over one hour of fragmented manual work</strong> to approximately 15 minutes - including validation and checks - with consistent output across the team regardless of who ran it.</div>
+    </div>
+
+    <div class="cs-body">
+      <p>Beyond time savings, the process became more reliable. Operational risk was reduced by removing the inconsistencies that came from a distributed manual approach. The workflow could simply be refreshed each morning, producing the same structured output every day.</p>
+      <p>The shift from a team-distributed process to a single centralised tool also improved oversight - any threshold breach or data anomaly was immediately visible rather than potentially buried in one team member's spreadsheet.</p>
+    </div>
+  </section>
+
+  <!-- 07 TAKEAWAY -->
+  <div class="takeaways" id="takeaway">
+    <div class="tk-eyebrow">07 - Key Takeaway</div>
+    <div class="tk-heading">In risk-sensitive environments, automation is about control as much as efficiency</div>
+    <ul class="tk-list">
+      <li>The value of automation here was not only time saved, but consistency and control. A process that runs the same way every morning, regardless of who runs it, is a fundamentally lower-risk process.</li>
+      <li>Fragmentation is a hidden operational risk. When the same workflow is executed differently across team members, inconsistencies accumulate - and in a margin call context, that inconsistency has direct financial consequences.</li>
+      <li>Validation matters more than speed. In a risk-sensitive environment, a fast tool that occasionally produces incorrect output is worse than a slow manual process. Building in checkpoints was not optional.</li>
+      <li>Outlook integration and exception handling were the hardest parts technically - not the financial logic. Understanding the workflow deeply made the implementation tractable.</li>
+    </ul>
+  </div>
+
+</div>
+
+<div class="project-nav">
+  <a href="finance.html" class="pnav-link">
+    <div class="pnav-dir"><- Back</div>
+    <div class="pnav-title">Finance & Markets</div>
+  </a>
+  <a href="project-finance-aum.html" class="pnav-link" style="text-align:right">
+    <div class="pnav-dir">Next project -></div>
+    <div class="pnav-title">Automating Monthly AUM Reporting</div>
+  </a>
+</div>
+
+<footer>
+  <a href="index.html"><- Portfolio</a>
+  <a href="mailto:martin.delhomme@gmail.com">martin.delhomme@gmail.com</a>
+</footer>
+
+<script>
+document.getElementById('burger').addEventListener('click', function() {
+  document.getElementById('nav-mobile').classList.toggle('open');
+});
+</script>
+
+</body>
+</html>
