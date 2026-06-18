@@ -121,11 +121,22 @@
     justify-content: flex-end;
     padding: 48px;
     position: relative;
+    gap: 40px;
   }
-  .hero-location {
-    position: absolute; top: 32px; right: 32px;
-    font-family: 'Space Mono', monospace; font-size: 10px;
-    letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-light);
+  .hero-photo-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+  }
+  .hero-photo {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: center top;
+    border: 3px solid var(--ink);
+    display: block;
   }
   .hero-stats {
     display: grid; grid-template-columns: 1fr 1fr;
@@ -189,7 +200,8 @@
     .nav-burger { display: flex; }
     .hero { grid-template-columns: 1fr; }
     .hero-left { padding: 80px 24px 48px; }
-    .hero-right { min-height: 320px; padding: 32px 24px; }
+    .hero-right { min-height: 360px; padding: 40px 24px; gap: 28px; }
+    .hero-photo { width: 140px; height: 140px; }
     .cards { grid-template-columns: 1fr; }
     .card + .card { border-left: none; border-top: 1px solid var(--ink); }
     .card:hover { padding-left: 40px; }
@@ -239,6 +251,9 @@
     </div>
   </div>
   <div class="hero-right">
+    <div class="hero-photo-wrap">
+      <img src="DELHOMME_Martin.jpg" alt="Martin Delhomme" class="hero-photo">
+    </div>
     <div class="hero-stats">
       <div class="stat-block">
         <div class="stat-number">6+</div>
