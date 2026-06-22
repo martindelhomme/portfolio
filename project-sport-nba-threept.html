@@ -187,7 +187,7 @@
   <div class="breadcrumb"><a href="index.html">Home</a> / <a href="sport.html">Sport Analytics</a> / NBA Three-Point Revolution</div>
   <span class="project-tag">NBA Analytics - Python - D3.js - 300 observations</span>
   <h1 class="page-title">Has the Three-Point Revolution<br>Changed What Drives Winning?</h1>
-  <p class="page-subtitle">Since Curry and the Warriors, everyone says the NBA became a three-point league. But do teams win because they shoot more threes — or because they're simply more efficient?</p>
+  <p class="page-subtitle">Since Curry and the Warriors, everyone says the NBA became a three-point league. But do teams win because they shoot more threes, or because they're simply more efficient?</p>
   <div class="meta-row">
     <div class="meta-item"><div class="meta-label">Dataset</div><div class="meta-value">300 team-seasons</div></div>
     <div class="meta-item"><div class="meta-label">Period</div><div class="meta-value">2015-16 to 2025-26</div></div>
@@ -205,8 +205,8 @@
     <div class="cs-eyebrow">01 - Context & Question</div>
     <h2 class="cs-heading">The narrative vs the data</h2>
     <div class="cs-body">
-      <p>The story is familiar: Stephen Curry and the Golden State Warriors changed basketball forever. Since their 2015-16 73-win season, every team has chased three-point volume. The league-wide 3PA rate has risen from <strong>28.4% in 2015-16 to 41.5% in 2025-26</strong> — a near-50% increase in a decade.</p>
-      <p>But the narrative raises a precise analytical question: are teams winning <em>because</em> they shoot more threes, or are successful teams simply better at everything — including shooting threes? Is three-point volume the cause, or just a symptom of overall offensive quality?</p>
+      <p>The story is familiar: Stephen Curry and the Golden State Warriors changed basketball forever. Since their 2015-16 73-win season, every team has chased three-point volume. The league-wide 3PA rate has risen from <strong>28.4% in 2015-16 to 41.5% in 2025-26</strong>, a near-50% increase in a decade.</p>
+      <p>But the narrative raises a precise analytical question: are teams winning <em>because</em> they shoot more threes, or are successful teams simply better at everything, including shooting threes? Is three-point volume the cause, or just a symptom of overall offensive quality?</p>
     </div>
     <div class="callout">"Correlation with volume ≠ causation. The question is whether shooting more threes drives winning, or whether good teams happen to shoot more threes because they're good."</div>
   </section>
@@ -217,7 +217,7 @@
     <h2 class="cs-heading">300 team-seasons, 10 variables</h2>
     <div class="cs-body">
       <p>The dataset covers all 30 NBA teams across 10 complete regular seasons (2015-16 to 2025-26, excluding 2021-22 which has a data gap). Each observation is one team-season aggregate, yielding <strong>300 data points</strong>.</p>
-      <p>For each team-season, I computed: Win%, 3PA Rate (three-point attempts as % of total FGA), 3P%, FG%, eFG% (effective field goal %), TS% (true shooting %), Offensive Rating, Defensive Rating and Net Rating — all derived from game-by-game box scores.</p>
+      <p>For each team-season, I computed: Win%, 3PA Rate (three-point attempts as % of total FGA), 3P%, FG%, eFG% (effective field goal %), TS% (true shooting %), Offensive Rating, Defensive Rating and Net Rating, all derived from game-by-game box scores.</p>
       <p>The analysis uses simple linear regression for each variable against Win%, plus a correlation matrix across all variables. R (Pearson correlation coefficient) measures the strength of each relationship; R² tells us what share of win% variance each variable explains.</p>
     </div>
 
@@ -282,9 +282,9 @@ variables = [<span class="py-str">'tpa_rate'</span>,<span class="py-str">'tpp'</
   <!-- 03 TREND -->
   <section class="content-section" id="trend">
     <div class="cs-eyebrow">03 - The Three-Point Trend</div>
-    <h2 class="cs-heading">Volume has exploded — but has it plateaued?</h2>
+    <h2 class="cs-heading">Volume has exploded, but has it plateaued?</h2>
     <div class="cs-body">
-      <p>The rise in three-point volume is real and dramatic. In 2015-16, teams attempted threes on 28.4% of their possessions. By 2025-26, that number reached 41.5% — a near-50% increase in a decade. But the chart below suggests the revolution may be stabilizing: growth slowed significantly after 2022-23.</p>
+      <p>The rise in three-point volume is real and dramatic. In 2015-16, teams attempted threes on 28.4% of their possessions. By 2025-26, that number reached 41.5%, a near-50% increase in a decade. But the chart below suggests the revolution may be stabilizing: growth slowed significantly after 2022-23.</p>
     </div>
 
     <div class="chart-wrap" id="trend-chart-wrap">
@@ -295,7 +295,7 @@ variables = [<span class="py-str">'tpa_rate'</span>,<span class="py-str">'tpp'</
 
     <div class="finding">
       <div class="finding-icon">Finding 01</div>
-      <div class="finding-text">3PA rate rose from <strong>28.4% to 41.5%</strong> between 2015-16 and 2025-26, but growth has slowed markedly since 2022-23 — suggesting the league may be approaching a natural ceiling on three-point volume.</div>
+      <div class="finding-text">3PA rate rose from <strong>28.4% to 41.5%</strong> between 2015-16 and 2025-26, but growth has slowed markedly since 2022-23, suggesting the league may be approaching a natural ceiling on three-point volume.</div>
     </div>
   </section>
 
@@ -363,7 +363,7 @@ plt.<span class="py-fn">savefig</span>(<span class="py-str">'nba_scatter_plots.p
   <!-- 05 EFFICIENCY -->
   <section class="content-section" id="efficiency">
     <div class="cs-eyebrow">05 - Efficiency vs Wins</div>
-    <h2 class="cs-heading">Shooting better — and overall efficiency — matters far more</h2>
+    <h2 class="cs-heading">Shooting better, and overall efficiency, matters far more</h2>
     <div class="cs-body">
       <p>Now let's look at <em>how well</em> teams shoot threes, and at broader offensive efficiency. The picture changes dramatically.</p>
     </div>
@@ -392,7 +392,7 @@ plt.<span class="py-fn">savefig</span>(<span class="py-str">'nba_scatter_plots.p
         3P% → <strong>r = 0.59, R² = 0.35</strong><br>
         eFG% → <strong>r = 0.56, R² = 0.32</strong><br>
         Net Rating → <strong>r = 0.97, R² = 0.93</strong><br><br>
-        Net Rating alone explains <strong>93% of win% variance</strong>. Shooting efficiency matters — but overall two-way dominance is the only near-perfect predictor.
+        Net Rating alone explains <strong>93% of win% variance</strong>. Shooting efficiency matters, but overall two-way dominance is the only near-perfect predictor.
       </div>
     </div>
   </section>
@@ -457,8 +457,8 @@ plt.<span class="py-fn">savefig</span>(<span class="py-str">'nba_heatmap.png'</s
     <h2 class="cs-heading">The NBA did not become a three-point league. It became an efficiency league.</h2>
     <div class="cs-body">
       <p>The data is unambiguous. Shooting more threes (3PA Rate, r = 0.14) explains almost nothing about winning. Shooting them accurately matters more (3P%, r = 0.59), but only because accuracy is a proxy for overall offensive quality. Effective field goal percentage and true shooting percentage tell a similar story.</p>
-      <p>The real driver of winning in the modern NBA is <strong>Net Rating</strong> — the gap between how many points a team scores and allows per 100 possessions. It explains 93% of win% variance. Nothing comes close.</p>
-      <p>The three-point revolution changed <em>how</em> teams pursue efficiency — threes and layups are the highest-value shots, so smart teams gravitate toward them. But the underlying objective has not changed: score more than you allow, consistently, over 82 games.</p>
+      <p>The real driver of winning in the modern NBA is <strong>Net Rating</strong>, the gap between how many points a team scores and allows per 100 possessions. It explains 93% of win% variance. Nothing comes close.</p>
+      <p>The three-point revolution changed <em>how</em> teams pursue efficiency, threes and layups are the highest-value shots, so smart teams gravitate toward them. But the underlying objective has not changed: score more than you allow, consistently, over 82 games.</p>
     </div>
   </section>
 
@@ -468,10 +468,10 @@ plt.<span class="py-fn">savefig</span>(<span class="py-str">'nba_heatmap.png'</s
     <div class="tk-heading">What the numbers actually say</div>
     <ul class="tk-list">
       <li><strong>3PA Rate → r = 0.14, R² = 0.02.</strong> Volume is nearly irrelevant. Shooting more threes does not predict winning.</li>
-      <li><strong>3P% → r = 0.59, R² = 0.35.</strong> Accuracy matters — but it's a proxy for overall shooting quality, not a three-point-specific effect.</li>
+      <li><strong>3P% → r = 0.59, R² = 0.35.</strong> Accuracy matters, but it's a proxy for overall shooting quality, not a three-point-specific effect.</li>
       <li><strong>eFG% → r = 0.56, R² = 0.32.</strong> Shooting efficiency broadly explains about a third of win variance.</li>
       <li><strong>Net Rating → r = 0.97, R² = 0.93.</strong> Two-way dominance is the only near-perfect predictor of winning in the NBA.</li>
-      <li>The three-point revolution is real as a stylistic shift — but it's a tool in pursuit of efficiency, not a winning formula in itself. The NBA became an efficiency league, not a three-point league.</li>
+      <li>The three-point revolution is real as a stylistic shift, but it's a tool in pursuit of efficiency, not a winning formula in itself. The NBA became an efficiency league, not a three-point league.</li>
     </ul>
   </div>
 
