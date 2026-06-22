@@ -133,7 +133,8 @@
   <div class="breadcrumb"><a href="index.html">Home</a> / <a href="sport.html">Sport Analytics</a> / NBA Champion Prediction</div>
   <span class="project-tag">NBA Analytics - Predictive Model - Backtesting - 10 seasons</span>
   <h1 class="page-title">Can Regular Season Statistics<br>Predict the NBA Champion?</h1>
-  <p class="page-subtitle">Using the efficiency metrics from Articles 1 & 2 to build a simple champion score — then backtesting it against 10 seasons of results.</p>
+  <p class="page-subtitle">Using the efficiency metrics from Articles "Has the Three-Point Revolution Changed What Drives Winning?" and "What Statistics Best Predict
+Winning in Today's NBA?" to build a simple champion score, then backtesting it against 10 seasons of results.</p>
   <div class="meta-row">
     <div class="meta-item"><div class="meta-label">Seasons tested</div><div class="meta-value">2015-16 to 2025-26</div></div>
     <div class="meta-item"><div class="meta-label">Champion 2025-26</div><div class="meta-value">New York Knicks</div></div>
@@ -149,19 +150,19 @@
     <div class="cs-eyebrow">01 - The Question</div>
     <h2 class="cs-heading">If we only knew the regular season stats...</h2>
     <div class="cs-body">
-      <p>Articles 1 and 2 established that <strong>Net Rating and shooting efficiency</strong> are the dominant predictors of regular-season winning. But does that translate to playoff success? If you built a model based purely on regular-season data, could you have identified the eventual champion?</p>
-      <p>This is the analyst's version of a fantasy question. The goal is not to claim we can predict the champion with certainty — the NBA playoffs are a small sample, subject to injuries, matchups, and randomness. The goal is more modest: <strong>does the model consistently identify a small group of realistic contenders that includes the eventual winner?</strong></p>
+      <p>Articles "Has the Three-Point Revolution Changed What Drives Winning?" and "What Statistics Best Predict Winning in Today's NBA?" established that <strong>Net Rating and shooting efficiency</strong> are the dominant predictors of regular-season winning. But does that translate to playoff success? If you built a model based purely on regular-season data, could you have identified the eventual champion?</p>
+      <p>This is the analyst's version of a fantasy question. The goal is not to claim we can predict the champion with certainty, the NBA playoffs are a small sample, subject to injuries, matchups, and randomness. The goal is more modest: <strong>does the model consistently identify a small group of realistic contenders that includes the eventual winner?</strong></p>
       <p>The analogy to finance is direct: this is a backtest. We build a model on historical data, apply it to each season, and measure how well it would have performed out-of-sample.</p>
     </div>
-    <div class="callout">"The question is not 'does the model predict the champion?' — it's 'does the model consistently put the champion among the top contenders?' That's a much more honest and useful benchmark."</div>
+    <div class="callout">"The question is not 'does the model predict the champion?', it's 'does the model consistently put the champion among the top contenders?' That's a much more honest and useful benchmark."</div>
   </section>
 
   <section class="content-section" id="model">
     <div class="cs-eyebrow">02 - The Model</div>
-    <h2 class="cs-heading">A composite score built on Article 2 findings</h2>
+    <h2 class="cs-heading">A composite score built on Article "What Statistics Best Predict Winning in Today's NBA?" findings</h2>
     <div class="cs-body">
-      <p>From Article 2, the variables that best explain regular-season winning are Net Rating (r = 0.965), eFG% (r = 0.564), Defensive Rating (r = -0.512), and TOV% (r = -0.368). The model weights these four factors, with Net Rating carrying the most weight given its dominant explanatory power.</p>
-      <p>To make scores comparable across seasons, each variable is <strong>z-scored within the season</strong> before weighting — this removes the effect of year-to-year shifts in league averages (e.g. pace changes, scoring inflation).</p>
+      <p>From this article, the variables that best explain regular-season winning are Net Rating (r = 0.965), eFG% (r = 0.564), Defensive Rating (r = -0.512), and TOV% (r = -0.368). The model weights these four factors, with Net Rating carrying the most weight given its dominant explanatory power.</p>
+      <p>To make scores comparable across seasons, each variable is <strong>z-scored within the season</strong> before weighting, this removes the effect of year-to-year shifts in league averages (e.g. pace changes, scoring inflation).</p>
     </div>
     <div class="model-formula">
       <div class="mf-title">Champion Score Formula</div>
@@ -173,7 +174,7 @@
       </div>
     </div>
     <div class="cs-body">
-      <p>All variables are z-scored within each season. Defensive Rating and TOV% are inverted (lower is better). The weights reflect the correlation strength found in Article 2 — Net Rating dominates, followed by shooting efficiency, then defense, then turnovers.</p>
+      <p>All variables are z-scored within each season. Defensive Rating and TOV% are inverted (lower is better). The weights reflect the correlation strength found in Article "What Statistics Best Predict Winning in Today's NBA?", Net Rating dominates, followed by shooting efficiency, then defense, then turnovers.</p>
     </div>
     <div class="code-toggle">
       <button class="code-toggle-btn" onclick="toggleCode(this)"><span class="arrow">▶</span> Show Python code — Model & backtest</button>
@@ -251,7 +252,7 @@ results = []
 
     <div class="finding">
       <div class="finding-icon">Finding 01</div>
-      <div class="finding-text">The model ranks the champion <strong>#1 or #2 in 4 of 10 seasons</strong>, and within the top 5 in 7 of 10 seasons. The notable miss is 2022-23 (Warriors won ranked #9 — a dynasty coasting through the regular season). The model identifies the <em>field of contenders</em> reliably; predicting the exact winner remains beyond regular-season data alone.</div>
+      <div class="finding-text">The model ranks the champion <strong>#1 or #2 in 4 of 10 seasons</strong>, and within the top 5 in 7 of 10 seasons. The notable miss is 2022-23 (Warriors won ranked #9, a dynasty coasting through the regular season). The model identifies the <em>field of contenders</em> reliably; predicting the exact winner remains beyond regular-season data alone.</div>
     </div>
   </section>
 
@@ -259,7 +260,7 @@ results = []
     <div class="cs-eyebrow">04 - Champion Rank Chart</div>
     <h2 class="cs-heading">Where did the champion rank each year?</h2>
     <div class="cs-body">
-      <p>The chart below visualizes the champion's model rank for each season. Lower is better — #1 means the model's top pick won the championship. The dashed line at #5 represents a reasonable "contender threshold".</p>
+      <p>The chart below visualizes the champion's model rank for each season. Lower is better, #1 means the model's top pick won the championship. The dashed line at #5 represents a reasonable "contender threshold".</p>
     </div>
     <div class="chart-wrap">
       <div class="chart-title">Champion's Model Rank by Season</div>
@@ -268,7 +269,7 @@ results = []
     </div>
     <div class="chart-wrap" style="margin-top:24px;">
       <div class="chart-title">Top 5 Teams by Model Score — All Seasons</div>
-      <div class="chart-subtitle">Distribution of champion scores — champions highlighted in gold | hover for details</div>
+      <div class="chart-subtitle">Distribution of champion scores, champions highlighted in gold | hover for details</div>
       <div class="chart-area" id="score-chart"></div>
     </div>
   </section>
@@ -277,15 +278,15 @@ results = []
     <div class="cs-eyebrow">05 - 2025-26 Season</div>
     <h2 class="cs-heading">The Knicks: ranked #6 by the model</h2>
     <div class="cs-body">
-      <p>The 2025-26 NBA Champion is the New York Knicks. The model ranked them <strong>#6 in the league</strong> based on regular-season stats — with the Thunder, Spurs, and Nuggets holding the top spots by efficiency metrics.</p>
-      <p>This is the model's biggest miss of the decade — but it also illustrates the core limitation honestly: regular-season efficiency predicts regular-season success. The playoffs are a different competition. The Knicks' championship is a testament to exactly what the model can't capture: playoff execution, matchup advantages, coaching adjustments, and the health and form of key players in June.</p>
+      <p>The 2025-26 NBA Champion is the New York Knicks. The model ranked them <strong>#6 in the league</strong> based on regular-season stats, with the Thunder(lost in WCF), Spurs (Runner-up), and Nuggets holding the top spots by efficiency metrics.</p>
+      <p>This is the model's biggest miss of the decade, but it also illustrates the core limitation honestly: regular-season efficiency predicts regular-season success. The playoffs are a different competition. The Knicks' championship is a testament to exactly what the model can't capture: playoff execution, matchup advantages, coaching adjustments, and the health and form of key players in June.</p>
     </div>
     <div class="result-box">
       <div class="result-box-label">2025-26 Model vs Reality</div>
       <div class="result-box-text">Model #1: <strong>Thunder</strong> &nbsp;|&nbsp; Model #2: Spurs &nbsp;|&nbsp; Model #3: Nuggets<br><br>Actual Champion: <strong>New York Knicks (ranked #6)</strong></div>
     </div>
     <div class="cs-body">
-      <p>The Knicks were a legitimate contender by the model — top 6 in the league. But the gap between #1 and #6 is exactly where playoff basketball lives: the randomness of a 7-game series, the impact of a single injury, and the ability to execute under pressure are not in the data.</p>
+      <p>The Knicks were a legitimate contender by the model, top 6 in the league. But the gap between #1 and #6 is exactly where playoff basketball lives: the randomness of a 7-game series, the impact of a single injury, and the ability to execute under pressure are not in the data.</p>
     </div>
   </section>
 
@@ -293,11 +294,11 @@ results = []
     <div class="cs-eyebrow">06 - Limits</div>
     <h2 class="cs-heading">What this model cannot do</h2>
     <div class="cs-body">
-      <p><strong>Small sample size.</strong> 10 seasons is not enough to draw robust statistical conclusions about a predictive model. The results are directionally interesting — not statistically definitive.</p>
+      <p><strong>Small sample size.</strong> 10 seasons is not enough to draw robust statistical conclusions about a predictive model. The results are directionally interesting, not statistically definitive.</p>
       <p><strong>Regular season vs playoffs.</strong> The model is trained on regular-season efficiency. Playoff basketball involves opponent-specific preparation, series adjustments, and home court effects that don't appear in 82-game averages.</p>
       <p><strong>Dynasty effects.</strong> Teams like the Warriors (2022-23, ranked #9) deliberately manage regular-season effort to preserve players for the playoffs. A model based on regular-season stats will systematically underrate teams with this strategy.</p>
       <p><strong>Injuries and health.</strong> The model has no injury data. A top-ranked team that loses a key player in Round 1 will show no sign of weakness in the regular-season stats used to build the score.</p>
-      <p><strong>Weight sensitivity.</strong> The 40/30/20/10 weights were chosen based on correlation strength — not optimized through cross-validation. Different weight combinations would produce different results, and the model has not been tested for robustness to weight changes.</p>
+      <p><strong>Weight sensitivity.</strong> The 40/30/20/10 weights were chosen based on correlation strength, not optimized through cross-validation. Different weight combinations would produce different results, and the model has not been tested for robustness to weight changes.</p>
     </div>
   </section>
 
@@ -305,10 +306,10 @@ results = []
     <div class="tk-eyebrow">07 - Conclusion</div>
     <div class="tk-heading">A reliable contender filter — not a crystal ball</div>
     <ul class="tk-list">
-      <li>The model correctly identifies the champion within its top 5 in <strong>7 of 10 seasons</strong>. That's a meaningful result — it's much better than random — but well short of a reliable prediction.</li>
+      <li>The model correctly identifies the champion within its top 5 in <strong>7 of 10 seasons</strong>. That's a meaningful result, it's much better than random, but well short of a reliable prediction.</li>
       <li>The model is best understood as a <strong>contender filter</strong>: it systematically eliminates the bottom 25 teams and identifies a group of 4-6 realistic championship candidates from regular-season data alone.</li>
-      <li>Net Rating and eFG% do most of the work. The model's misses (2022-23 Warriors, 2025-26 Knicks) are not random errors — they reflect specific structural limitations: dynasty coasting and playoff-specific performance differences.</li>
-      <li>The Knicks' 2025-26 championship is the model's most instructive miss. Ranked #6 by efficiency, they won it all — a reminder that the playoffs reward execution, not regular-season dominance.</li>
+      <li>Net Rating and eFG% do most of the work. The model's misses (2022-23 Warriors, 2025-26 Knicks) are not random errors, they reflect specific structural limitations: dynasty coasting and playoff-specific performance differences.</li>
+      <li>The Knicks' 2025-26 championship is the model's most instructive miss. Ranked #6 by efficiency, they won it all, a reminder that the playoffs reward execution, not regular-season dominance.</li>
       <li>This three-article series mirrors a quantitative investment framework: identify the relevant factors (Article 1), measure their explanatory power (Article 2), build and test a predictive model (Article 3). The NBA's data richness makes it a uniquely accessible laboratory for this kind of structured analysis.</li>
     </ul>
   </div>
