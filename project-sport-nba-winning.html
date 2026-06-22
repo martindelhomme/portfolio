@@ -131,7 +131,7 @@
   <div class="breadcrumb"><a href="index.html">Home</a> / <a href="sport.html">Sport Analytics</a> / NBA Winning Metrics</div>
   <span class="project-tag">NBA Analytics - Regression - Four Factors - 300 observations</span>
   <h1 class="page-title">What Statistics Best Predict<br>Winning in Today's NBA?</h1>
-  <p class="page-subtitle">Which metrics actually explain team success — and which are just noise? A structured regression analysis across 300 team-seasons to find out.</p>
+  <p class="page-subtitle">Which metrics actually explain team success, and which are just noise? A structured regression analysis across 300 team-seasons to find out.</p>
   <div class="meta-row">
     <div class="meta-item"><div class="meta-label">Dataset</div><div class="meta-value">300 team-seasons</div></div>
     <div class="meta-item"><div class="meta-label">Period</div><div class="meta-value">2015-16 to 2025-26</div></div>
@@ -147,11 +147,11 @@
     <div class="cs-eyebrow">01 - Hypothesis</div>
     <h2 class="cs-heading">Not all stats are created equal</h2>
     <div class="cs-body">
-      <p>Every NBA broadcast drowns you in statistics. Points per game, rebounds, assists, pace, turnovers, defensive rating — the list is endless. But which of these actually <em>explain</em> why teams win?</p>
-      <p>This is the most "finance-like" of the three articles in this series. The methodology mirrors factor analysis in quantitative investing: identify candidate variables, measure their explanatory power individually, then build a multi-factor model and test it for robustness.</p>
+      <p>Every NBA broadcast drowns you in statistics. Points per game, rebounds, assists, pace, turnovers, defensive rating, the list is endless. But which of these actually <em>explain</em> why teams win?</p>
+      <p>The methodology mirrors factor analysis in quantitative investing: identify candidate variables, measure their explanatory power individually, then build a multi-factor model and test it for robustness.</p>
       <p>The hypothesis going in: <strong>Net Rating and shooting efficiency will dominate. Pace, assists, and rebounds will matter far less than basketball commentary suggests.</strong></p>
     </div>
-    <div class="callout">"The question is not which stats look impressive — it's which stats actually predict wins. Correlation first, causation second."</div>
+    <div class="callout">"The question is not which stats look impressive, it's which stats actually predict wins. Correlation first, causation second."</div>
   </section>
 
   <section class="content-section" id="dataset">
@@ -203,7 +203,7 @@ df_corr = pd.<span class="py-fn">DataFrame</span>(results).<span class="py-fn">s
   <section class="content-section" id="correlations">
     <div class="cs-eyebrow">03 - Correlation Ranking</div>
     <h2 class="cs-heading">13 metrics, one clear winner</h2>
-    <div class="cs-body"><p>The chart below ranks all 13 variables by their absolute correlation with Win%. The hierarchy is striking — and confirms the hypothesis.</p></div>
+    <div class="cs-body"><p>The chart below ranks all 13 variables by their absolute correlation with Win%. The hierarchy is striking, and confirms the hypothesis.</p></div>
     <div class="chart-wrap">
       <div class="chart-title">All Metrics Ranked by Correlation with Win%</div>
       <div class="chart-subtitle">Absolute Pearson r — 300 team-seasons, 2015-16 to 2025-26 | hover for details</div>
@@ -211,7 +211,7 @@ df_corr = pd.<span class="py-fn">DataFrame</span>(results).<span class="py-fn">s
     </div>
     <div class="finding">
       <div class="finding-icon">Finding 01</div>
-      <div class="finding-text">Net Rating sits alone at the top with <strong>r = 0.965</strong>. The next tier — Off Rating, 3P%, TS%, eFG% — clusters around r = 0.55–0.61. Then a sharp drop: TOV%, Assists, Pace, ORB%, FT Rate all fall below r = 0.40. Volume stats are noise.</div>
+      <div class="finding-text">Net Rating sits alone at the top with <strong>r = 0.965</strong>. The next tier (Off Rating, 3P%, TS%, eFG%) clusters around r = 0.55–0.61. Then a sharp drop: TOV%, Assists, Pace, ORB%, FT Rate all fall below r = 0.40. Volume stats are noise.</div>
     </div>
     <table class="factors-table" id="corr-full-table">
       <thead><tr><th>#</th><th>Metric</th><th>r with Win%</th><th>R²</th><th>Direction</th><th>Strength</th></tr></thead>
@@ -223,7 +223,7 @@ df_corr = pd.<span class="py-fn">DataFrame</span>(results).<span class="py-fn">s
     <div class="cs-eyebrow">04 - Four Factors Model</div>
     <h2 class="cs-heading">Dean Oliver's framework, tested on modern data</h2>
     <div class="cs-body">
-      <p>In 2002, basketball analyst Dean Oliver proposed that four factors explain most of team success: shooting efficiency (eFG%), turnovers (TOV%), offensive rebounding (ORB%), and getting to the free throw line (FT Rate). This was groundbreaking pre-Moneyball basketball analytics — let's see how it holds up two decades later.</p>
+      <p>In 2002, basketball analyst Dean Oliver proposed that four factors explain most of team success: shooting efficiency (eFG%), turnovers (TOV%), offensive rebounding (ORB%), and getting to the free throw line (FT Rate). This was groundbreaking pre-Moneyball basketball analytics, let's see how it holds up two decades later.</p>
     </div>
     <div class="reg-box">
       <div class="reg-title">Model 1 — Four Factors Regression</div>
@@ -238,7 +238,7 @@ df_corr = pd.<span class="py-fn">DataFrame</span>(results).<span class="py-fn">s
     </div>
     <div class="finding">
       <div class="finding-icon">Finding 02</div>
-      <div class="finding-text">The Four Factors model explains <strong>~37% of win% variance (R² ≈ 0.37)</strong>. eFG% and TOV% carry almost all the weight. ORB% (r = 0.06) and FT Rate (r = 0.09) contribute almost nothing — Oliver's last two factors have become less predictive in the modern game.</div>
+      <div class="finding-text">The Four Factors model explains <strong>~37% of win% variance (R² ≈ 0.37)</strong>. eFG% and TOV% carry almost all the weight. ORB% (r = 0.06) and FT Rate (r = 0.09) contribute almost nothing, Oliver's last two factors have become less predictive in the modern game.</div>
     </div>
     <div class="code-toggle">
       <button class="code-toggle-btn" onclick="toggleCode(this)"><span class="arrow">▶</span> Show Python code — Multiple regression</button>
@@ -293,7 +293,7 @@ r2_mod = <span class="py-fn">r2_score</span>(y_mod, model_mod.<span class="py-fn
     </div>
     <div class="finding">
       <div class="finding-icon">Finding 03</div>
-      <div class="finding-text">Net Rating alone explains <strong>93% of win% variance</strong>. Adding eFG%, Pace and Assists brings the model to ~94%. The marginal gain from additional variables is minimal — Net Rating is nearly a sufficient statistic for team quality in the modern NBA.</div>
+      <div class="finding-text">Net Rating alone explains <strong>93% of win% variance</strong>. Adding eFG%, Pace and Assists brings the model to ~94%. The marginal gain from additional variables is minimal, Net Rating is nearly a sufficient statistic for team quality in the modern NBA.</div>
     </div>
   </section>
 
@@ -301,10 +301,10 @@ r2_mod = <span class="py-fn">r2_score</span>(y_mod, model_mod.<span class="py-fn
     <div class="cs-eyebrow">06 - Limits</div>
     <h2 class="cs-heading">What this analysis cannot tell us</h2>
     <div class="cs-body">
-      <p><strong>Correlation vs causation.</strong> Net Rating predicts wins almost perfectly — but that's partly tautological. A team's Net Rating is computed from the same games as their win percentage. It's a measure of what happened, not a predictor of what will happen.</p>
-      <p><strong>Multicollinearity.</strong> Many variables are highly correlated with each other (eFG% and TS%, Off Rating and Net Rating). Multiple regression coefficients should be interpreted with care — individual betas are not stable when predictors are correlated.</p>
-      <p><strong>Playoffs vs regular season.</strong> This analysis covers regular season only. The variables that predict playoff success may differ significantly — small sample sizes, opponent quality, and home court changes the dynamics entirely. Article 3 addresses this directly.</p>
-      <p><strong>Missing variables.</strong> Clutch performance, health/injuries, schedule strength, and coaching quality are not captured here. The model explains the average — not the outliers.</p>
+      <p><strong>Correlation vs causation.</strong> Net Rating predicts wins almost perfectly, but that's partly tautological. A team's Net Rating is computed from the same games as their win percentage. It's a measure of what happened, not a predictor of what will happen.</p>
+      <p><strong>Multicollinearity.</strong> Many variables are highly correlated with each other (eFG% and TS%, Off Rating and Net Rating). Multiple regression coefficients should be interpreted with care, individual betas are not stable when predictors are correlated.</p>
+      <p><strong>Playoffs vs regular season.</strong> This analysis covers regular season only. The variables that predict playoff success may differ significantly, small sample sizes, opponent quality, and home court changes the dynamics entirely. Article 3 addresses this directly.</p>
+      <p><strong>Missing variables.</strong> Clutch performance, health/injuries, schedule strength, and coaching quality are not captured here. The model explains the average, not the outliers.</p>
     </div>
   </section>
 
@@ -312,12 +312,12 @@ r2_mod = <span class="py-fn">r2_score</span>(y_mod, model_mod.<span class="py-fn
     <div class="tk-eyebrow">07 - Conclusion</div>
     <div class="tk-heading">The hierarchy of NBA winning metrics</div>
     <ul class="tk-list">
-      <li><strong>Net Rating (r = 0.965)</strong> — The only near-perfect predictor. Score more than you allow per 100 possessions, and you will win. Everything else is downstream of this.</li>
-      <li><strong>Offensive Rating, eFG%, TS% (r ≈ 0.56–0.61)</strong> — The second tier. Shooting efficiency is the most controllable driver of offensive quality.</li>
+      <li><strong>Net Rating (r = 0.965)</strong>: The only near-perfect predictor. Score more than you allow per 100 possessions, and you will win. Everything else is downstream of this.</li>
+      <li><strong>Offensive Rating, eFG%, TS% (r ≈ 0.56–0.61)</strong>: The second tier. Shooting efficiency is the most controllable driver of offensive quality.</li>
       <li><strong>Defensive Rating (r = -0.51)</strong> — Defense matters, but less than offense in explaining win% variation across the league.</li>
-      <li><strong>TOV% / Turnovers per game (r ≈ -0.37)</strong> — Meaningful but not dominant. The Four Factors overweighted this variable relative to its actual predictive power.</li>
-      <li><strong>Pace, ORB%, FT Rate, Assists (r &lt; 0.25)</strong> — Noisy. These matter in specific systems or matchups but explain little of the overall variance in wins.</li>
-      <li>The Four Factors model (R² ≈ 0.37) is useful but outdated — ORB% and FT Rate have lost much of their predictive power in the modern game. A two-factor model of eFG% and TOV% performs almost as well.</li>
+      <li><strong>TOV% / Turnovers per game (r ≈ -0.37)</strong>: Meaningful but not dominant. The Four Factors overweighted this variable relative to its actual predictive power.</li>
+      <li><strong>Pace, ORB%, FT Rate, Assists (r &lt; 0.25)</strong>: Noisy. These matter in specific systems or matchups but explain little of the overall variance in wins.</li>
+      <li>The Four Factors model (R² ≈ 0.37) is useful but outdated, ORB% and FT Rate have lost much of their predictive power in the modern game. A two-factor model of eFG% and TOV% performs almost as well.</li>
     </ul>
   </div>
 </div>
