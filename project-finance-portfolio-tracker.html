@@ -7,20 +7,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=Space+Mono&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-:root {
-  --sand:#EAE4D9; --sand-mid:#D8D0C2; --sand-dark:#C4BAA8;
-  --ink:#1C1C1A; --ink-mid:#4A4740; --ink-light:#7A756C;
-  --accent:#BDD0E0; --accent-dark:#8AAEC8;
-  --green-strong:#0a5c2e; --green-mid:#1a8a45; --green-light:#d4edda;
-  --red-strong:#8b1a1a; --red-mid:#c0392b; --red-light:#fde8e8;
-  --white:#ffffff; --gray-light:#f4f4f2; --gray-mid:#e8e8e4;
-}
+:root{--sand:#EAE4D9;--sand-mid:#D8D0C2;--sand-dark:#C4BAA8;--ink:#1C1C1A;--ink-mid:#4A4740;--ink-light:#7A756C;--accent:#BDD0E0;--accent-dark:#8AAEC8;--green-strong:#0a5c2e;--green-mid:#1a8a45;--green-light:#d4edda;--red-strong:#8b1a1a;--red-mid:#c0392b;--red-light:#fde8e8;--white:#ffffff;--gray-light:#f4f4f2;--gray-mid:#e8e8e4;}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html{scroll-behavior:smooth;}
 body{font-family:'DM Sans',sans-serif;background:var(--sand);color:var(--ink);}
-
-/* NAV */
 nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:18px 48px;background:var(--accent);border-bottom:1px solid var(--accent-dark);}
 .nav-logo{font-family:'DM Serif Display',serif;font-size:17px;text-decoration:none;color:var(--ink);white-space:nowrap;}
 .nav-right{display:flex;gap:32px;}
@@ -31,8 +23,6 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:cen
 .nav-mobile{display:none;position:fixed;top:57px;left:0;right:0;z-index:199;background:var(--accent);border-bottom:2px solid var(--ink);flex-direction:column;}
 .nav-mobile.open{display:flex;}
 .nav-mobile a{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;text-decoration:none;color:var(--ink-mid);padding:18px 24px;border-bottom:1px solid rgba(0,0,0,.1);}
-
-/* PAGE HEADER */
 .page-header{background:var(--accent);padding:120px 48px 56px;border-bottom:2px solid var(--ink);}
 .breadcrumb{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-light);margin-bottom:20px;}
 .breadcrumb a{color:var(--ink-light);text-decoration:none;}.breadcrumb a:hover{color:var(--ink);}
@@ -42,133 +32,124 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:cen
 .meta-row{display:flex;gap:40px;flex-wrap:wrap;padding-top:24px;border-top:1px solid rgba(28,28,26,.15);}
 .meta-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-light);margin-bottom:4px;}
 .meta-value{font-size:13px;font-weight:500;}
-
-/* INTRO SECTION */
 .intro-section{max-width:900px;padding:48px 48px 0;}
 .cs-eyebrow{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-light);margin-bottom:10px;}
 .cs-heading{font-family:'DM Serif Display',serif;font-size:26px;margin-bottom:16px;}
 .cs-body{font-size:15px;line-height:1.8;color:var(--ink-mid);}
 .cs-body p{margin-bottom:14px;}
 .cs-body strong{color:var(--ink);font-weight:500;}
+.csv-format{background:#1a1a18;padding:20px 24px;margin:20px 0;}
+.csv-title{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#7A756C;margin-bottom:10px;}
+.csv-code{color:#BDE0C8;font-family:'Space Mono',monospace;font-size:11px;line-height:1.7;white-space:pre;}
 
-/* CSV FORMAT BOX */
-.csv-format{display:grid;grid-template-columns:1fr 1fr;gap:2px;background:var(--ink);margin:28px 0;}
-.csv-block{background:var(--sand);padding:24px;}
-.csv-title{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-light);margin-bottom:12px;}
-.csv-code{background:#1a1a18;color:#BDE0C8;font-family:'Space Mono',monospace;font-size:11px;line-height:1.7;padding:16px;white-space:pre;}
+/* UPLOAD */
+.upload-zone{padding:48px 48px 0;max-width:900px;}
+.upload-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:28px;}
+.upload-card{border:2px dashed var(--sand-dark);padding:28px 22px;text-align:center;cursor:pointer;transition:all .2s;position:relative;background:var(--white);}
+.upload-card:hover,.upload-card.drag-over{border-color:var(--ink);background:rgba(189,208,224,.15);}
+.upload-card input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.upload-icon{font-size:24px;margin-bottom:10px;}
+.upload-title{font-family:'DM Serif Display',serif;font-size:17px;margin-bottom:6px;}
+.upload-desc{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-light);line-height:1.6;}
+.upload-status{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;margin-top:8px;}
+.upload-status.ok{color:var(--green-mid);}.upload-status.err{color:var(--red-mid);}
 
-/* ═══════════════════════════════════════
-   DASHBOARD
-═══════════════════════════════════════ */
-#dashboard{display:none;padding:0;}
+/* SETTINGS FORM */
+.settings-form{background:var(--white);border:1px solid var(--sand-dark);padding:28px;margin-bottom:28px;}
+.settings-title{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-light);margin-bottom:20px;}
+.settings-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+.field-group{display:flex;flex-direction:column;gap:6px;}
+.field-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-light);}
+.field-input{font-family:'Space Mono',monospace;font-size:13px;padding:10px 12px;border:1px solid var(--sand-dark);background:var(--gray-light);color:var(--ink);width:100%;}
+.field-input:focus{outline:none;border-color:var(--ink);}
+.field-select{font-family:'Space Mono',monospace;font-size:13px;padding:10px 12px;border:1px solid var(--sand-dark);background:var(--gray-light);color:var(--ink);width:100%;cursor:pointer;}
 
-/* DASHBOARD HEADER BAR */
-.dash-header{background:var(--ink);padding:20px 32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;border-bottom:1px solid rgba(255,255,255,.1);}
-.dash-title{font-family:'DM Serif Display',serif;font-size:20px;color:var(--sand);}
-.dash-controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
-.currency-btns{display:flex;gap:2px;}
-.currency-btn{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:7px 14px;background:rgba(255,255,255,.1);color:rgba(234,228,217,.7);border:none;cursor:pointer;transition:all .15s;}
-.currency-btn.active{background:var(--accent);color:var(--ink);}
-.currency-btn:hover{background:rgba(255,255,255,.2);}
-.country-select{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:7px 12px;background:rgba(255,255,255,.1);color:rgba(234,228,217,.7);border:1px solid rgba(255,255,255,.2);cursor:pointer;}
-.country-select option{background:#1a1a18;color:var(--sand);}
-.last-updated{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:rgba(234,228,217,.4);}
+.launch-row{display:flex;gap:16px;align-items:center;flex-wrap:wrap;padding-bottom:48px;}
+.btn-launch{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;padding:14px 32px;background:var(--ink);color:var(--sand);border:none;cursor:pointer;transition:opacity .15s;}
+.btn-launch:hover{opacity:.75;}
+.btn-demo{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:14px 24px;background:none;border:1px solid var(--sand-dark);color:var(--ink-mid);cursor:pointer;transition:all .15s;}
+.btn-demo:hover{border-color:var(--ink);color:var(--ink);}
+.error-msg{font-family:'Space Mono',monospace;font-size:10px;color:var(--red-mid);display:none;}
 
-/* LOADING BAR */
-.loading-bar{background:var(--ink);padding:12px 32px;display:none;align-items:center;gap:12px;}
+/* LOADING */
+.loading-bar{background:var(--ink);padding:14px 32px;display:none;align-items:center;gap:12px;}
 .loading-bar.visible{display:flex;}
 .spinner{width:14px;height:14px;border:2px solid rgba(234,228,217,.2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;}
 @keyframes spin{to{transform:rotate(360deg);}}
-.loading-text{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:rgba(234,228,217,.6);}
+.loading-text{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:rgba(234,228,217,.7);}
 .loading-progress{margin-left:auto;font-family:'Space Mono',monospace;font-size:10px;color:rgba(234,228,217,.4);}
 
-/* KPI CARDS */
+/* DASHBOARD */
+#dashboard{display:none;}
+.dash-header{background:var(--ink);padding:18px 32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;}
+.dash-title{font-family:'DM Serif Display',serif;font-size:19px;color:var(--sand);}
+.dash-controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.currency-btns{display:flex;gap:2px;}
+.currency-btn{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:7px 13px;background:rgba(255,255,255,.1);color:rgba(234,228,217,.6);border:none;cursor:pointer;transition:all .15s;}
+.currency-btn.active{background:var(--accent);color:var(--ink);}
+.currency-btn:hover{background:rgba(255,255,255,.2);}
+.country-select{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:7px 10px;background:rgba(255,255,255,.1);color:rgba(234,228,217,.7);border:1px solid rgba(255,255,255,.2);cursor:pointer;}
+.country-select option{background:#1a1a18;}
+.btn-reset{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:7px 13px;background:none;border:1px solid rgba(255,255,255,.25);color:rgba(234,228,217,.5);cursor:pointer;}
+.btn-reset:hover{border-color:rgba(255,255,255,.6);color:rgba(234,228,217,.9);}
+.last-updated{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:rgba(234,228,217,.35);}
+
+/* KPI */
 .kpi-strip{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--ink);border-bottom:1px solid var(--ink);}
-.kpi-card{background:var(--white);padding:20px 18px;position:relative;}
+.kpi-card{background:var(--white);padding:18px 16px;}
 .kpi-card.accent{background:var(--accent);}
-.kpi-label{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-light);margin-bottom:8px;}
-.kpi-value{font-family:'DM Serif Display',serif;font-size:22px;line-height:1;margin-bottom:4px;color:var(--ink);}
+.kpi-label{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-light);margin-bottom:7px;}
+.kpi-value{font-family:'DM Serif Display',serif;font-size:21px;line-height:1;margin-bottom:4px;}
 .kpi-sub{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-light);}
-.kpi-value.positive{color:var(--green-mid);}
-.kpi-value.negative{color:var(--red-mid);}
+.kpi-value.positive{color:var(--green-mid);}.kpi-value.negative{color:var(--red-mid);}
 
-/* INSIGHTS ROW */
+/* INSIGHTS */
 .insights-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--ink);border-bottom:1px solid var(--sand-mid);}
-.insight-card{background:var(--gray-light);padding:16px 18px;}
-.insight-label{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-light);margin-bottom:5px;}
-.insight-value{font-size:14px;font-weight:500;color:var(--ink);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.insight-card{background:var(--gray-light);padding:14px 16px;}
+.insight-label{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-light);margin-bottom:4px;}
+.insight-value{font-size:13px;font-weight:500;color:var(--ink);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .insight-sub{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-light);}
-.insight-sub.pos{color:var(--green-mid);}
-.insight-sub.neg{color:var(--red-mid);}
+.insight-sub.pos{color:var(--green-mid);}.insight-sub.neg{color:var(--red-mid);}
 
-/* DASHBOARD BODY */
-.dash-body{display:grid;grid-template-columns:1fr 340px;gap:0;background:var(--gray-mid);}
-
-/* LEFT COLUMN */
-.dash-left{padding:24px;display:flex;flex-direction:column;gap:24px;}
-
-/* HEATMAP */
+/* DASH BODY */
+.dash-body{display:grid;grid-template-columns:1fr 320px;gap:0;background:var(--gray-mid);}
+.dash-left{padding:20px;display:flex;flex-direction:column;gap:20px;}
 .panel{background:var(--white);border:1px solid var(--gray-mid);}
-.panel-header{padding:16px 20px;border-bottom:1px solid var(--gray-mid);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
-.panel-title{font-family:'DM Serif Display',serif;font-size:16px;color:var(--ink);}
+.panel-header{padding:14px 18px;border-bottom:1px solid var(--gray-mid);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.panel-title{font-family:'DM Serif Display',serif;font-size:15px;color:var(--ink);}
 .view-btns{display:flex;gap:2px;}
-.view-btn{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;padding:5px 10px;background:var(--gray-light);color:var(--ink-mid);border:none;cursor:pointer;transition:all .15s;}
+.view-btn{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.07em;text-transform:uppercase;padding:5px 10px;background:var(--gray-light);color:var(--ink-mid);border:none;cursor:pointer;transition:all .15s;}
 .view-btn.active{background:var(--ink);color:var(--sand);}
-#heatmap-container{padding:16px;min-height:280px;}
+#heatmap-container{padding:14px;min-height:260px;}
 
 /* TABLE */
-.table-controls{padding:12px 16px;border-bottom:1px solid var(--gray-mid);display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
-.search-input{font-family:'Space Mono',monospace;font-size:10px;padding:7px 12px;border:1px solid var(--gray-mid);background:var(--gray-light);color:var(--ink);width:200px;letter-spacing:.04em;}
+.table-controls{padding:10px 14px;border-bottom:1px solid var(--gray-mid);display:flex;gap:10px;align-items:center;}
+.search-input{font-family:'Space Mono',monospace;font-size:10px;padding:7px 11px;border:1px solid var(--gray-mid);background:var(--gray-light);color:var(--ink);width:200px;}
 .search-input:focus{outline:none;border-color:var(--ink);}
 .table-wrap{overflow-x:auto;}
-table{width:100%;border-collapse:collapse;font-size:12.5px;}
-thead th{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-light);padding:10px 14px;border-bottom:2px solid var(--ink);text-align:left;background:var(--gray-light);white-space:nowrap;cursor:pointer;user-select:none;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+thead th{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-light);padding:9px 12px;border-bottom:2px solid var(--ink);text-align:left;background:var(--gray-light);white-space:nowrap;cursor:pointer;user-select:none;}
 thead th:hover{color:var(--ink);}
 thead th.sort-asc::after{content:' ▲';font-size:7px;}
 thead th.sort-desc::after{content:' ▼';font-size:7px;}
-tbody td{padding:9px 14px;border-bottom:1px solid var(--gray-mid);color:var(--ink-mid);white-space:nowrap;}
+tbody td{padding:8px 12px;border-bottom:1px solid var(--gray-mid);color:var(--ink-mid);white-space:nowrap;}
 tbody td:first-child{font-weight:600;color:var(--ink);font-family:'Space Mono',monospace;font-size:11px;}
-tbody tr:hover td{background:rgba(189,208,224,.15);}
-.td-pos{color:var(--green-mid);font-weight:500;}
-.td-neg{color:var(--red-mid);font-weight:500;}
+tbody tr:hover td{background:rgba(189,208,224,.12);}
+.td-pos{color:var(--green-mid);font-weight:500;}.td-neg{color:var(--red-mid);font-weight:500;}
 
-/* RIGHT COLUMN */
-.dash-right{padding:24px;display:flex;flex-direction:column;gap:20px;border-left:1px solid var(--gray-mid);}
-.donut-wrap{position:relative;display:flex;justify-content:center;}
+/* RIGHT */
+.dash-right{padding:20px;display:flex;flex-direction:column;gap:18px;border-left:1px solid var(--gray-mid);overflow-y:auto;}
+.donut-wrap{position:relative;display:flex;justify-content:center;padding:10px 0 4px;}
 .donut-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;}
-.donut-center-val{font-family:'DM Serif Display',serif;font-size:18px;color:var(--ink);}
+.donut-center-val{font-family:'DM Serif Display',serif;font-size:17px;color:var(--ink);}
 .donut-center-lbl{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-light);}
-.donut-legend{display:flex;flex-direction:column;gap:6px;padding:0 8px 8px;}
-.legend-item{display:flex;align-items:center;gap:8px;font-size:12px;cursor:default;}
-.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.donut-legend{display:flex;flex-direction:column;gap:5px;padding:0 8px 10px;}
+.legend-item{display:flex;align-items:center;gap:7px;font-size:11px;}
+.legend-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
 .legend-label{color:var(--ink-mid);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.legend-pct{font-family:'Space Mono',monospace;font-size:10px;color:var(--ink-light);font-weight:500;}
+.legend-pct{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-light);}
 
-/* TOOLTIP */
-.tooltip{position:fixed;pointer-events:none;background:var(--ink);color:var(--sand);padding:12px 16px;font-family:'Space Mono',monospace;font-size:10px;line-height:1.7;letter-spacing:.04em;z-index:9999;opacity:0;transition:opacity .15s;max-width:220px;border-radius:1px;}
-
-/* UPLOAD ZONE */
-.upload-zone{padding:48px;display:flex;flex-direction:column;align-items:center;gap:32px;}
-.upload-cards{display:grid;grid-template-columns:1fr 1fr;gap:24px;width:100%;max-width:700px;}
-.upload-card{border:2px dashed var(--sand-dark);padding:32px 24px;text-align:center;cursor:pointer;transition:all .2s;position:relative;}
-.upload-card:hover,.upload-card.drag-over{border-color:var(--ink);background:rgba(189,208,224,.15);}
-.upload-card input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
-.upload-icon{font-size:28px;margin-bottom:12px;}
-.upload-title{font-family:'DM Serif Display',serif;font-size:18px;margin-bottom:8px;}
-.upload-desc{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-light);line-height:1.6;}
-.upload-status{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;margin-top:10px;}
-.upload-status.ok{color:var(--green-mid);}
-.upload-status.err{color:var(--red-mid);}
-.btn-launch{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;padding:15px 36px;background:var(--ink);color:var(--sand);border:none;cursor:pointer;transition:opacity .15s;display:none;}
-.btn-launch:hover{opacity:.75;}
-.btn-launch.visible{display:block;}
-
-/* DEMO BUTTON */
-.demo-strip{text-align:center;padding-bottom:8px;}
-.btn-demo{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:10px 24px;background:none;border:1px solid var(--sand-dark);color:var(--ink-mid);cursor:pointer;transition:all .15s;}
-.btn-demo:hover{border-color:var(--ink);color:var(--ink);}
-
-/* BOTTOM NAV */
+.tooltip{position:fixed;pointer-events:none;background:var(--ink);color:var(--sand);padding:11px 14px;font-family:'Space Mono',monospace;font-size:10px;line-height:1.7;letter-spacing:.04em;z-index:9999;opacity:0;transition:opacity .15s;max-width:230px;}
 .project-nav{display:flex;justify-content:space-between;padding:40px 48px;border-top:2px solid var(--ink);gap:24px;}
 .pnav-link{text-decoration:none;color:var(--ink);}
 .pnav-dir{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-light);margin-bottom:5px;}
@@ -180,13 +161,13 @@ footer a:hover{color:var(--ink);}
 @media(max-width:900px){
   nav{padding:16px 20px;}.nav-right{display:none;}.nav-burger{display:flex;}
   .page-header{padding:86px 20px 40px;}
-  .intro-section{padding:36px 20px 0;}
-  .csv-format{grid-template-columns:1fr;}
+  .intro-section,.upload-zone{padding:32px 20px 0;}
+  .upload-grid{grid-template-columns:1fr;}
+  .settings-grid{grid-template-columns:1fr;}
   .kpi-strip{grid-template-columns:repeat(2,1fr);}
   .insights-strip{grid-template-columns:repeat(2,1fr);}
   .dash-body{grid-template-columns:1fr;}
   .dash-right{border-left:none;border-top:1px solid var(--gray-mid);}
-  .upload-cards{grid-template-columns:1fr;}
   .project-nav{padding:28px 20px;flex-direction:column;gap:20px;}
   footer{padding:16px 20px;flex-direction:column;gap:8px;}
 }
@@ -212,72 +193,74 @@ footer a:hover{color:var(--ink);}
   <a href="mailto:martin.delhomme@gmail.com">Contact</a>
 </div>
 
-<!-- PAGE HEADER -->
 <header class="page-header">
   <div class="breadcrumb"><a href="index.html">Home</a> / <a href="finance.html">Finance & Markets</a> / Portfolio Tracker</div>
   <span class="project-tag">Live Tool - Vanilla JS - Yahoo Finance - No Backend</span>
   <h1 class="page-title">Portfolio Tracker</h1>
-  <p class="page-subtitle">Upload two CSV files and instantly get a full portfolio dashboard — live prices, PnL, allocation heatmaps, sector and country breakdowns. No server, no database, no API key.</p>
+  <p class="page-subtitle">Upload your holdings (CSV or Excel), enter your cash and deposits, and get a full live dashboard — PnL, allocation heatmaps, sector and country breakdowns. No server, no API key, no data stored.</p>
   <div class="meta-row">
     <div class="meta-item"><div class="meta-label">Type</div><div class="meta-value">Interactive Tool</div></div>
-    <div class="meta-item"><div class="meta-label">Data</div><div class="meta-value">Yahoo Finance + Frankfurter</div></div>
+    <div class="meta-item"><div class="meta-label">Data</div><div class="meta-value">Yahoo Finance (live / last close)</div></div>
     <div class="meta-item"><div class="meta-label">Stack</div><div class="meta-value">HTML / CSS / Vanilla JS / D3</div></div>
-    <div class="meta-item"><div class="meta-label">Hosting</div><div class="meta-value">GitHub Pages</div></div>
+    <div class="meta-item"><div class="meta-label">Input</div><div class="meta-value">CSV or Excel (.xlsx)</div></div>
   </div>
 </header>
 
 <!-- INTRO -->
 <div class="intro-section">
-  <div style="margin-bottom:36px;">
-    <div class="cs-eyebrow">How it works</div>
-    <h2 class="cs-heading">Two CSV files. Instant dashboard.</h2>
-    <div class="cs-body">
-      <p>Inspired by institutional asset management reporting tools, this tracker was built to monitor a personal portfolio with the same rigour applied at work — allocation breakdowns, live PnL, sector and country exposure — without relying on any paid service or backend infrastructure.</p>
-      <p>Upload your holdings CSV and a settings file with your cash balance and total deposits. The tool fetches live prices and FX rates, converts everything to your chosen reporting currency, and builds the full dashboard in the browser.</p>
-      <p><strong>No data leaves your browser.</strong> Nothing is stored. Refresh the page and it resets.</p>
-    </div>
+  <div class="cs-eyebrow">How it works</div>
+  <h2 class="cs-heading">One file. Three fields. Full dashboard.</h2>
+  <div class="cs-body">
+    <p>Upload your holdings file (CSV or Excel), enter your cash balance, total deposits and reporting currency below. The tool fetches live prices from Yahoo Finance — falling back to last close if the market is closed — converts everything to your chosen currency, and builds the dashboard entirely in your browser.</p>
+    <p><strong>No data leaves your browser.</strong> Nothing is stored anywhere. Refresh to reset.</p>
   </div>
   <div class="csv-format">
-    <div class="csv-block">
-      <div class="csv-title">holdings.csv — one row per position</div>
-      <div class="csv-code">ticker,qty,cost_price,currency
+    <div class="csv-title">holdings.csv or holdings.xlsx — required columns</div>
+    <div class="csv-code">ticker,qty,cost_price,currency
 AAPL,10,150.00,USD
 ENB.TO,100,47.50,CAD
-AGG,50,95.00,USD
-MSFT,5,280.00,USD</div>
-    </div>
-    <div class="csv-block">
-      <div class="csv-title">settings.csv — cash & deposits</div>
-      <div class="csv-code">metric,value,currency
-cash,12000,CAD
-deposits,25000,CAD</div>
-    </div>
+AGG,50,95.00,USD</div>
   </div>
 </div>
 
-<!-- UPLOAD ZONE -->
-<div id="upload-section">
-  <div class="upload-zone">
-    <div class="upload-cards">
-      <div class="upload-card" id="holdings-card">
-        <input type="file" accept=".csv" id="holdings-input">
-        <div class="upload-icon">📊</div>
-        <div class="upload-title">Holdings CSV</div>
-        <div class="upload-desc">ticker, qty, cost_price, currency</div>
-        <div class="upload-status" id="holdings-status"></div>
-      </div>
-      <div class="upload-card" id="settings-card">
-        <input type="file" accept=".csv" id="settings-input">
-        <div class="upload-icon">⚙️</div>
-        <div class="upload-title">Settings CSV</div>
-        <div class="upload-desc">cash balance & total deposits</div>
-        <div class="upload-status" id="settings-status"></div>
+<!-- UPLOAD & SETTINGS -->
+<div class="upload-zone">
+  <div class="upload-grid">
+    <div class="upload-card" id="holdings-card">
+      <input type="file" accept=".csv,.xlsx,.xls" id="holdings-input">
+      <div class="upload-icon">📊</div>
+      <div class="upload-title">Holdings File</div>
+      <div class="upload-desc">CSV or Excel (.xlsx / .xls)<br>ticker · qty · cost_price · currency</div>
+      <div class="upload-status" id="holdings-status">Click or drag to upload</div>
+    </div>
+    <div style="display:flex;flex-direction:column;justify-content:center;">
+      <div class="settings-form">
+        <div class="settings-title">Portfolio Settings</div>
+        <div class="settings-grid">
+          <div class="field-group">
+            <div class="field-label">Cash Balance</div>
+            <input class="field-input" type="number" id="input-cash" placeholder="e.g. 12000" min="0">
+          </div>
+          <div class="field-group">
+            <div class="field-label">Total Deposits</div>
+            <input class="field-input" type="number" id="input-deposits" placeholder="e.g. 50000" min="0">
+          </div>
+          <div class="field-group">
+            <div class="field-label">Currency</div>
+            <select class="field-select" id="input-currency">
+              <option value="CAD">CAD</option>
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+            </select>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="demo-strip">
-      <button class="btn-demo" onclick="loadDemo()">Try with demo data</button>
-    </div>
-    <button class="btn-launch" id="btn-launch" onclick="launch()">Load Dashboard →</button>
+  </div>
+  <div class="launch-row">
+    <button class="btn-launch" onclick="launch()">Load Dashboard →</button>
+    <button class="btn-demo" onclick="loadDemo()">Try demo data</button>
+    <span class="error-msg" id="error-msg">Please upload a holdings file first.</span>
   </div>
 </div>
 
@@ -305,240 +288,186 @@ deposits,25000,CAD</div>
         <option value="Europe">Europe</option>
         <option value="Other">Other</option>
       </select>
+      <button class="btn-reset" onclick="resetDashboard()">← Reset</button>
       <span class="last-updated" id="last-updated"></span>
     </div>
   </div>
 
-  <!-- KPI -->
   <div class="kpi-strip">
-    <div class="kpi-card accent">
-      <div class="kpi-label">Portfolio Value</div>
-      <div class="kpi-value" id="kpi-total">—</div>
-      <div class="kpi-sub" id="kpi-total-sub"></div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Cash</div>
-      <div class="kpi-value" id="kpi-cash">—</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Invested Capital</div>
-      <div class="kpi-value" id="kpi-invested">—</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Total Deposits</div>
-      <div class="kpi-value" id="kpi-deposits">—</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Unrealized PnL</div>
-      <div class="kpi-value" id="kpi-pnl">—</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Return %</div>
-      <div class="kpi-value" id="kpi-return">—</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Holdings</div>
-      <div class="kpi-value" id="kpi-count">—</div>
-    </div>
+    <div class="kpi-card accent"><div class="kpi-label">Portfolio Value</div><div class="kpi-value" id="kpi-total">—</div></div>
+    <div class="kpi-card"><div class="kpi-label">Cash</div><div class="kpi-value" id="kpi-cash">—</div></div>
+    <div class="kpi-card"><div class="kpi-label">Invested Capital</div><div class="kpi-value" id="kpi-invested">—</div></div>
+    <div class="kpi-card"><div class="kpi-label">Total Deposits</div><div class="kpi-value" id="kpi-deposits">—</div></div>
+    <div class="kpi-card"><div class="kpi-label">Unrealized PnL</div><div class="kpi-value" id="kpi-pnl">—</div></div>
+    <div class="kpi-card"><div class="kpi-label">Return %</div><div class="kpi-value" id="kpi-return">—</div></div>
+    <div class="kpi-card"><div class="kpi-label">Holdings</div><div class="kpi-value" id="kpi-count">—</div></div>
   </div>
 
-  <!-- INSIGHTS -->
   <div class="insights-strip">
-    <div class="insight-card">
-      <div class="insight-label">Largest Position</div>
-      <div class="insight-value" id="ins-largest">—</div>
-      <div class="insight-sub" id="ins-largest-sub"></div>
-    </div>
-    <div class="insight-card">
-      <div class="insight-label">Best Performer</div>
-      <div class="insight-value" id="ins-best">—</div>
-      <div class="insight-sub pos" id="ins-best-sub"></div>
-    </div>
-    <div class="insight-card">
-      <div class="insight-label">Worst Performer</div>
-      <div class="insight-value" id="ins-worst">—</div>
-      <div class="insight-sub neg" id="ins-worst-sub"></div>
-    </div>
-    <div class="insight-card">
-      <div class="insight-label">Top Sector</div>
-      <div class="insight-value" id="ins-sector">—</div>
-      <div class="insight-sub" id="ins-sector-sub"></div>
-    </div>
+    <div class="insight-card"><div class="insight-label">Largest Position</div><div class="insight-value" id="ins-largest">—</div><div class="insight-sub" id="ins-largest-sub"></div></div>
+    <div class="insight-card"><div class="insight-label">Best Performer</div><div class="insight-value" id="ins-best">—</div><div class="insight-sub pos" id="ins-best-sub"></div></div>
+    <div class="insight-card"><div class="insight-label">Worst Performer</div><div class="insight-value" id="ins-worst">—</div><div class="insight-sub neg" id="ins-worst-sub"></div></div>
+    <div class="insight-card"><div class="insight-label">Top Sector</div><div class="insight-value" id="ins-sector">—</div><div class="insight-sub" id="ins-sector-sub"></div></div>
   </div>
 
-  <!-- BODY -->
   <div class="dash-body">
     <div class="dash-left">
-      <!-- HEATMAP -->
       <div class="panel">
         <div class="panel-header">
           <div class="panel-title">Holdings Heatmap</div>
           <div class="view-btns">
-            <button class="view-btn active" onclick="setHeatmapView('pnl_pct')">PnL %</button>
-            <button class="view-btn" onclick="setHeatmapView('pnl_abs')">PnL $</button>
-            <button class="view-btn" onclick="setHeatmapView('weight')">Weight</button>
+            <button class="view-btn active" onclick="setHeatmapView('pnl_pct',this)">PnL %</button>
+            <button class="view-btn" onclick="setHeatmapView('pnl_abs',this)">PnL $</button>
+            <button class="view-btn" onclick="setHeatmapView('weight',this)">Weight</button>
           </div>
         </div>
         <div id="heatmap-container"></div>
       </div>
-
-      <!-- TABLE -->
       <div class="panel">
-        <div class="panel-header">
-          <div class="panel-title">Holdings</div>
-        </div>
+        <div class="panel-header"><div class="panel-title">Holdings</div></div>
         <div class="table-controls">
           <input class="search-input" type="text" id="table-search" placeholder="Search ticker or name..." oninput="renderTable()">
         </div>
         <div class="table-wrap">
           <table>
-            <thead>
-              <tr>
-                <th onclick="sortTable('ticker')">Ticker</th>
-                <th onclick="sortTable('name')">Name</th>
-                <th onclick="sortTable('sector')">Sector</th>
-                <th onclick="sortTable('country')">Country</th>
-                <th onclick="sortTable('qty')">Qty</th>
-                <th onclick="sortTable('cost')">Cost</th>
-                <th onclick="sortTable('price')">Price</th>
-                <th onclick="sortTable('value')">Value</th>
-                <th onclick="sortTable('pnl_abs')">PnL $</th>
-                <th onclick="sortTable('pnl_pct')">PnL %</th>
-                <th onclick="sortTable('weight')">Weight</th>
-              </tr>
-            </thead>
+            <thead><tr>
+              <th onclick="sortTable('ticker')">Ticker</th>
+              <th onclick="sortTable('name')">Name</th>
+              <th onclick="sortTable('sector')">Sector</th>
+              <th onclick="sortTable('country')">Country</th>
+              <th onclick="sortTable('qty')">Qty</th>
+              <th onclick="sortTable('cost')">Avg Cost</th>
+              <th onclick="sortTable('price')">Live Price</th>
+              <th onclick="sortTable('mktVal')">Value</th>
+              <th onclick="sortTable('pnlAbs')">PnL $</th>
+              <th onclick="sortTable('pnlPct')">PnL %</th>
+              <th onclick="sortTable('weight')">Weight</th>
+            </tr></thead>
             <tbody id="holdings-tbody"></tbody>
           </table>
         </div>
       </div>
     </div>
-
-    <!-- RIGHT: DONUTS -->
     <div class="dash-right">
-      <div class="panel" id="sector-panel">
-        <div class="panel-header"><div class="panel-title">Sector</div></div>
-        <div id="sector-donut" class="donut-wrap"></div>
-        <div class="donut-legend" id="sector-legend"></div>
-      </div>
-      <div class="panel" id="country-panel">
-        <div class="panel-header"><div class="panel-title">Country</div></div>
-        <div id="country-donut" class="donut-wrap"></div>
-        <div class="donut-legend" id="country-legend"></div>
-      </div>
-      <div class="panel" id="asset-panel">
-        <div class="panel-header"><div class="panel-title">Asset Class</div></div>
-        <div id="asset-donut" class="donut-wrap"></div>
-        <div class="donut-legend" id="asset-legend"></div>
-      </div>
+      <div class="panel"><div class="panel-header"><div class="panel-title">Sector</div></div><div id="sector-donut" class="donut-wrap"></div><div class="donut-legend" id="sector-legend"></div></div>
+      <div class="panel"><div class="panel-header"><div class="panel-title">Country</div></div><div id="country-donut" class="donut-wrap"></div><div class="donut-legend" id="country-legend"></div></div>
+      <div class="panel"><div class="panel-header"><div class="panel-title">Asset Class</div></div><div id="asset-donut" class="donut-wrap"></div><div class="donut-legend" id="asset-legend"></div></div>
     </div>
   </div>
 </div>
 
-<!-- BOTTOM NAV & FOOTER -->
-<div id="page-footer">
+<div id="page-footer" style="display:none">
   <div class="project-nav">
-    <a href="finance.html" class="pnav-link">
-      <div class="pnav-dir"><- Back</div>
-      <div class="pnav-title">Finance & Markets</div>
-    </a>
+    <a href="finance.html" class="pnav-link"><div class="pnav-dir">← Back</div><div class="pnav-title">Finance & Markets</div></a>
   </div>
   <footer>
-    <a href="index.html"><- Portfolio</a>
+    <a href="index.html">← Portfolio</a>
     <a href="mailto:martin.delhomme@gmail.com">martin.delhomme@gmail.com</a>
   </footer>
 </div>
 
 <script>
-// ═══════════════════════════════════════════════════════════════
-// STATE
-// ═══════════════════════════════════════════════════════════════
-let holdingsRaw = [], settingsRaw = {};
-let positions = [];       // enriched with live data
+// ═══════════════════ STATE ═══════════════════
+let holdingsRaw = [];
+let positions = [];
 let currency = 'CAD';
 let heatmapView = 'pnl_pct';
-let sortKey = 'value', sortDir = -1;
+let sortKey = 'mktVal', sortDir = -1;
 let fxRates = {};
 let countryFilter = 'all';
+let cashSettings = { value: 0, currency: 'CAD' };
+let depositsSettings = { value: 0, currency: 'CAD' };
 
-const FMT = (n, c='') => {
+// ═══════════════════ FORMAT ═══════════════════
+const FMT = (n, c) => {
   if (n == null || isNaN(n)) return '—';
   const abs = Math.abs(n);
-  const s = abs >= 1e6 ? (abs/1e6).toFixed(2)+'M' : abs >= 1e3 ? (abs/1e3).toFixed(1)+'K' : abs.toFixed(2);
+  const s = abs >= 1e6 ? (abs/1e6).toFixed(2)+'M' : abs >= 1e3 ? (abs/1e3).toFixed(1)+'K' : abs.toFixed(0);
+  return (n < 0 ? '-' : '') + (c ? c+' ' : '') + s;
+};
+const FMTD = (n, c) => {
+  if (n == null || isNaN(n)) return '—';
+  const abs = Math.abs(n);
+  const s = abs >= 1e6 ? (abs/1e6).toFixed(2)+'M' : abs.toFixed(0);
   return (n < 0 ? '-' : '') + (c ? c+' ' : '') + s;
 };
 const FMTP = n => n == null || isNaN(n) ? '—' : (n >= 0 ? '+' : '') + n.toFixed(2) + '%';
 const FMTW = n => n == null || isNaN(n) ? '—' : n.toFixed(1) + '%';
+const FMTPRICE = n => n == null || isNaN(n) ? '—' : n.toFixed(2);
 
 const tip = document.getElementById('tooltip');
 function showTip(e,h){tip.innerHTML=h;tip.style.opacity=1;tip.style.left=(e.clientX+14)+'px';tip.style.top=(e.clientY-10)+'px';}
 function moveTip(e){tip.style.left=(e.clientX+14)+'px';tip.style.top=(e.clientY-10)+'px';}
 function hideTip(){tip.style.opacity=0;}
 
-// ═══════════════════════════════════════════════════════════════
-// CSV PARSING
-// ═══════════════════════════════════════════════════════════════
-function parseCSV(text) {
+// ═══════════════════ CSV / EXCEL PARSE ═══════════════════
+function parseCSVText(text) {
   const lines = text.trim().split('\n').filter(l => l.trim());
-  const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+  const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/[^a-z_]/g,''));
   return lines.slice(1).map(line => {
-    const vals = line.split(',').map(v => v.trim());
+    const vals = line.split(',').map(v => v.trim().replace(/^"|"$/g,''));
     const obj = {};
     headers.forEach((h,i) => obj[h] = vals[i]||'');
     return obj;
-  });
+  }).filter(r => r.ticker || r.symbol);
+}
+
+function parseExcel(buffer) {
+  const wb = XLSX.read(buffer, { type: 'array' });
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const raw = XLSX.utils.sheet_to_json(ws, { defval: '' });
+  return raw.map(r => {
+    const norm = {};
+    Object.keys(r).forEach(k => { norm[k.toLowerCase().trim().replace(/[^a-z_]/g,'')] = String(r[k]).trim(); });
+    // support both 'ticker' and 'symbol'
+    if (!norm.ticker && norm.symbol) norm.ticker = norm.symbol;
+    if (!norm.cost_price && norm['costprice']) norm.cost_price = norm['costprice'];
+    if (!norm.cost_price && norm['cost']) norm.cost_price = norm['cost'];
+    return norm;
+  }).filter(r => r.ticker);
 }
 
 document.getElementById('holdings-input').addEventListener('change', e => {
   const f = e.target.files[0]; if (!f) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    try {
-      holdingsRaw = parseCSV(ev.target.result);
-      document.getElementById('holdings-status').textContent = `✓ ${holdingsRaw.length} positions loaded`;
-      document.getElementById('holdings-status').className = 'upload-status ok';
-      checkReady();
-    } catch(err) {
-      document.getElementById('holdings-status').textContent = '✗ Parse error';
-      document.getElementById('holdings-status').className = 'upload-status err';
-    }
-  };
-  reader.readAsText(f);
-});
-
-document.getElementById('settings-input').addEventListener('change', e => {
-  const f = e.target.files[0]; if (!f) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    try {
-      const rows = parseCSV(ev.target.result);
-      settingsRaw = {};
-      rows.forEach(r => { settingsRaw[r.metric] = { value: parseFloat(r.value), currency: r.currency }; });
-      document.getElementById('settings-status').textContent = '✓ Settings loaded';
-      document.getElementById('settings-status').className = 'upload-status ok';
-      checkReady();
-    } catch(err) {
-      document.getElementById('settings-status').textContent = '✗ Parse error';
-      document.getElementById('settings-status').className = 'upload-status err';
-    }
-  };
-  reader.readAsText(f);
-});
-
-function checkReady() {
-  const btn = document.getElementById('btn-launch');
-  if (holdingsRaw.length > 0 && settingsRaw.deposits) {
-    btn.classList.add('visible');
+  const ext = f.name.split('.').pop().toLowerCase();
+  if (ext === 'csv') {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        holdingsRaw = parseCSVText(ev.target.result);
+        setHoldingsStatus(holdingsRaw.length);
+      } catch(err) { setHoldingsError(); }
+    };
+    reader.readAsText(f);
+  } else {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        holdingsRaw = parseExcel(new Uint8Array(ev.target.result));
+        setHoldingsStatus(holdingsRaw.length);
+      } catch(err) { setHoldingsError(); }
+    };
+    reader.readAsArrayBuffer(f);
   }
+});
+
+function setHoldingsStatus(n) {
+  const s = document.getElementById('holdings-status');
+  s.textContent = `✓ ${n} positions loaded`;
+  s.className = 'upload-status ok';
+}
+function setHoldingsError() {
+  const s = document.getElementById('holdings-status');
+  s.textContent = '✗ Could not read file';
+  s.className = 'upload-status err';
 }
 
-// ═══════════════════════════════════════════════════════════════
-// DEMO DATA
-// ═══════════════════════════════════════════════════════════════
+// ═══════════════════ DEMO DATA ═══════════════════
 function loadDemo() {
   holdingsRaw = [
     {ticker:'AAPL',qty:'15',cost_price:'155.00',currency:'USD'},
     {ticker:'MSFT',qty:'8',cost_price:'280.00',currency:'USD'},
-    {ticker:'NVDA',qty:'5',cost_price:'420.00',currency:'USD'},
+    {ticker:'NVDA',qty:'5',cost_price:'500.00',currency:'USD'},
     {ticker:'ENB.TO',qty:'200',cost_price:'47.50',currency:'CAD'},
     {ticker:'RY.TO',qty:'30',cost_price:'128.00',currency:'CAD'},
     {ticker:'TD.TO',qty:'40',cost_price:'82.00',currency:'CAD'},
@@ -547,125 +476,146 @@ function loadDemo() {
     {ticker:'GOOGL',qty:'10',cost_price:'130.00',currency:'USD'},
     {ticker:'AMZN',qty:'12',cost_price:'140.00',currency:'USD'},
   ];
-  settingsRaw = {
-    cash: { value: 15000, currency: 'CAD' },
-    deposits: { value: 50000, currency: 'CAD' }
-  };
-  document.getElementById('holdings-status').textContent = `✓ ${holdingsRaw.length} demo positions`;
-  document.getElementById('holdings-status').className = 'upload-status ok';
-  document.getElementById('settings-status').textContent = '✓ Demo settings';
-  document.getElementById('settings-status').className = 'upload-status ok';
-  document.getElementById('btn-launch').classList.add('visible');
+  document.getElementById('input-cash').value = 15000;
+  document.getElementById('input-deposits').value = 80000;
+  document.getElementById('input-currency').value = 'CAD';
+  setHoldingsStatus(holdingsRaw.length);
   launch();
 }
 
-// ═══════════════════════════════════════════════════════════════
-// LAUNCH
-// ═══════════════════════════════════════════════════════════════
+// ═══════════════════ LAUNCH ═══════════════════
 async function launch() {
-  document.getElementById('upload-section').style.display = 'none';
+  if (!holdingsRaw.length) {
+    document.getElementById('error-msg').style.display = 'block';
+    return;
+  }
+  document.getElementById('error-msg').style.display = 'none';
+
+  const cashVal = parseFloat(document.getElementById('input-cash').value) || 0;
+  const depVal  = parseFloat(document.getElementById('input-deposits').value) || 0;
+  const cur     = document.getElementById('input-currency').value || 'CAD';
+  cashSettings     = { value: cashVal, currency: cur };
+  depositsSettings = { value: depVal,  currency: cur };
+  currency = cur;
+
+  // Update currency buttons
+  document.querySelectorAll('.currency-btn').forEach(b => b.classList.toggle('active', b.textContent === cur));
+
+  document.getElementById('upload-zone-wrap') && (document.getElementById('upload-zone-wrap').style.display = 'none');
+  document.querySelectorAll('.upload-zone, .intro-section').forEach(el => el.style.display = 'none');
+
   const lb = document.getElementById('loading-bar');
   lb.classList.add('visible');
-  setLoading('Fetching FX rates...', '0 / 2');
+  setLoading('Fetching FX rates...','0 / 2');
 
   try {
     await fetchFX();
-    setLoading('Fetching stock prices...', '1 / 2');
+    setLoading('Fetching live prices...','1 / 2');
     await fetchAllPrices();
-    setLoading('Building dashboard...', '2 / 2');
-    buildDashboard();
     lb.classList.remove('visible');
+    buildDashboard();
     document.getElementById('dashboard').style.display = 'block';
     document.getElementById('page-footer').style.display = 'block';
   } catch(err) {
     lb.classList.remove('visible');
-    alert('Error fetching data. Some prices may be unavailable. ' + err.message);
     buildDashboard();
     document.getElementById('dashboard').style.display = 'block';
+    document.getElementById('page-footer').style.display = 'block';
   }
 }
 
-function setLoading(text, prog) {
-  document.getElementById('loading-text').textContent = text;
-  document.getElementById('loading-progress').textContent = prog;
+function setLoading(t, p) {
+  document.getElementById('loading-text').textContent = t;
+  document.getElementById('loading-progress').textContent = p;
 }
 
-// ═══════════════════════════════════════════════════════════════
-// FX RATES
-// ═══════════════════════════════════════════════════════════════
+function resetDashboard() {
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('page-footer').style.display = 'none';
+  document.querySelectorAll('.upload-zone, .intro-section').forEach(el => el.style.display = '');
+  holdingsRaw = []; positions = [];
+  document.getElementById('holdings-status').textContent = 'Click or drag to upload';
+  document.getElementById('holdings-status').className = 'upload-status';
+}
+
+// ═══════════════════ FX ═══════════════════
 async function fetchFX() {
   try {
-    const res = await fetch('https://api.frankfurter.app/latest?base=USD');
-    if (!res.ok) throw new Error('FX fetch failed');
-    const data = await res.json();
-    // rates relative to USD
-    fxRates = { USD: 1, ...data.rates };
-  } catch(e) {
-    // fallback approximate rates
-    fxRates = { USD: 1, CAD: 1.36, EUR: 0.92, GBP: 0.79 };
+    const r = await fetch('https://api.frankfurter.app/latest?base=USD');
+    if (!r.ok) throw new Error();
+    const d = await r.json();
+    fxRates = { USD:1, ...d.rates };
+  } catch {
+    fxRates = { USD:1, CAD:1.36, EUR:0.92, GBP:0.79, AUD:1.53, CHF:0.90 };
   }
 }
 
+function toUSD(amount, from) {
+  if (from === 'USD') return amount;
+  return amount / (fxRates[from] || 1);
+}
+function fromUSD(amount, to) {
+  if (to === 'USD') return amount;
+  return amount * (fxRates[to] || 1);
+}
 function convertFX(amount, from, to) {
-  const fromUSD = from === 'USD' ? amount : amount / (fxRates[from] || 1);
-  return to === 'USD' ? fromUSD : fromUSD * (fxRates[to] || 1);
+  return fromUSD(toUSD(amount, from), to);
 }
 
-// ═══════════════════════════════════════════════════════════════
-// YAHOO FINANCE FETCH
-// ═══════════════════════════════════════════════════════════════
-const SECTOR_MAP = {
-  'Technology':'Technology','Financial Services':'Financials','Financials':'Financials',
-  'Healthcare':'Healthcare','Energy':'Energy','Consumer Cyclical':'Consumer',
-  'Consumer Defensive':'Consumer','Communication Services':'Communication',
-  'Basic Materials':'Materials','Industrials':'Industrials','Real Estate':'Real Estate',
+// ═══════════════════ YAHOO FINANCE FETCH ═══════════════════
+// Sector normalisation
+const SECTOR_NORM = {
+  'Technology':'Technology','tech':'Technology',
+  'Financial Services':'Financials','financials':'Financials','Finance':'Financials',
+  'Healthcare':'Healthcare','health':'Healthcare',
+  'Energy':'Energy','energy':'Energy',
+  'Consumer Cyclical':'Consumer','Consumer Defensive':'Consumer','consumer':'Consumer',
+  'Communication Services':'Communication','communication':'Communication',
+  'Basic Materials':'Materials','materials':'Materials',
+  'Industrials':'Industrials','Real Estate':'Real Estate',
   'Utilities':'Utilities','ETF':'ETF','Bond ETF':'Fixed Income','Fixed Income':'Fixed Income',
 };
 
-const QUOTEFIELDS = 'regularMarketPrice,shortName,longName,sector,country,currency,quoteType,fiftyTwoWeekHigh,fiftyTwoWeekLow';
+function normSector(s) {
+  if (!s) return 'Unknown';
+  return SECTOR_NORM[s] || s;
+}
 
-async function fetchYahoo(ticker) {
-  const proxies = [
-    `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=1d`,
-    `https://query2.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=1d`,
+function guessCountry(ticker, exchangeTz) {
+  if (ticker.endsWith('.TO') || ticker.endsWith('.TSX')) return 'Canada';
+  if (ticker.endsWith('.L') || ticker.endsWith('.PA') || ticker.endsWith('.DE') || ticker.endsWith('.MI')) return 'Europe';
+  if (exchangeTz && exchangeTz.includes('Toronto')) return 'Canada';
+  if (exchangeTz && (exchangeTz.includes('London') || exchangeTz.includes('Paris') || exchangeTz.includes('Berlin'))) return 'Europe';
+  return 'USA';
+}
+
+async function fetchYahooQuote(ticker) {
+  // Try both chart endpoints (v8) which work without CORS preflight
+  const urls = [
+    `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=5d`,
+    `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=5d`,
   ];
-  for (const url of proxies) {
+  for (const url of urls) {
     try {
-      const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
-      if (!res.ok) continue;
-      const data = await res.json();
-      const meta = data?.chart?.result?.[0]?.meta;
-      if (!meta) continue;
+      const r = await fetch(url);
+      if (!r.ok) continue;
+      const d = await r.json();
+      const res = d?.chart?.result?.[0];
+      if (!res) continue;
+      const meta = res.meta;
+      const price = meta.regularMarketPrice || meta.previousClose || meta.chartPreviousClose;
+      if (!price) continue;
       return {
-        price: meta.regularMarketPrice,
-        currency: meta.currency,
-        name: meta.longName || meta.shortName || ticker,
-        sector: 'Unknown',
-        country: meta.exchangeTimezoneName?.includes('America/Toronto') ? 'Canada' :
-                 meta.exchangeTimezoneName?.includes('America') ? 'USA' : 'Other',
-        quoteType: meta.instrumentType || 'EQUITY',
+        price,
+        currency: meta.currency || 'USD',
+        name: meta.shortName || meta.longName || ticker,
+        sector: normSector(meta.sector || ''),
+        country: guessCountry(ticker, meta.exchangeTimezoneName || ''),
+        quoteType: meta.instrumentType || meta.quoteType || 'EQUITY',
+        isLive: !!meta.regularMarketPrice,
       };
-    } catch(e) { continue; }
+    } catch { continue; }
   }
-  // Try v7 quote endpoint as fallback
-  try {
-    const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${ticker}&fields=${QUOTEFIELDS}`;
-    const res = await fetch(url);
-    if (res.ok) {
-      const data = await res.json();
-      const q = data?.quoteResponse?.result?.[0];
-      if (q) {
-        return {
-          price: q.regularMarketPrice,
-          currency: q.currency,
-          name: q.shortName || q.longName || ticker,
-          sector: SECTOR_MAP[q.sector] || q.sector || 'Unknown',
-          country: q.country || (ticker.endsWith('.TO') ? 'Canada' : 'USA'),
-          quoteType: q.quoteType || 'EQUITY',
-        };
-      }
-    }
-  } catch(e) {}
   return null;
 }
 
@@ -674,212 +624,251 @@ async function fetchAllPrices() {
   positions = [];
   for (let i = 0; i < holdingsRaw.length; i++) {
     const h = holdingsRaw[i];
-    setLoading(`Fetching ${h.ticker}...`, `${i+1} / ${total}`);
-    const data = await fetchYahoo(h.ticker);
+    const ticker = (h.ticker || h.symbol || '').toUpperCase().trim();
+    if (!ticker) continue;
+    setLoading(`Fetching ${ticker}...`, `${i+1} / ${total}`);
+    const data = await fetchYahooQuote(ticker);
     const qty = parseFloat(h.qty) || 0;
-    const cost = parseFloat(h.cost_price) || 0;
-    const price = data?.price || cost; // fallback to cost if no data
+    const cost = parseFloat(h.cost_price || h.costprice || h.cost || 0);
+    const price = data?.price || cost;
     const posCur = data?.currency || h.currency || 'USD';
+    // Determine asset type
+    const qt = (data?.quoteType || '').toLowerCase();
+    let assetType = 'Equity';
+    if (qt.includes('etf') || qt.includes('fund') || ticker === 'AGG' || ticker === 'VTI' || ticker === 'SPY' || ticker === 'QQQ') assetType = 'ETF';
+    else if (ticker.endsWith('.TO') || ticker.endsWith('.TSX')) assetType = 'Equity';
+
+    // Sector enrichment for ETFs
+    let sector = data?.sector || 'Unknown';
+    if (assetType === 'ETF') sector = 'ETF';
+    if (['AGG','BND','TLT','SHY','IEF'].includes(ticker)) sector = 'Fixed Income';
+
     positions.push({
-      ticker: h.ticker.toUpperCase(),
-      qty,
-      cost,
-      price,
+      ticker, qty, cost, price,
       currency: posCur,
-      name: data?.name || h.ticker,
-      sector: data?.sector || 'Unknown',
-      country: data?.country || (h.ticker.endsWith('.TO') ? 'Canada' : 'USA'),
-      quoteType: data?.quoteType || 'EQUITY',
+      name: data?.name || ticker,
+      sector,
+      country: data?.country || guessCountry(ticker, ''),
+      assetType,
       hasData: !!data,
+      isLive: data?.isLive || false,
     });
   }
-  document.getElementById('last-updated').textContent = 'Updated: ' + new Date().toLocaleTimeString();
+  const n = new Date();
+  document.getElementById('last-updated').textContent =
+    `${positions.filter(p=>p.isLive).length}/${positions.length} live · ${n.toLocaleTimeString()}`;
 }
 
-// ═══════════════════════════════════════════════════════════════
-// CALCULATIONS
-// ═══════════════════════════════════════════════════════════════
-function calcPositions(cur) {
-  const cashVal = settingsRaw.cash ? convertFX(settingsRaw.cash.value, settingsRaw.cash.currency, cur) : 0;
-  const deposits = settingsRaw.deposits ? convertFX(settingsRaw.deposits.value, settingsRaw.deposits.currency, cur) : 0;
+// ═══════════════════ CALCULATIONS ═══════════════════
+function calcAll(cur) {
+  const cashInCur = convertFX(cashSettings.value, cashSettings.currency, cur);
+  const depositsInCur = convertFX(depositsSettings.value, depositsSettings.currency, cur);
 
   let enriched = positions.map(p => {
-    const mktVal = convertFX(p.price * p.qty, p.currency, cur);
-    const costVal = convertFX(p.cost * p.qty, p.currency, cur);
-    const pnlAbs = mktVal - costVal;
-    const pnlPct = costVal > 0 ? (pnlAbs / costVal) * 100 : 0;
-    return { ...p, mktVal, costVal, pnlAbs, pnlPct };
+    const mktVal  = convertFX(p.price * p.qty, p.currency, cur);
+    const costVal = convertFX(p.cost  * p.qty, p.currency, cur);
+    const pnlAbs  = mktVal - costVal;
+    const pnlPct  = costVal > 0 ? (pnlAbs / costVal) * 100 : 0;
+    const livePriceInCur = convertFX(p.price, p.currency, cur);
+    const costInCur      = convertFX(p.cost,  p.currency, cur);
+    return { ...p, mktVal, costVal, pnlAbs, pnlPct, livePriceInCur, costInCur };
   });
 
   const totalInvested = enriched.reduce((s,p) => s + p.mktVal, 0);
-  const totalPortfolio = totalInvested + cashVal;
+  const totalPortfolio = totalInvested + cashInCur;
 
   enriched = enriched.map(p => ({
     ...p,
-    weight: totalPortfolio > 0 ? (p.mktVal / totalPortfolio) * 100 : 0
+    weight: totalPortfolio > 0 ? (p.mktVal / totalPortfolio) * 100 : 0,
   }));
 
-  const cashWeight = totalPortfolio > 0 ? (cashVal / totalPortfolio) * 100 : 0;
-  const totalPnL = totalPortfolio - deposits;
-  const returnPct = deposits > 0 ? (totalPnL / deposits) * 100 : 0;
+  const cashWeight  = totalPortfolio > 0 ? (cashInCur / totalPortfolio) * 100 : 0;
+  const totalPnL    = totalPortfolio - depositsInCur;
+  const returnPct   = depositsInCur > 0 ? (totalPnL / depositsInCur) * 100 : 0;
 
-  return { enriched, cashVal, cashWeight, deposits, totalInvested, totalPortfolio, totalPnL, returnPct };
+  return { enriched, cashInCur, cashWeight, depositsInCur, totalInvested, totalPortfolio, totalPnL, returnPct };
 }
 
-// ═══════════════════════════════════════════════════════════════
-// BUILD DASHBOARD
-// ═══════════════════════════════════════════════════════════════
+// ═══════════════════ RENDER ALL ═══════════════════
 function buildDashboard() { renderAll(); }
 
 function renderAll() {
-  const c = currency;
-  const { enriched, cashVal, cashWeight, deposits, totalInvested, totalPortfolio, totalPnL, returnPct } = calcPositions(c);
+  const cur = currency;
+  const { enriched, cashInCur, cashWeight, depositsInCur, totalInvested, totalPortfolio, totalPnL, returnPct } = calcAll(cur);
 
-  // Filter
-  const filtered = countryFilter === 'all' ? enriched :
-    enriched.filter(p => {
-      if (countryFilter === 'Europe') return !['USA','Canada'].includes(p.country) && p.country !== 'Other';
-      return p.country === countryFilter;
-    });
+  const filtered = countryFilter === 'all' ? enriched : enriched.filter(p => {
+    if (countryFilter === 'Europe') return p.country === 'Europe';
+    return p.country === countryFilter;
+  });
 
   // KPIs
-  document.getElementById('kpi-total').textContent = FMT(totalPortfolio, c);
-  document.getElementById('kpi-cash').textContent = FMT(cashVal, c);
-  document.getElementById('kpi-invested').textContent = FMT(totalInvested, c);
-  document.getElementById('kpi-deposits').textContent = FMT(deposits, c);
-  const pnlEl = document.getElementById('kpi-pnl');
-  pnlEl.textContent = FMT(totalPnL, c);
-  pnlEl.className = 'kpi-value ' + (totalPnL >= 0 ? 'positive' : 'negative');
-  const retEl = document.getElementById('kpi-return');
-  retEl.textContent = FMTP(returnPct);
-  retEl.className = 'kpi-value ' + (returnPct >= 0 ? 'positive' : 'negative');
-  document.getElementById('kpi-count').textContent = enriched.length;
+  setText('kpi-total',   FMT(totalPortfolio, cur));
+  setText('kpi-cash',    FMT(cashInCur, cur));
+  setText('kpi-invested',FMT(totalInvested, cur));
+  setText('kpi-deposits',FMT(depositsInCur, cur));
+  setValClass('kpi-pnl',    FMT(totalPnL, cur),  totalPnL >= 0);
+  setValClass('kpi-return', FMTP(returnPct),       returnPct >= 0);
+  setText('kpi-count', enriched.length);
 
   // Insights
   const byWeight = [...filtered].sort((a,b) => b.weight - a.weight);
   const byPnlPct = [...filtered].sort((a,b) => b.pnlPct - a.pnlPct);
-  const byPnlAbs = [...filtered].sort((a,b) => b.pnlAbs - a.pnlAbs);
-
   if (byWeight.length) {
-    document.getElementById('ins-largest').textContent = byWeight[0].ticker;
-    document.getElementById('ins-largest-sub').textContent = FMTW(byWeight[0].weight);
+    setText('ins-largest',     byWeight[0].ticker);
+    setText('ins-largest-sub', FMTW(byWeight[0].weight));
   }
   if (byPnlPct.length) {
-    document.getElementById('ins-best').textContent = byPnlPct[0].ticker;
-    document.getElementById('ins-best-sub').textContent = FMTP(byPnlPct[0].pnlPct);
-    document.getElementById('ins-worst').textContent = byPnlPct[byPnlPct.length-1].ticker;
-    document.getElementById('ins-worst-sub').textContent = FMTP(byPnlPct[byPnlPct.length-1].pnlPct);
+    setText('ins-best',     byPnlPct[0].ticker);
+    setText('ins-best-sub', FMTP(byPnlPct[0].pnlPct) + ' · ' + byPnlPct[0].name?.slice(0,20));
+    const worst = byPnlPct[byPnlPct.length - 1];
+    setText('ins-worst',     worst.ticker);
+    setText('ins-worst-sub', FMTP(worst.pnlPct) + ' · ' + worst.name?.slice(0,20));
   }
+  const sMap = {};
+  filtered.forEach(p => { sMap[p.sector] = (sMap[p.sector]||0) + p.weight; });
+  const topS = Object.entries(sMap).sort((a,b)=>b[1]-a[1])[0];
+  if (topS) { setText('ins-sector', topS[0]); setText('ins-sector-sub', FMTW(topS[1])); }
 
-  // Top sector
-  const sectorMap = {};
-  filtered.forEach(p => { sectorMap[p.sector] = (sectorMap[p.sector]||0) + p.weight; });
-  const topSector = Object.entries(sectorMap).sort((a,b)=>b[1]-a[1])[0];
-  if (topSector) {
-    document.getElementById('ins-sector').textContent = topSector[0];
-    document.getElementById('ins-sector-sub').textContent = FMTW(topSector[1]);
-  }
-
-  renderHeatmap(filtered, cashVal, cashWeight, totalPortfolio, c);
-  renderTable(filtered, c);
-  renderDonuts(filtered, cashVal, cashWeight, c);
+  renderHeatmap(filtered, cashInCur, cashWeight, totalPortfolio, cur);
+  renderTable(filtered, cur);
+  renderDonuts(filtered, cashInCur, cashWeight, totalPortfolio, cur);
 }
 
-// ═══════════════════════════════════════════════════════════════
-// HEATMAP
-// ═══════════════════════════════════════════════════════════════
-function renderHeatmap(data, cashVal, cashWeight, totalPortfolio, c) {
+function setText(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
+function setValClass(id, val, positive) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = val;
+  el.className = 'kpi-value ' + (positive ? 'positive' : 'negative');
+}
+
+// ═══════════════════ HEATMAP ═══════════════════
+function renderHeatmap(data, cashInCur, cashWeight, totalPortfolio, cur) {
   const container = document.getElementById('heatmap-container');
   container.innerHTML = '';
-  const W = container.offsetWidth || 600;
-  const H = Math.max(280, Math.min(420, W * 0.55));
+  if (!data.length) { container.innerHTML = '<div style="padding:24px;font-family:Space Mono,monospace;font-size:10px;color:#7A756C">No data</div>'; return; }
+
+  const W = container.clientWidth || 580;
+  const H = Math.max(260, Math.min(420, W * 0.55));
 
   const nodes = data.map(p => ({
-    id: p.ticker,
-    value: p.mktVal,
-    colorVal: heatmapView === 'pnl_pct' ? p.pnlPct :
-              heatmapView === 'pnl_abs' ? p.pnlAbs : p.weight,
-    ...p
+    ...p, id: p.ticker,
+    value: Math.max(p.mktVal, 1),
+    colorVal: heatmapView === 'pnl_pct' ? p.pnlPct : heatmapView === 'pnl_abs' ? p.pnlAbs : p.weight,
   }));
-  if (cashVal > 0) nodes.push({ id:'CASH', name:'Cash', value:cashVal, colorVal: heatmapView==='weight'?cashWeight:0, sector:'Cash', country:'—', pnlAbs:0, pnlPct:0, weight:cashWeight, mktVal:cashVal });
+  if (cashInCur > 0) nodes.push({
+    id:'CASH', ticker:'CASH', name:'Cash',
+    value: cashInCur, mktVal: cashInCur,
+    colorVal: heatmapView === 'weight' ? cashWeight : 0,
+    pnlAbs:0, pnlPct:0, weight:cashWeight, sector:'Cash', country:'—',
+  });
 
-  // Treemap
-  const root = d3.hierarchy({ children: nodes }).sum(d => d.value || 0).sort((a,b) => b.value - a.value);
+  const root = d3.hierarchy({ children: nodes }).sum(d => d.value || 0).sort((a,b)=>b.value-a.value);
   d3.treemap().size([W, H]).padding(2).round(true)(root);
 
-  const allVals = nodes.map(n => n.colorVal).filter(v => v != null && isFinite(v));
-  const maxAbs = Math.max(Math.abs(d3.min(allVals)||0), Math.abs(d3.max(allVals)||0), 0.01);
+  const colorVals = nodes.map(n => n.colorVal).filter(v => v != null && isFinite(v));
+  const maxAbsGain = Math.max(0.01, ...colorVals.filter(v=>v>0));
+  const maxAbsLoss = Math.max(0.01, ...colorVals.filter(v=>v<0).map(Math.abs));
+  const maxAbsWeight = Math.max(0.01, ...colorVals);
 
-  function colorFor(v) {
-    if (heatmapView === 'weight') {
-      return d3.interpolateBlues(0.15 + 0.7 * (v / (d3.max(allVals)||1)));
+  function colorFor(v, isWeight) {
+    if (isWeight) {
+      const t = Math.max(0, Math.min(1, v / maxAbsWeight));
+      return d3.interpolate('#dbe8f4', '#1D428A')(0.15 + t * 0.8);
     }
-    if (v == null || isNaN(v)) return '#e0e0da';
-    if (v === 0) return '#f5f5f0';
-    const t = Math.min(Math.abs(v) / maxAbs, 1);
-    return v > 0 ? d3.interpolate('#d4edda', '#0a5c2e')(t) : d3.interpolate('#fde8e8', '#8b1a1a')(t);
+    if (v == null || isNaN(v) || v === 0) return '#f0ede8';
+    if (v > 0) {
+      const t = Math.min(1, v / maxAbsGain);
+      return d3.interpolate('#d4edda', '#0a5c2e')(t);
+    } else {
+      const t = Math.min(1, Math.abs(v) / maxAbsLoss);
+      return d3.interpolate('#fde8e8', '#8b1a1a')(t);
+    }
   }
 
-  const svg = d3.select(container).append('svg').attr('width','100%').attr('viewBox',`0 0 ${W} ${H}`);
+  function textColor(v, isWeight) {
+    if (isWeight) return Math.abs(v) / maxAbsWeight > 0.5 ? '#fff' : '#1C1C1A';
+    if (!v || v === 0) return '#4A4740';
+    const t = isWeight ? 0 : Math.min(1, Math.abs(v) / (v > 0 ? maxAbsGain : maxAbsLoss));
+    return t > 0.5 ? '#fff' : '#1C1C1A';
+  }
+
+  const isWeight = heatmapView === 'weight';
+  const svg = d3.select(container).append('svg')
+    .attr('width','100%').attr('viewBox',`0 0 ${W} ${H}`).style('display','block');
 
   root.leaves().forEach(leaf => {
     const d = leaf.data;
     const lw = leaf.x1 - leaf.x0, lh = leaf.y1 - leaf.y0;
+    const col = colorFor(d.colorVal, isWeight);
+    const tcol = textColor(d.colorVal, isWeight);
     const g = svg.append('g').attr('transform',`translate(${leaf.x0},${leaf.y0})`);
     g.append('rect').attr('width',lw).attr('height',lh)
-      .attr('fill', colorFor(d.colorVal))
-      .attr('stroke','#fff').attr('stroke-width',1)
+      .attr('fill',col).attr('stroke','#fff').attr('stroke-width',1.5)
       .style('cursor','pointer')
       .on('mouseover', e => {
-        const cv = heatmapView === 'pnl_pct' ? FMTP(d.pnlPct) :
-                   heatmapView === 'pnl_abs' ? FMT(d.pnlAbs, c) : FMTW(d.weight);
-        showTip(e, `<b>${d.id}</b> — ${d.name||''}<br>Value: ${FMT(d.mktVal,c)}<br>Weight: ${FMTW(d.weight)}<br>PnL $: ${FMT(d.pnlAbs,c)}<br>PnL %: ${FMTP(d.pnlPct)}`);
+        const pnlLine = `PnL $: ${FMT(d.pnlAbs, cur)} | PnL %: ${FMTP(d.pnlPct)}`;
+        const valLine = `Value: ${FMT(d.mktVal, cur)} | Weight: ${FMTW(d.weight)}`;
+        showTip(e, `<b>${d.id}</b><br>${d.name||''}<br>${valLine}<br>${pnlLine}`);
       })
-      .on('mousemove', moveTip).on('mouseout', hideTip);
-    if (lw > 36 && lh > 22) {
-      g.append('text').attr('x',5).attr('y',16).attr('font-size','11px').attr('font-weight','600')
-        .attr('fill', d.colorVal && Math.abs(d.colorVal)/maxAbs > 0.5 ? '#fff' : '#1C1C1A')
-        .attr('font-family','Space Mono,monospace').text(d.id);
+      .on('mousemove',moveTip).on('mouseout',hideTip);
+    // Ticker
+    if (lw > 34 && lh > 20) {
+      g.append('text').attr('x',5).attr('y',15)
+        .attr('font-size','11px').attr('font-weight','600')
+        .attr('fill',tcol).attr('font-family','Space Mono,monospace')
+        .text(d.id.length > 8 ? d.id.slice(0,8) : d.id);
     }
-    if (lw > 50 && lh > 38) {
-      const cv = heatmapView === 'pnl_pct' ? FMTP(d.pnlPct) :
-                 heatmapView === 'pnl_abs' ? FMT(d.pnlAbs, c) : FMTW(d.weight);
-      g.append('text').attr('x',5).attr('y',30).attr('font-size','9px')
-        .attr('fill', d.colorVal && Math.abs(d.colorVal)/maxAbs > 0.5 ? 'rgba(255,255,255,.8)' : '#4A4740')
-        .attr('font-family','Space Mono,monospace').text(cv);
+    // PnL % or $ or Weight
+    if (lw > 48 && lh > 34) {
+      const line2 = isWeight ? FMTW(d.colorVal) : heatmapView === 'pnl_pct' ? FMTP(d.colorVal) : FMT(d.colorVal, cur);
+      g.append('text').attr('x',5).attr('y',28)
+        .attr('font-size','9px').attr('fill',tcol).attr('font-family','Space Mono,monospace')
+        .attr('opacity',0.85).text(line2);
+    }
+    // Value amount (for weight view) or $ amount
+    if (lw > 64 && lh > 48) {
+      const line3 = isWeight ? FMT(d.mktVal, cur) : FMTW(d.weight);
+      g.append('text').attr('x',5).attr('y',40)
+        .attr('font-size','9px').attr('fill',tcol).attr('font-family','Space Mono,monospace')
+        .attr('opacity',0.65).text(line3);
     }
   });
 }
 
-// ═══════════════════════════════════════════════════════════════
-// TABLE
-// ═══════════════════════════════════════════════════════════════
-let _tableData = [];
-function renderTable(data, c) {
-  if (data) _tableData = data;
+// ═══════════════════ TABLE ═══════════════════
+function renderTable(data, cur) {
+  if (!data) {
+    const c = currency;
+    const { enriched } = calcAll(c);
+    data = countryFilter === 'all' ? enriched : enriched.filter(p => p.country === countryFilter || (countryFilter==='Europe'&&p.country==='Europe'));
+    cur = c;
+  }
   const search = (document.getElementById('table-search')?.value || '').toLowerCase();
-  const cur = c || currency;
-  const { enriched } = calcPositions(cur);
-  const base = data || enriched;
-  let filtered = base.filter(p => p.ticker.toLowerCase().includes(search) || (p.name||'').toLowerCase().includes(search));
+  let filtered = data.filter(p =>
+    p.ticker.toLowerCase().includes(search) || (p.name||'').toLowerCase().includes(search)
+  );
+  const sortMap = { ticker:'ticker',name:'name',sector:'sector',country:'country',qty:'qty',cost:'costInCur',price:'livePriceInCur',mktVal:'mktVal',pnlAbs:'pnlAbs',pnlPct:'pnlPct',weight:'weight' };
+  const sk = sortMap[sortKey] || sortKey;
   filtered.sort((a,b) => {
-    const av = a[sortKey] ?? 0, bv = b[sortKey] ?? 0;
+    const av = a[sk] ?? 0, bv = b[sk] ?? 0;
     return typeof av === 'string' ? sortDir * av.localeCompare(bv) : sortDir * (av - bv);
   });
   const tbody = document.getElementById('holdings-tbody');
   tbody.innerHTML = '';
   filtered.forEach(p => {
     const tr = document.createElement('tr');
+    const liveFlag = p.hasData ? '' : ' <span style="color:#C4BAA8;font-size:9px">~</span>';
     tr.innerHTML = `
-      <td>${p.ticker}</td>
-      <td style="font-size:11px;max-width:140px;overflow:hidden;text-overflow:ellipsis">${p.name||''}</td>
-      <td style="font-size:11px">${p.sector||''}</td>
-      <td style="font-size:11px">${p.country||''}</td>
+      <td>${p.ticker}${liveFlag}</td>
+      <td style="font-size:11px;max-width:130px;overflow:hidden;text-overflow:ellipsis">${p.name||''}</td>
+      <td style="font-size:11px">${p.sector||'—'}</td>
+      <td style="font-size:11px">${p.country||'—'}</td>
       <td>${p.qty}</td>
-      <td>${FMT(convertFX(p.cost,p.currency,cur))}</td>
-      <td>${FMT(convertFX(p.price,p.currency,cur))}</td>
-      <td>${FMT(p.mktVal)}</td>
-      <td class="${p.pnlAbs>=0?'td-pos':'td-neg'}">${FMT(p.pnlAbs)}</td>
+      <td>${FMTPRICE(p.costInCur)}</td>
+      <td>${FMTPRICE(p.livePriceInCur)}</td>
+      <td>${FMT(p.mktVal,cur)}</td>
+      <td class="${p.pnlAbs>=0?'td-pos':'td-neg'}">${FMT(p.pnlAbs,cur)}</td>
       <td class="${p.pnlPct>=0?'td-pos':'td-neg'}">${FMTP(p.pnlPct)}</td>
       <td>${FMTW(p.weight)}</td>`;
     tbody.appendChild(tr);
@@ -889,7 +878,7 @@ function renderTable(data, c) {
 function sortTable(key) {
   if (sortKey === key) sortDir *= -1; else { sortKey = key; sortDir = -1; }
   document.querySelectorAll('thead th').forEach(th => th.classList.remove('sort-asc','sort-desc'));
-  const keys = ['ticker','name','sector','country','qty','cost','price','value','pnl_abs','pnl_pct','weight'];
+  const keys = ['ticker','name','sector','country','qty','cost','price','mktVal','pnlAbs','pnlPct','weight'];
   const idx = keys.indexOf(key);
   if (idx >= 0) {
     const th = document.querySelectorAll('thead th')[idx];
@@ -898,93 +887,98 @@ function sortTable(key) {
   renderTable();
 }
 
-// ═══════════════════════════════════════════════════════════════
-// DONUT CHARTS
-// ═══════════════════════════════════════════════════════════════
-const PALETTE = ['#1D428A','#C8102E','#2A5A3A','#EDD98A','#8AAEC8','#BDE0C8','#4A4740','#BDD0E0','#D4A574','#552098'];
+// ═══════════════════ DONUTS ═══════════════════
+const PALETTE = ['#1D428A','#C8102E','#2A5A3A','#E8A020','#8AAEC8','#BDE0C8','#552098','#D4A574','#4A9080','#C4BAA8'];
 
-function makeDonut(containerId, legendId, slices, centerLabel) {
-  const container = document.getElementById(containerId);
-  container.innerHTML = '';
-  const size = 160, r = 62, ir = 40;
-  const svg = d3.select(container).append('svg').attr('viewBox',`0 0 ${size} ${size}`)
-    .style('width','100%').style('max-width','200px');
-  const g = svg.append('g').attr('transform',`translate(${size/2},${size/2})`);
-  const pie = d3.pie().sort(null).value(d=>d.value)(slices);
-  const arc = d3.arc().innerRadius(ir).outerRadius(r);
+function makeDonut(containerId, legendId, slices) {
+  const wrap = document.getElementById(containerId);
+  wrap.innerHTML = '';
+  if (!slices.length) return;
+  const SIZE = 150, R = 58, IR = 36;
+  const svg = d3.select(wrap).append('svg')
+    .attr('viewBox',`0 0 ${SIZE} ${SIZE}`).style('width','100%').style('max-width','180px');
+  const g = svg.append('g').attr('transform',`translate(${SIZE/2},${SIZE/2})`);
+  const pie = d3.pie().sort(null).value(d=>d.pct)(slices);
+  const arc = d3.arc().innerRadius(IR).outerRadius(R);
   pie.forEach((d,i) => {
-    g.append('path').attr('d',arc(d)).attr('fill',slices[i].color||PALETTE[i%PALETTE.length])
+    g.append('path').attr('d',arc(d))
+      .attr('fill', slices[i].color || PALETTE[i%PALETTE.length])
       .attr('stroke','#fff').attr('stroke-width',1.5)
       .style('cursor','pointer')
-      .on('mouseover', e => showTip(e, `<b>${d.data.label}</b><br>${d.data.value.toFixed(1)}%${d.data.holdings?'<br>'+d.data.holdings:''}`))
-      .on('mousemove', moveTip).on('mouseout', hideTip);
+      .on('mouseover', e => {
+        const hold = slices[i].holdings ? '<br>' + slices[i].holdings : '';
+        showTip(e, `<b>${d.data.label}</b><br>${d.data.pct.toFixed(1)}%${hold}`);
+      })
+      .on('mousemove',moveTip).on('mouseout',hideTip);
   });
-  // Center text
+  // Center
   const cd = document.createElement('div');
   cd.className = 'donut-center';
-  cd.innerHTML = `<div class="donut-center-val">${slices.length}</div><div class="donut-center-lbl">${centerLabel}</div>`;
-  container.style.position = 'relative';
-  container.appendChild(cd);
+  cd.innerHTML = `<div class="donut-center-val">${slices.length}</div><div class="donut-center-lbl">groups</div>`;
+  wrap.style.position = 'relative';
+  wrap.appendChild(cd);
 
-  // Legend
   const leg = document.getElementById(legendId);
   leg.innerHTML = '';
   slices.forEach((s,i) => {
     const div = document.createElement('div');
     div.className = 'legend-item';
-    div.innerHTML = `<div class="legend-dot" style="background:${s.color||PALETTE[i%PALETTE.length]}"></div><span class="legend-label">${s.label}</span><span class="legend-pct">${s.value.toFixed(1)}%</span>`;
+    div.innerHTML = `<div class="legend-dot" style="background:${s.color||PALETTE[i%PALETTE.length]}"></div><span class="legend-label">${s.label}</span><span class="legend-pct">${s.pct.toFixed(1)}%</span>`;
     leg.appendChild(div);
   });
 }
 
-function renderDonuts(data, cashVal, cashWeight, c) {
+function renderDonuts(data, cashInCur, cashWeight, totalPortfolio, cur) {
   // SECTOR
-  const sectorTotals = {};
-  data.forEach(p => { sectorTotals[p.sector] = (sectorTotals[p.sector]||0) + p.weight; });
-  if (cashWeight > 0) sectorTotals['Cash'] = (sectorTotals['Cash']||0) + cashWeight;
-  const sectorSlices = Object.entries(sectorTotals).sort((a,b)=>b[1]-a[1])
-    .map(([label,value]) => ({ label, value, holdings: data.filter(p=>p.sector===label).map(p=>p.ticker).join(', ') }));
-  makeDonut('sector-donut','sector-legend', sectorSlices, 'sectors');
+  const sMap = {};
+  data.forEach(p => { sMap[p.sector] = (sMap[p.sector]||0) + p.weight; });
+  if (cashWeight > 0.1) sMap['Cash'] = (sMap['Cash']||0) + cashWeight;
+  makeDonut('sector-donut','sector-legend',
+    Object.entries(sMap).sort((a,b)=>b[1]-a[1]).map(([label,pct]) => ({
+      label, pct,
+      holdings: data.filter(p=>p.sector===label).map(p=>p.ticker).slice(0,4).join(', ')
+    }))
+  );
 
   // COUNTRY
-  const countryTotals = {};
+  const cMap = {};
   data.forEach(p => {
-    const ctry = p.country === 'USA' ? 'USA' : p.country === 'Canada' ? 'Canada' : 'Other';
-    countryTotals[ctry] = (countryTotals[ctry]||0) + p.weight;
+    const c = p.country === 'USA' ? 'USA' : p.country === 'Canada' ? 'Canada' : p.country === 'Europe' ? 'Europe' : 'Other';
+    cMap[c] = (cMap[c]||0) + p.weight;
   });
-  if (cashWeight > 0) countryTotals['Cash'] = (countryTotals['Cash']||0) + cashWeight;
-  const countrySlices = Object.entries(countryTotals).sort((a,b)=>b[1]-a[1])
-    .map(([label,value]) => ({ label, value }));
-  makeDonut('country-donut','country-legend', countrySlices, 'regions');
+  if (cashWeight > 0.1) cMap['Cash'] = (cMap['Cash']||0) + cashWeight;
+  makeDonut('country-donut','country-legend',
+    Object.entries(cMap).sort((a,b)=>b[1]-a[1]).map(([label,pct]) => ({ label, pct }))
+  );
 
   // ASSET CLASS
-  const assetTotals = { Equities: 0, ETFs: 0, 'Fixed Income': 0, Cash: cashWeight };
+  const aMap = { Equities:0, ETFs:0, 'Fixed Income':0 };
   data.forEach(p => {
-    const qt = (p.quoteType||'').toLowerCase();
-    if (qt.includes('etf') || qt.includes('fund')) assetTotals['ETFs'] += p.weight;
-    else if (p.sector === 'Fixed Income') assetTotals['Fixed Income'] += p.weight;
-    else assetTotals['Equities'] += p.weight;
+    const t = p.assetType || 'Equity';
+    if (t === 'ETF') aMap['ETFs'] += p.weight;
+    else if (p.sector === 'Fixed Income') aMap['Fixed Income'] += p.weight;
+    else aMap['Equities'] += p.weight;
   });
-  const assetSlices = Object.entries(assetTotals).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1])
-    .map(([label,value]) => ({ label, value }));
-  makeDonut('asset-donut','asset-legend', assetSlices, 'classes');
+  if (cashWeight > 0.1) aMap['Cash'] = cashWeight;
+  makeDonut('asset-donut','asset-legend',
+    Object.entries(aMap).filter(([,v])=>v>0.1).sort((a,b)=>b[1]-a[1]).map(([label,pct]) => ({ label, pct }))
+  );
 }
 
-// ═══════════════════════════════════════════════════════════════
-// CONTROLS
-// ═══════════════════════════════════════════════════════════════
+// ═══════════════════ CONTROLS ═══════════════════
 function setCurrency(c) {
   currency = c;
   document.querySelectorAll('.currency-btn').forEach(b => b.classList.toggle('active', b.textContent===c));
   renderAll();
 }
 
-function setHeatmapView(v) {
+function setHeatmapView(v, btn) {
   heatmapView = v;
   document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
-  event.target.classList.add('active');
-  const { enriched, cashVal, cashWeight, totalPortfolio } = calcPositions(currency);
-  renderHeatmap(enriched, cashVal, cashWeight, totalPortfolio, currency);
+  if (btn) btn.classList.add('active');
+  const { enriched, cashInCur, cashWeight, totalPortfolio } = calcAll(currency);
+  const filtered = countryFilter === 'all' ? enriched : enriched.filter(p => p.country === countryFilter || (countryFilter==='Europe'&&p.country==='Europe'));
+  renderHeatmap(filtered, cashInCur, cashWeight, totalPortfolio, currency);
 }
 
 function applyFilter() {
@@ -992,17 +986,15 @@ function applyFilter() {
   renderAll();
 }
 
-// ═══════════════════════════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════════════════════════
-document.getElementById('page-footer').style.display = 'none';
+// ═══════════════════ INIT ═══════════════════
 document.getElementById('burger').addEventListener('click', () => {
   document.getElementById('nav-mobile').classList.toggle('open');
 });
 window.addEventListener('resize', () => {
   if (positions.length > 0) {
-    const { enriched, cashVal, cashWeight, totalPortfolio } = calcPositions(currency);
-    renderHeatmap(enriched, cashVal, cashWeight, totalPortfolio, currency);
+    const { enriched, cashInCur, cashWeight, totalPortfolio } = calcAll(currency);
+    const filtered = countryFilter === 'all' ? enriched : enriched.filter(p => p.country === countryFilter);
+    renderHeatmap(filtered, cashInCur, cashWeight, totalPortfolio, currency);
   }
 });
 </script>
