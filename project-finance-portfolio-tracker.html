@@ -181,7 +181,7 @@ footer a:hover{color:var(--ink);}
   <div class="breadcrumb"><a href="index.html">Home</a> / <a href="finance.html">Finance & Markets</a> / Portfolio Tracker</div>
   <span class="project-tag">Interactive Tool · Last Close · No Backend · No API Key</span>
   <h1 class="page-title">Portfolio Tracker</h1>
-  <p class="page-subtitle">Upload your holdings file, enter cash and deposits, get a full dashboard with PnL, heatmaps, sector and country breakdowns. Prices from Yahoo Finance (last close). Nothing stored.</p>
+  <p class="page-subtitle">Upload your holdings file, enter cash and deposits — get a full dashboard with PnL, heatmaps, sector and country breakdowns. Prices from Yahoo Finance (last close). Nothing stored.</p>
   <div class="meta-row">
     <div class="meta-item"><div class="meta-label">Type</div><div class="meta-value">Interactive Tool</div></div>
     <div class="meta-item"><div class="meta-label">Prices</div><div class="meta-value">Yahoo Finance — last close</div></div>
@@ -191,16 +191,16 @@ footer a:hover{color:var(--ink);}
 </header>
 
 <div class="setup-wrap" id="setup-wrap">
-  <div class="cs-eyebrow">Step 1: Upload your holdings</div>
+  <div class="cs-eyebrow">Step 1 — Upload your holdings</div>
   <h2 class="cs-heading">One file. Six columns.</h2>
-  <div class="cs-body">Add <strong>sector</strong> manually, ensures accurate allocation charts. Country is automatically derived from currency (USD → USA, CAD → Canada, EUR → Europe, GBP → UK, etc.). Use standard sector names: Technology, Financials, Healthcare, Energy, Consumer, Industrials, Communication, Materials, Real Estate, Utilities, ETF, Fixed Income.</div>
+  <div class="cs-body">Add <strong>sector</strong> and <strong>country</strong> manually — ensures accurate allocation charts without relying on API metadata. Use standard names: Technology, Financials, Healthcare, Energy, Consumer, Industrials, Communication, Materials, Real Estate, Utilities, ETF, Fixed Income.</div>
   <div class="csv-box">
-    <div class="csv-title">holdings.csv or holdings.xlsx : required columns</div>
-    <div class="csv-code">ticker,qty,cost_price,currency,sector
-AAPL,10,150.00,USD,Technology
-ENB.TO,100,47.50,CAD,Energy
-AGG,50,95.00,USD,Fixed Income
-MSFT,8,280.00,USD,Technology</div>
+    <div class="csv-title">holdings.csv or holdings.xlsx — required columns</div>
+    <div class="csv-code">ticker,qty,cost_price,currency,sector,country
+AAPL,10,150.00,USD,Technology,USA
+ENB.TO,100,47.50,CAD,Energy,Canada
+AGG,50,95.00,USD,Fixed Income,USA
+MSFT,8,280.00,USD,Technology,USA</div>
   </div>
   <div class="upload-card">
     <input type="file" accept=".csv,.xlsx,.xls" id="holdings-input">
@@ -210,24 +210,28 @@ MSFT,8,280.00,USD,Technology</div>
     <div class="upload-status" id="holdings-status">Waiting for file...</div>
   </div>
 
-  <div class="cs-eyebrow" style="margin-top:28px">Step 2: Portfolio settings</div>
+  <div class="cs-eyebrow" style="margin-top:28px">Step 2 — Portfolio settings</div>
   <div class="settings-panel">
     <div class="settings-title">Deposits & Cash</div>
-    <div class="deposits-row">
-      <div class="field-group">
-        <div class="field-label">Total Deposits (all-time capital invested)</div>
-        <input class="field-input" type="number" id="input-deposits" placeholder="e.g. 50000" min="0">
+    <div class="cash-section-title" style="margin-bottom:12px">Total Deposits — enter all amounts you have invested across all currencies</div>
+    <div class="cash-rows" style="margin-bottom:20px">
+      <div class="cash-row">
+        <div class="cash-row-label">🇨🇦 CAD Dep.</div>
+        <input class="field-input" type="number" id="dep-cad" placeholder="0" min="0" value="0">
+        <div class="cash-row-note">e.g. 30 000 CAD deposited</div>
       </div>
-      <div class="field-group">
-        <div class="field-label">Deposits Currency</div>
-        <select class="field-select" id="input-dep-currency">
-          <option value="CAD">CAD</option>
-          <option value="USD">USD</option>
-          <option value="EUR">EUR</option>
-        </select>
+      <div class="cash-row">
+        <div class="cash-row-label">🇺🇸 USD Dep.</div>
+        <input class="field-input" type="number" id="dep-usd" placeholder="0" min="0" value="0">
+        <div class="cash-row-note">e.g. 10 000 USD deposited</div>
+      </div>
+      <div class="cash-row">
+        <div class="cash-row-label">🇪🇺 EUR Dep.</div>
+        <input class="field-input" type="number" id="dep-eur" placeholder="0" min="0" value="0">
+        <div class="cash-row-note">e.g. 5 000 EUR deposited</div>
       </div>
     </div>
-    <div class="cash-section-title">Cash Positions: enter 0 if none (each currency mapped to its country allocation)</div>
+    <div class="cash-section-title">Cash Positions — enter 0 if none (each currency mapped to its country allocation)</div>
     <div class="cash-rows">
       <div class="cash-row">
         <div class="cash-row-label">🇨🇦 CAD Cash</div>
@@ -370,7 +374,7 @@ let currency='CAD', heatmapView='pnl_pct';
 let sortKey='mktVal', sortDir=-1;
 let fxRates={}, countryFilter='all';
 let cashPositions={CAD:0,USD:0,EUR:0};
-let depositsVal=0, depositsCur='CAD';
+let depositsPositions={CAD:0,USD:0,EUR:0};
 
 // ══════════════════════════════════════
 // FORMAT HELPERS
@@ -433,22 +437,23 @@ function setHoldErr(){const s=document.getElementById('holdings-status');s.textC
 // ══════════════════════════════════════
 function loadDemo(){
   holdingsRaw=[
-    {ticker:'AAPL',qty:'15',cost_price:'155.00',currency:'USD',sector:'Technology'},
-    {ticker:'MSFT',qty:'8',cost_price:'280.00',currency:'USD',sector:'Technology'},
-    {ticker:'NVDA',qty:'5',cost_price:'500.00',currency:'USD',sector:'Technology'},
-    {ticker:'GOOGL',qty:'10',cost_price:'130.00',currency:'USD',sector:'Communication'},
-    {ticker:'AMZN',qty:'12',cost_price:'140.00',currency:'USD',sector:'Consumer'},
-    {ticker:'ENB.TO',qty:'200',cost_price:'47.50',currency:'CAD',sector:'Energy'},
-    {ticker:'RY.TO',qty:'30',cost_price:'128.00',currency:'CAD',sector:'Financials'},
-    {ticker:'TD.TO',qty:'40',cost_price:'82.00',currency:'CAD',sector:'Financials'},
-    {ticker:'AGG',qty:'60',cost_price:'98.00',currency:'USD',sector:'Fixed Income'},
-    {ticker:'VTI',qty:'20',cost_price:'210.00',currency:'USD',sector:'ETF'},
+    {ticker:'AAPL',qty:'15',cost_price:'155.00',currency:'USD',sector:'Technology',country:'USA'},
+    {ticker:'MSFT',qty:'8',cost_price:'280.00',currency:'USD',sector:'Technology',country:'USA'},
+    {ticker:'NVDA',qty:'5',cost_price:'500.00',currency:'USD',sector:'Technology',country:'USA'},
+    {ticker:'GOOGL',qty:'10',cost_price:'130.00',currency:'USD',sector:'Communication',country:'USA'},
+    {ticker:'AMZN',qty:'12',cost_price:'140.00',currency:'USD',sector:'Consumer',country:'USA'},
+    {ticker:'ENB.TO',qty:'200',cost_price:'47.50',currency:'CAD',sector:'Energy',country:'Canada'},
+    {ticker:'RY.TO',qty:'30',cost_price:'128.00',currency:'CAD',sector:'Financials',country:'Canada'},
+    {ticker:'TD.TO',qty:'40',cost_price:'82.00',currency:'CAD',sector:'Financials',country:'Canada'},
+    {ticker:'AGG',qty:'60',cost_price:'98.00',currency:'USD',sector:'Fixed Income',country:'USA'},
+    {ticker:'VTI',qty:'20',cost_price:'210.00',currency:'USD',sector:'ETF',country:'USA'},
   ];
   document.getElementById('cash-cad').value=15000;
   document.getElementById('cash-usd').value=5000;
   document.getElementById('cash-eur').value=0;
-  document.getElementById('input-deposits').value=80000;
-  document.getElementById('input-dep-currency').value='CAD';
+  document.getElementById('dep-cad').value=50000;
+  document.getElementById('dep-usd').value=20000;
+  document.getElementById('dep-eur').value=0;
   document.getElementById('input-report-currency').value='CAD';
   setHoldOK(holdingsRaw.length);
   launch();
@@ -465,8 +470,11 @@ async function launch(){
     USD:parseFloat(document.getElementById('cash-usd').value)||0,
     EUR:parseFloat(document.getElementById('cash-eur').value)||0,
   };
-  depositsVal=parseFloat(document.getElementById('input-deposits').value)||0;
-  depositsCur=document.getElementById('input-dep-currency').value||'CAD';
+  depositsPositions={
+    CAD:parseFloat(document.getElementById('dep-cad').value)||0,
+    USD:parseFloat(document.getElementById('dep-usd').value)||0,
+    EUR:parseFloat(document.getElementById('dep-eur').value)||0,
+  };
   currency=document.getElementById('input-report-currency').value||'CAD';
   document.querySelectorAll('.currency-btn').forEach(b=>b.classList.toggle('active',b.textContent===currency));
   document.getElementById('setup-wrap').style.display='none';
@@ -553,59 +561,6 @@ async function fetchLastClose(ticker){
   return null;
 }
 
-// ══════════════════════════════════════
-// HELPERS — country from currency, sector normalisation
-// ══════════════════════════════════════
-function currencyToCountry(cur){
-  const map={
-    USD:'USA',CAD:'Canada',EUR:'Europe',GBP:'UK',
-    CHF:'Europe',SEK:'Europe',NOK:'Europe',DKK:'Europe',
-    AUD:'Australia',NZD:'New Zealand',JPY:'Japan',
-    HKD:'Hong Kong',CNY:'China',SGD:'Singapore',
-    BRL:'Brazil',MXN:'Mexico',INR:'India',KRW:'South Korea',
-  };
-  return map[cur]||'Other';
-}
-
-// Normalise and group sectors into clean buckets
-const SECTOR_MAP={
-  // Technology
-  'technology':'Technology','tech':'Technology','software':'Technology','semiconductors':'Technology',
-  'information technology':'Technology','it':'Technology',
-  // Financials
-  'financials':'Financials','financial services':'Financials','banking':'Financials',
-  'insurance':'Financials','asset management':'Financials','finance':'Financials',
-  // Healthcare
-  'healthcare':'Healthcare','health care':'Healthcare','pharma':'Healthcare',
-  'pharmaceuticals':'Healthcare','biotech':'Healthcare','biotechnology':'Healthcare',
-  'medical':'Healthcare',
-  // Energy
-  'energy':'Energy','oil':'Energy','gas':'Energy','oil & gas':'Energy',
-  'utilities':'Utilities',
-  // Consumer
-  'consumer':'Consumer','consumer cyclical':'Consumer','consumer discretionary':'Consumer',
-  'consumer defensive':'Consumer','consumer staples':'Consumer','retail':'Consumer',
-  // Communication
-  'communication':'Communication','communication services':'Communication',
-  'telecom':'Communication','telecommunications':'Communication','media':'Communication',
-  // Industrials
-  'industrials':'Industrials','industrial':'Industrials','aerospace':'Industrials',
-  'defense':'Industrials','transportation':'Industrials','manufacturing':'Industrials',
-  // Materials
-  'materials':'Materials','basic materials':'Materials','mining':'Materials','metals':'Materials',
-  // Real Estate
-  'real estate':'Real Estate','reit':'Real Estate','reits':'Real Estate',
-  // Fixed Income / ETF / Cash
-  'fixed income':'Fixed Income','bonds':'Fixed Income','bond etf':'Fixed Income','bond':'Fixed Income',
-  'etf':'ETF','index fund':'ETF','fund':'ETF',
-  'cash':'Cash','unknown':'Other',
-};
-function normSector(raw){
-  if(!raw)return'Other';
-  const key=raw.trim().toLowerCase();
-  return SECTOR_MAP[key]||raw.trim();
-}
-
 async function fetchAllPrices(){
   const total=holdingsRaw.length;
   positions=[];
@@ -620,14 +575,12 @@ async function fetchAllPrices(){
     const cost=parseFloat(h.cost_price||h.costprice||h.cost||0);
     const price=data?.price||cost;
     const posCur=data?.currency||h.currency||'USD';
-    const sector=normSector(h.sector||'Unknown');
-    // Country auto-derived from currency
-    const posCurForCountry=(data?.currency||h.currency||'USD').toUpperCase();
-    const country=currencyToCountry(posCurForCountry);
+    const sector=h.sector||'Unknown';
+    const country=h.country||'USA';
     let assetType='Equity';
     const sl=sector.toLowerCase();
     if(sl==='etf')assetType='ETF';
-    else if(sl==='fixed income'||sl==='bond'||sl==='bonds')assetType='Fixed Income';
+    else if(sl==='fixed income'||sl==='bond')assetType='Fixed Income';
     if(data)fetched++;else failed++;
     positions.push({ticker,qty,cost,price,currency:posCur,
       name:data?.name||ticker,sector,country,assetType,
@@ -719,7 +672,7 @@ function renderHeatmap(data,totalCash,cashWeight,totalPortfolio,cur){
   const nodes=data.map(p=>({...p,id:p.ticker,treemapValue:Math.max(p.mktVal,0.01),
     colorVal:isW?p.weight:heatmapView==='pnl_pct'?p.pnlPct:p.pnlAbs}));
   if(totalCash>0)nodes.push({id:'CASH',ticker:'CASH',name:'Cash',treemapValue:totalCash,mktVal:totalCash,
-    colorVal:isW?cashWeight:0,pnlAbs:0,pnlPct:0,weight:cashWeight,sector:'Cash',country:'Cash',assetType:'Cash'});
+    colorVal:isW?cashWeight:0,pnlAbs:0,pnlPct:0,weight:cashWeight,sector:'Cash',country:'—',assetType:'Cash'});
   const root=d3.hierarchy({children:nodes}).sum(d=>d.treemapValue||0).sort((a,b)=>b.treemapValue-a.treemapValue);
   d3.treemap().size([W,H]).padding(2).round(true)(root);
   const colorVals=nodes.map(n=>n.colorVal).filter(v=>v!=null&&isFinite(v));
