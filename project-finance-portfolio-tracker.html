@@ -213,22 +213,18 @@ MSFT,8,280.00,USD,Technology,USA</div>
   <div class="cs-eyebrow" style="margin-top:28px">Step 2 — Portfolio settings</div>
   <div class="settings-panel">
     <div class="settings-title">Deposits & Cash</div>
-    <div class="cash-section-title" style="margin-bottom:12px">Total Deposits — enter amounts invested per currency (leave 0 if none)</div>
-    <div class="cash-rows" style="margin-bottom:20px">
-      <div class="cash-row">
-        <div class="cash-row-label">🇨🇦 CAD Dep.</div>
-        <input class="field-input" type="number" id="dep-cad" placeholder="0" min="0" value="0">
-        <div class="cash-row-note">e.g. 30 000 CAD deposited</div>
+    <div class="deposits-row">
+      <div class="field-group">
+        <div class="field-label">Total Deposits (all-time capital invested)</div>
+        <input class="field-input" type="number" id="input-deposits" placeholder="e.g. 50000" min="0">
       </div>
-      <div class="cash-row">
-        <div class="cash-row-label">🇺🇸 USD Dep.</div>
-        <input class="field-input" type="number" id="dep-usd" placeholder="0" min="0" value="0">
-        <div class="cash-row-note">e.g. 10 000 USD deposited</div>
-      </div>
-      <div class="cash-row">
-        <div class="cash-row-label">🇪🇺 EUR Dep.</div>
-        <input class="field-input" type="number" id="dep-eur" placeholder="0" min="0" value="0">
-        <div class="cash-row-note">e.g. 5 000 EUR deposited</div>
+      <div class="field-group">
+        <div class="field-label">Deposits Currency</div>
+        <select class="field-select" id="input-dep-currency">
+          <option value="CAD">CAD</option>
+          <option value="USD">USD</option>
+          <option value="EUR">EUR</option>
+        </select>
       </div>
     </div>
     <div class="cash-section-title">Cash Positions — enter 0 if none (each currency mapped to its country allocation)</div>
@@ -374,16 +370,13 @@ let currency='CAD', heatmapView='pnl_pct';
 let sortKey='mktVal', sortDir=-1;
 let fxRates={}, countryFilter='all';
 let cashPositions={CAD:0,USD:0,EUR:0};
-let depositsPositions={CAD:0,USD:0,EUR:0};
+let depositsVal=0, depositsCur='CAD';
 
 // ══════════════════════════════════════
 // FORMAT HELPERS
 // ══════════════════════════════════════
 const FMT=(n,c)=>{if(n==null||isNaN(n))return'—';const a=Math.abs(n),s=a>=1e6?(a/1e6).toFixed(2)+'M':a>=1e3?(a/1e3).toFixed(1)+'K':a.toFixed(0);return(n<0?'-':'')+(c?c+' ':'')+s;};
-// FMT2: 2 decimal places always — for table cells (value, PnL $)
 const FMT2=(n,c)=>{if(n==null||isNaN(n))return'—';const a=Math.abs(n),s=a>=1e6?(a/1e6).toFixed(2)+'M':a.toFixed(2);return(n<0?'-':'')+(c?c+' ':'')+s;};
-// FMTQTY: integer if whole number, else 2 decimals
-const FMTQTY=n=>{if(n==null||isNaN(n))return'—';return Number.isInteger(Number(n))?String(Math.round(n)):Number(n).toFixed(2);};
 const FMTP=n=>n==null||isNaN(n)?'—':(n>=0?'+':'')+n.toFixed(2)+'%';
 const FMTW=n=>n==null||isNaN(n)?'—':n.toFixed(1)+'%';
 const FMTPR=n=>n==null||isNaN(n)?'—':n.toFixed(2);
@@ -441,23 +434,22 @@ function setHoldErr(){const s=document.getElementById('holdings-status');s.textC
 // ══════════════════════════════════════
 function loadDemo(){
   holdingsRaw=[
-    {ticker:'AAPL',qty:'15',cost_price:'155.00',currency:'USD',sector:'Technology',country:'USA'},
-    {ticker:'MSFT',qty:'8',cost_price:'280.00',currency:'USD',sector:'Technology',country:'USA'},
-    {ticker:'NVDA',qty:'5',cost_price:'500.00',currency:'USD',sector:'Technology',country:'USA'},
-    {ticker:'GOOGL',qty:'10',cost_price:'130.00',currency:'USD',sector:'Communication',country:'USA'},
-    {ticker:'AMZN',qty:'12',cost_price:'140.00',currency:'USD',sector:'Consumer',country:'USA'},
-    {ticker:'ENB.TO',qty:'200',cost_price:'47.50',currency:'CAD',sector:'Energy',country:'Canada'},
-    {ticker:'RY.TO',qty:'30',cost_price:'128.00',currency:'CAD',sector:'Financials',country:'Canada'},
-    {ticker:'TD.TO',qty:'40',cost_price:'82.00',currency:'CAD',sector:'Financials',country:'Canada'},
-    {ticker:'AGG',qty:'60',cost_price:'98.00',currency:'USD',sector:'Fixed Income',country:'USA'},
-    {ticker:'VTI',qty:'20',cost_price:'210.00',currency:'USD',sector:'ETF',country:'USA'},
+    {ticker:'AAPL',qty:'15',cost_price:'155.00',currency:'USD',sector:'Technology'},
+    {ticker:'MSFT',qty:'8',cost_price:'280.00',currency:'USD',sector:'Technology'},
+    {ticker:'NVDA',qty:'5',cost_price:'500.00',currency:'USD',sector:'Technology'},
+    {ticker:'GOOGL',qty:'10',cost_price:'130.00',currency:'USD',sector:'Communication'},
+    {ticker:'AMZN',qty:'12',cost_price:'140.00',currency:'USD',sector:'Consumer'},
+    {ticker:'ENB.TO',qty:'200',cost_price:'47.50',currency:'CAD',sector:'Energy'},
+    {ticker:'RY.TO',qty:'30',cost_price:'128.00',currency:'CAD',sector:'Financials'},
+    {ticker:'TD.TO',qty:'40',cost_price:'82.00',currency:'CAD',sector:'Financials'},
+    {ticker:'AGG',qty:'60',cost_price:'98.00',currency:'USD',sector:'Fixed Income'},
+    {ticker:'VTI',qty:'20',cost_price:'210.00',currency:'USD',sector:'ETF'},
   ];
   document.getElementById('cash-cad').value=15000;
   document.getElementById('cash-usd').value=5000;
   document.getElementById('cash-eur').value=0;
-  document.getElementById('dep-cad').value=50000;
-  document.getElementById('dep-usd').value=20000;
-  document.getElementById('dep-eur').value=0;
+  document.getElementById('input-deposits').value=80000;
+  document.getElementById('input-dep-currency').value='CAD';
   document.getElementById('input-report-currency').value='CAD';
   setHoldOK(holdingsRaw.length);
   launch();
@@ -474,11 +466,8 @@ async function launch(){
     USD:parseFloat(document.getElementById('cash-usd').value)||0,
     EUR:parseFloat(document.getElementById('cash-eur').value)||0,
   };
-  depositsPositions={
-    CAD:parseFloat(document.getElementById('dep-cad').value)||0,
-    USD:parseFloat(document.getElementById('dep-usd').value)||0,
-    EUR:parseFloat(document.getElementById('dep-eur').value)||0,
-  };
+  depositsVal=parseFloat(document.getElementById('input-deposits').value)||0;
+  depositsCur=document.getElementById('input-dep-currency').value||'CAD';
   currency=document.getElementById('input-report-currency').value||'CAD';
   document.querySelectorAll('.currency-btn').forEach(b=>b.classList.toggle('active',b.textContent===currency));
   document.getElementById('setup-wrap').style.display='none';
@@ -506,8 +495,13 @@ function resetDashboard(){
   document.getElementById('page-footer').style.display='none';
   document.getElementById('setup-wrap').style.display='';
   holdingsRaw=[];positions=[];
+  // Reset file input so same file can be re-uploaded
+  const fi=document.getElementById('holdings-input');
+  fi.value='';
   document.getElementById('holdings-status').textContent='Waiting for file...';
   document.getElementById('holdings-status').className='upload-status';
+  // Reset locked heatmap height for next session
+  delete document.getElementById('heatmap-container').dataset.lockedH;
 }
 
 // ══════════════════════════════════════
@@ -565,6 +559,20 @@ async function fetchLastClose(ticker){
   return null;
 }
 
+// ══════════════════════════════════════
+// COUNTRY FROM CURRENCY
+// ══════════════════════════════════════
+function currencyToCountry(cur){
+  const map={
+    USD:'USA',CAD:'Canada',EUR:'Europe',GBP:'UK',
+    CHF:'Europe',SEK:'Europe',NOK:'Europe',DKK:'Europe',
+    AUD:'Australia',NZD:'New Zealand',JPY:'Japan',
+    HKD:'Hong Kong',CNY:'China',SGD:'Singapore',
+    BRL:'Brazil',MXN:'Mexico',INR:'India',KRW:'South Korea',
+  };
+  return map[(cur||'').toUpperCase()]||'Other';
+}
+
 async function fetchAllPrices(){
   const total=holdingsRaw.length;
   positions=[];
@@ -580,7 +588,8 @@ async function fetchAllPrices(){
     const price=data?.price||cost;
     const posCur=data?.currency||h.currency||'USD';
     const sector=h.sector||'Unknown';
-    const country=h.country||'USA';
+    // Country auto-derived from position currency (not from file)
+    const country=currencyToCountry(posCur);
     let assetType='Equity';
     const sl=sector.toLowerCase();
     if(sl==='etf')assetType='ETF';
@@ -606,9 +615,7 @@ function calcAll(cur){
   const cashUSD=convert(cashPositions.USD,'USD',cur);
   const cashEUR=convert(cashPositions.EUR,'EUR',cur);
   const totalCash=cashCAD+cashUSD+cashEUR;
-  const depositsInCur=convert(depositsPositions.CAD,'CAD',cur)
-                    +convert(depositsPositions.USD,'USD',cur)
-                    +convert(depositsPositions.EUR,'EUR',cur);
+  const depositsInCur=convert(depositsVal,depositsCur,cur);
   let enriched=positions.map(p=>{
     const mktVal =convert(p.price*p.qty,p.currency,cur);
     const costVal=convert(p.cost *p.qty,p.currency,cur);
@@ -670,10 +677,13 @@ function setVC(id,v,pos){const e=document.getElementById(id);if(!e)return;e.text
 // ══════════════════════════════════════
 function renderHeatmap(data,totalCash,cashWeight,totalPortfolio,cur){
   const container=document.getElementById('heatmap-container');
+  // Lock height on first render so view switches don't shrink it
+  const W=container.clientWidth||560;
+  const lockedH=container.dataset.lockedH;
+  const H=lockedH?parseInt(lockedH):Math.max(280,Math.min(420,W*0.55));
+  if(!lockedH)container.dataset.lockedH=H;
   container.innerHTML='';
   if(!data.length){container.innerHTML='<div style="padding:20px;font-family:Space Mono,monospace;font-size:10px;color:#7A756C">No data</div>';return;}
-  const W=container.clientWidth||560;
-  const H=Math.max(240,Math.min(400,W*0.52));
   const isW=heatmapView==='weight';
   const nodes=data.map(p=>({...p,id:p.ticker,treemapValue:Math.max(p.mktVal,0.01),
     colorVal:isW?p.weight:heatmapView==='pnl_pct'?p.pnlPct:p.pnlAbs}));
@@ -710,12 +720,14 @@ function renderHeatmap(data,totalCash,cashWeight,totalPortfolio,cur){
     if(lw>34&&lh>20)g.append('text').attr('x',5).attr('y',15).attr('font-size','11px').attr('font-weight','600')
       .attr('fill',tc).attr('font-family','Space Mono,monospace').text(d.id.length>9?d.id.slice(0,9):d.id);
     if(lw>48&&lh>32){
-      const l2=isW?FMTW(d.colorVal):heatmapView==='pnl_pct'?FMTP(d.colorVal):FMT(d.colorVal,cur);
+      // line 2: main metric with 2 decimal precision
+      const l2=isW?FMTW(d.colorVal):heatmapView==='pnl_pct'?FMTP(d.colorVal):FMT2(d.colorVal,cur);
       g.append('text').attr('x',5).attr('y',28).attr('font-size','9px').attr('fill',tc)
         .attr('font-family','Space Mono,monospace').attr('opacity',.88).text(l2);
     }
     if(lw>60&&lh>46){
-      const l3=isW?FMT(d.mktVal,cur):FMTW(d.weight);
+      // line 3: secondary — value with 2 dec for weight view, weight% otherwise
+      const l3=isW?FMT2(d.mktVal,cur):FMTW(d.weight);
       g.append('text').attr('x',5).attr('y',41).attr('font-size','9px').attr('fill',tc)
         .attr('font-family','Space Mono,monospace').attr('opacity',.62).text(l3);
     }
@@ -738,11 +750,11 @@ function renderTable(data,cur){
       <td style="font-size:11px;max-width:130px;overflow:hidden;text-overflow:ellipsis">${p.name||''}</td>
       <td style="font-size:11px">${p.sector||'—'}</td>
       <td style="font-size:11px">${p.country||'—'}</td>
-      <td>${FMTQTY(p.qty)}</td>
+      <td>${p.qty}</td>
       <td>${FMTPR(p.costInCur)}</td>
       <td>${FMTPR(p.closePriceInCur)}</td>
-      <td>${FMT2(p.mktVal,cur)}</td>
-      <td class="${p.pnlAbs>=0?'td-pos':'td-neg'}">${FMT2(p.pnlAbs,cur)}</td>
+      <td>${FMT(p.mktVal,cur)}</td>
+      <td class="${p.pnlAbs>=0?'td-pos':'td-neg'}">${FMT(p.pnlAbs,cur)}</td>
       <td class="${p.pnlPct>=0?'td-pos':'td-neg'}">${FMTP(p.pnlPct)}</td>
       <td>${FMTW(p.weight)}</td>`;
     tbody.appendChild(tr);
