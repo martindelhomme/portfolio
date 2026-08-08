@@ -6,6 +6,7 @@
 <title>US Sports Stadium Tracker</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 :root{
@@ -133,7 +134,21 @@ html,body{height:100%;font-family:var(--font-display);background:var(--bg);color
 .popup-btn{margin-top:8px;width:100%;padding:6px;background:var(--surface);border:1px solid var(--border);color:var(--text-mid);border-radius:5px;cursor:pointer;font-size:11px;font-family:inherit;font-weight:600;transition:all .15s;}
 .popup-btn:hover{border-color:var(--text-mid);color:var(--text);}
 
-@media(max-width:900px){
+/* EXPORT MODAL */
+.export-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;display:none;align-items:center;justify-content:center;padding:16px;}
+.export-overlay.open{display:flex;}
+.export-modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px;max-width:400px;width:100%;}
+.export-modal-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-mid);margin-bottom:14px;}
+.export-btn-row{display:flex;gap:10px;}
+.export-opt{flex:1;padding:14px 12px;border:1px solid var(--border);background:var(--surface2);border-radius:8px;cursor:pointer;text-align:left;transition:all .15s;}
+.export-opt:hover{border-color:var(--text-mid);background:var(--surface);}
+.export-opt-icon{font-size:20px;margin-bottom:6px;}
+.export-opt-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:3px;}
+.export-opt-desc{font-size:10px;color:var(--text-mid);line-height:1.5;}
+.export-close{margin-top:12px;width:100%;padding:8px;background:none;border:1px solid var(--border);border-radius:6px;color:var(--text-mid);cursor:pointer;font-size:11px;font-family:inherit;letter-spacing:.06em;text-transform:uppercase;}
+.export-close:hover{border-color:var(--text-mid);color:var(--text);}
+/* Hidden card rendered for image export */
+#export-card{position:fixed;left:-9999px;top:0;width:760px;font-family:system-ui,sans-serif;}
   /* Allow full page scroll on mobile */
   html,body{height:auto;overflow-x:hidden;}
   .main{
@@ -181,7 +196,7 @@ html,body{height:100%;font-family:var(--font-display);background:var(--bg);color
     </div>
   </div>
   <div class="header-actions">
-    <button class="btn-sm" onclick="exportData()">Export</button>
+    <button class="btn-sm" onclick="document.getElementById('export-overlay').classList.add('open')">Export</button>
     <button class="btn-sm danger" onclick="resetAll()">Reset All</button>
   </div>
 </div>
@@ -245,6 +260,29 @@ html,body{height:100%;font-family:var(--font-display);background:var(--bg);color
     <tbody id="venue-tbody"></tbody>
   </table>
 </div>
+
+<!-- EXPORT MODAL -->
+<div class="export-overlay" id="export-overlay" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="export-modal">
+    <div class="export-modal-title">Export my tracker</div>
+    <div class="export-btn-row">
+      <div class="export-opt" onclick="exportImage()">
+        <div class="export-opt-icon">🖼️</div>
+        <div class="export-opt-title">Stats Card</div>
+        <div class="export-opt-desc">Download a visual recap — stats, progress and team lists as an image.</div>
+      </div>
+      <div class="export-opt" onclick="exportJSON()">
+        <div class="export-opt-icon">📄</div>
+        <div class="export-opt-title">JSON Data</div>
+        <div class="export-opt-desc">Download your raw selections as a JSON file for backup or import.</div>
+      </div>
+    </div>
+    <button class="export-close" onclick="document.getElementById('export-overlay').classList.remove('open')">Cancel</button>
+  </div>
+</div>
+
+<!-- HIDDEN CARD FOR IMAGE EXPORT -->
+<div id="export-card"></div>
 
 <script>
 // ═══════════════════════════════════════════════════
@@ -703,7 +741,8 @@ function resetAll() {
   save(); renderAll();
 }
 
-function exportData() {
+function exportJSON() {
+  document.getElementById('export-overlay').classList.remove('open');
   const uniqueVenues = [...new Map(VENUES.map(v=>[v.venue_id,v])).values()];
   const data = {
     exported: new Date().toISOString(),
@@ -716,8 +755,133 @@ function exportData() {
   };
   const a = document.createElement('a');
   a.href = 'data:text/json,' + encodeURIComponent(JSON.stringify(data,null,2));
-  a.download = 'my_stadium_tracker.json';
+  a.download = 'stadium_tracker.json';
   a.click();
+}
+
+function exportImage() {
+  document.getElementById('export-overlay').classList.remove('open');
+
+  // ── Collect data ──────────────────────────────────
+  const uniqueVenues = [...new Map(VENUES.map(v=>[v.venue_id,v])).values()];
+  const allTeamsByS  = {};
+  ['NBA','NFL','NHL','MLB'].forEach(s=>{
+    allTeamsByS[s]=[...new Set(VENUES.flatMap(v=>v.teams.filter(t=>t.sport===s).map(t=>t.team)))].sort();
+  });
+  const visitedVenueIds = new Set(uniqueVenues.filter(v=>v.teams.some(t=>visitedTeams.has(t.team))).map(v=>v.venue_id));
+  const totalVenues     = uniqueVenues.filter(v=>v.teams.length>0).length;
+  const allTeams        = Object.values(allTeamsByS).flat();
+  const seenCount       = allTeams.filter(t=>seenTeams.has(t)||visitedTeams.has(t)).length;
+  const sportsActive    = new Set([...visitedTeams,...seenTeams].flatMap(t=>VENUES.flatMap(v=>v.teams.filter(tt=>tt.team===t).map(tt=>tt.sport))));
+  const cities          = new Set(uniqueVenues.filter(v=>v.teams.some(t=>visitedTeams.has(t.team))).map(v=>v.city));
+
+  // Teams visited per sport
+  const visitedBySport  = {};
+  const seenBySport     = {};
+  ['NBA','NFL','NHL','MLB'].forEach(s=>{
+    visitedBySport[s] = allTeamsByS[s].filter(t=>visitedTeams.has(t));
+    seenBySport[s]    = allTeamsByS[s].filter(t=>seenTeams.has(t)&&!visitedTeams.has(t));
+  });
+
+  const SC = SPORT_CONFIG;
+  const date = new Date().toLocaleDateString('en-CA');
+
+  // ── Build card HTML ───────────────────────────────
+  const teamListHTML = (teams, color, icon) => teams.length === 0
+    ? `<span style="color:#4a4f6a;font-size:10px;font-style:italic">None yet</span>`
+    : teams.map(t=>`<span style="display:inline-flex;align-items:center;gap:3px;background:${color}18;color:${color};border:1px solid ${color}33;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:600;margin:2px;">${icon} ${t}</span>`).join('');
+
+  const sportBlock = (sport) => {
+    const cfg = SC[sport];
+    const vis  = visitedBySport[sport];
+    const seen = seenBySport[sport];
+    const total= allTeamsByS[sport].length;
+    const visPct  = Math.round(vis.length/total*100);
+    const seenPct = Math.round((vis.length+seen.length)/total*100);
+    return `
+    <div style="background:#1a1d27;border:1px solid #2e3350;border-radius:8px;padding:14px 16px;margin-bottom:10px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <span style="font-weight:800;font-size:13px;color:${cfg.color};letter-spacing:.04em">${cfg.emoji} ${sport}</span>
+        <span style="font-size:11px;color:#8b90b0">${vis.length+seen.length} / ${total} seen &nbsp;·&nbsp; ${vis.length} visited</span>
+      </div>
+      <div style="margin-bottom:6px;">
+        <div style="height:4px;background:#2e3350;border-radius:3px;overflow:hidden;margin-bottom:3px;">
+          <div style="height:100%;width:${visPct}%;background:#6366f1;border-radius:3px;"></div>
+        </div>
+        <div style="height:4px;background:#2e3350;border-radius:3px;overflow:hidden;">
+          <div style="height:100%;width:${seenPct}%;background:${cfg.color};border-radius:3px;"></div>
+        </div>
+        <div style="display:flex;gap:16px;margin-top:4px;">
+          <span style="font-size:9px;color:#6366f1;letter-spacing:.04em">🏟️ VISITED</span>
+          <span style="font-size:9px;color:${cfg.color};letter-spacing:.04em">👀 SEEN</span>
+        </div>
+      </div>
+      ${vis.length > 0 ? `<div style="margin-top:6px;"><div style="font-size:9px;color:#4a4f6a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;">Visited</div><div style="line-height:1.8">${teamListHTML(vis,'#6366f1','🏟️')}</div></div>` : ''}
+      ${seen.length > 0 ? `<div style="margin-top:6px;"><div style="font-size:9px;color:#4a4f6a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;">Seen away</div><div style="line-height:1.8">${teamListHTML(seen,cfg.color,'👀')}</div></div>` : ''}
+    </div>`;
+  };
+
+  const card = document.getElementById('export-card');
+  card.innerHTML = `
+  <div style="background:#0f1117;padding:32px;width:760px;border-radius:0;">
+    <!-- HEADER -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+      <div>
+        <div style="font-size:22px;font-weight:900;color:#f0f2ff;letter-spacing:-.01em;">🏟️ Stadium Tracker</div>
+        <div style="font-size:11px;color:#8b90b0;letter-spacing:.06em;text-transform:uppercase;margin-top:3px;">My North American Sports Journey · ${date}</div>
+      </div>
+      <div style="font-size:28px">🇺🇸🇨🇦</div>
+    </div>
+
+    <!-- STATS STRIP -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px;">
+      ${[
+        {num:`${visitedVenueIds.size}/${totalVenues}`,lbl:'Venues Visited',icon:'🏟️',col:'#6366f1'},
+        {num:`${cities.size}`,lbl:'Cities',icon:'📍',col:'#3b82f6'},
+        {num:`${sportsActive.size}/4`,lbl:'Sports',icon:'🎯',col:'#a78bfa'},
+        {num:`${seenCount}/${allTeams.length}`,lbl:'Teams Seen',icon:'👀',col:'#f59e0b'},
+      ].map(s=>`
+        <div style="background:#1a1d27;border:1px solid #2e3350;border-radius:8px;padding:16px 12px;text-align:center;">
+          <div style="font-size:18px;margin-bottom:4px">${s.icon}</div>
+          <div style="font-size:24px;font-weight:900;color:${s.col};line-height:1;margin-bottom:4px">${s.num}</div>
+          <div style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#8b90b0">${s.lbl}</div>
+        </div>`).join('')}
+    </div>
+
+    <!-- SPORT BLOCKS -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div>${sportBlock('NBA')}${sportBlock('NHL')}</div>
+      <div>${sportBlock('NFL')}${sportBlock('MLB')}</div>
+    </div>
+
+    <!-- FOOTER -->
+    <div style="margin-top:20px;padding-top:14px;border-top:1px solid #2e3350;display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-size:10px;color:#4a4f6a;letter-spacing:.04em">martindelhomme.github.io/portfolio</span>
+      <span style="font-size:10px;color:#4a4f6a">Generated ${date}</span>
+    </div>
+  </div>`;
+
+  // ── Render with html2canvas ───────────────────────
+  const btn = document.querySelector('.header-actions .btn-sm');
+  const originalText = btn ? btn.textContent : '';
+  if(btn) btn.textContent = 'Generating...';
+
+  html2canvas(card.firstElementChild, {
+    backgroundColor: '#0f1117',
+    scale: 2,
+    useCORS: true,
+    logging: false,
+  }).then(canvas => {
+    const a = document.createElement('a');
+    a.download = `stadium_tracker_${date}.png`;
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+    if(btn) btn.textContent = originalText;
+    card.innerHTML = '';
+  }).catch(()=>{
+    if(btn) btn.textContent = originalText;
+    alert('Could not generate image. Try the JSON export instead.');
+  });
 }
 
 // ═══════════════════════════════════════════════════
