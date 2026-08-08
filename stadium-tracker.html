@@ -134,11 +134,39 @@ html,body{height:100%;font-family:var(--font-display);background:var(--bg);color
 .popup-btn:hover{border-color:var(--text-mid);color:var(--text);}
 
 @media(max-width:900px){
-  .main{grid-template-columns:1fr;}.sidebar{display:none;}
+  /* Allow full page scroll on mobile */
+  html,body{height:auto;overflow-x:hidden;}
+  .main{
+    grid-template-columns:1fr;
+    height:auto;
+    min-height:unset;
+    margin:0 12px;
+    border-radius:8px;
+    flex-direction:column;
+  }
+  /* Map fixed height on mobile */
+  #map{height:55vw;min-height:260px;max-height:380px;}
+  /* Sidebar visible below map, no fixed height */
+  .sidebar{
+    display:flex;
+    overflow-y:visible;
+    max-height:none;
+    border-top:1px solid var(--border);
+  }
+  .sidebar-section{padding:12px;}
   .stats-strip{grid-template-columns:repeat(2,1fr);}
-  .header,.controls,.search-wrap,.venue-table-wrap{padding-left:16px;padding-right:16px;}
-  .stats-strip{margin:14px 16px;}
-  .main{margin:0 16px;}
+  .header,.controls,.search-wrap,.venue-table-wrap{padding-left:12px;padding-right:12px;}
+  .stats-strip{margin:10px 12px;}
+  .controls{gap:6px;flex-wrap:wrap;}
+  .filter-btn{padding:6px 12px;font-size:10px;}
+  .toggle-visited,.btn-fit{padding:6px 10px;font-size:10px;}
+  .search-input{width:100%;}
+  .search-wrap{padding-right:12px;}
+  .search-results{width:calc(100vw - 24px);left:12px;}
+  /* Team list readable on mobile */
+  .team-item .team-name{font-size:11px;}
+  .chk{width:22px;height:22px;}
+  .venue-table-wrap{padding:0 12px 24px;}
 }
 </style>
 </head>
@@ -713,6 +741,8 @@ function renderAll() {
 // INIT
 // ═══════════════════════════════════════════════════
 renderAll();
+// Fix Leaflet tile render after mobile layout settles
+setTimeout(()=>map.invalidateSize(),100);
 </script>
 </body>
 </html>
