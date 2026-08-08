@@ -74,21 +74,38 @@ html,body{height:100%;font-family:var(--font-display);background:var(--bg);color
 .sport-group{margin-bottom:12px;}
 .sport-group-header{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:4px 0;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
 .sport-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-.team-item{display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:5px;cursor:pointer;transition:background .1s;user-select:none;}
+.team-item{display:flex;align-items:center;gap:6px;padding:5px 6px;border-radius:5px;user-select:none;transition:background .1s;}
 .team-item:hover{background:var(--surface2);}
-.team-item.selected{background:var(--surface2);}
-.team-check{width:16px;height:16px;border-radius:3px;border:1.5px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;transition:all .15s;}
-.team-item.selected .team-check{background:var(--text);border-color:var(--text);color:var(--bg);}
-.team-name{font-size:12px;color:var(--text-mid);}
-.team-item.selected .team-name{color:var(--text);}
-.team-venue-tag{font-size:9px;color:var(--text-dim);margin-left:auto;}
+.team-name{font-size:12px;color:var(--text-mid);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.team-item.any-selected .team-name{color:var(--text);}
+.team-checks{display:flex;gap:5px;flex-shrink:0;}
+/* Each checkbox: stadium or seen */
+.chk{width:20px;height:20px;border-radius:4px;border:1.5px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;cursor:pointer;transition:all .15s;position:relative;}
+.chk:hover{border-color:var(--text-dim);}
+.chk.visited{background:#6366f1;border-color:#6366f1;color:#fff;}
+.chk.seen{background:#f59e0b;border-color:#f59e0b;color:#fff;}
+/* Sidebar column headers */
+.team-list-header{display:flex;align-items:center;padding:0 6px 8px;border-bottom:1px solid var(--border);margin-bottom:6px;}
+.tlh-name{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);flex:1;}
+.tlh-checks{display:flex;gap:5px;flex-shrink:0;}
+.tlh-label{width:20px;text-align:center;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-dim);}
+/* Status dot on team item */
+.team-status-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;background:var(--border);}
+.team-status-dot.both{background:#22c55e;}
+.team-status-dot.seen-only{background:#f59e0b;}
+.team-status-dot.visited-only{background:#6366f1;}
+/* Progress section with two bars */
+.progress-sub-label{font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:var(--text-dim);margin-bottom:2px;margin-top:4px;}
+.progress-bar-row{display:flex;align-items:center;gap:6px;margin-bottom:3px;}
+.progress-bar-row .progress-bar{flex:1;}
+.progress-bar-row .pb-count{font-size:9px;color:var(--text-dim);width:28px;text-align:right;flex-shrink:0;}
 
 /* PROGRESS BARS */
-.progress-sport{margin-bottom:10px;}
+.progress-sport{margin-bottom:12px;}
 .progress-label{display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;}
 .progress-name{font-weight:600;}
 .progress-count{color:var(--text-mid);}
-.progress-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden;}
+.progress-bar{height:4px;background:var(--border);border-radius:3px;overflow:hidden;}
 .progress-fill{height:100%;border-radius:3px;transition:width .3s;}
 
 /* VENUE LIST */
@@ -155,8 +172,9 @@ html,body{height:100%;font-family:var(--font-display);background:var(--bg);color
     <div class="stat-label">Sports</div>
   </div>
   <div class="stat-card">
-    <div class="stat-num" id="stat-teams">0</div>
+    <div class="stat-num" id="stat-teams-seen">0<span id="stat-teams-seen-total">/0</span></div>
     <div class="stat-label">Teams Seen</div>
+    <div id="stat-seen-note" style="font-size:9px;color:var(--text-dim);margin-top:3px;letter-spacing:.04em"></div>
   </div>
 </div>
 
@@ -194,7 +212,7 @@ html,body{height:100%;font-family:var(--font-display);background:var(--bg);color
   <div class="venue-table-title">Visited Venues</div>
   <table class="venue-table">
     <thead><tr>
-      <th>Venue</th><th>City</th><th>Sport</th><th>Team</th>
+      <th>Venue</th><th>City</th><th>Sport</th><th>Team</th><th>Seen</th>
     </tr></thead>
     <tbody id="venue-tbody"></tbody>
   </table>
@@ -333,7 +351,10 @@ const SPORT_CONFIG = {
 // ═══════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════
-let selectedTeams = new Set(JSON.parse(localStorage.getItem('stadium_selected')||'[]'));
+let visitedTeams = new Set(JSON.parse(localStorage.getItem('stadium_visited')||'[]'));
+let seenTeams    = new Set(JSON.parse(localStorage.getItem('stadium_seen')||'[]'));
+// Legacy migration: if old key exists, treat as visited
+(()=>{const old=localStorage.getItem('stadium_selected');if(old){JSON.parse(old).forEach(t=>visitedTeams.add(t));localStorage.removeItem('stadium_selected');}})();
 let activeSports = new Set(['NBA','NFL','NHL','MLB']);
 let visitedOnly = false;
 let markers = {}; // venue_id -> leaflet marker
@@ -351,8 +372,9 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
 // ═══════════════════════════════════════════════════
 function getVenueState(venue) {
   const relevantTeams = venue.teams.filter(t => activeSports.has(t.sport));
-  const visitedHere = relevantTeams.filter(t => selectedTeams.has(t.team));
-  return { relevantTeams, visitedHere, isVisited: visitedHere.length > 0, hasRelevant: relevantTeams.length > 0 };
+  const visitedHere   = relevantTeams.filter(t => visitedTeams.has(t.team));
+  const seenHere      = relevantTeams.filter(t => seenTeams.has(t.team));
+  return { relevantTeams, visitedHere, seenHere, isVisited: visitedHere.length > 0, hasRelevant: relevantTeams.length > 0 };
 }
 
 function makeMarkerIcon(venue, state) {
@@ -365,7 +387,7 @@ function makeMarkerIcon(venue, state) {
     const border = sports.length === 1 ? SPORT_CONFIG[sports[0]].color+'66' : '#6a7090';
     return L.divIcon({className:'',html:`<div style="width:10px;height:10px;border-radius:50%;background:${col};border:1.5px solid ${border};"></div>`,iconSize:[10,10],iconAnchor:[5,5]});
   }
-  // Visited
+  // Visited — marker driven by visited status only
   const sports = [...new Set(state.visitedHere.map(t=>t.sport))];
   const col = sports.length === 1 ? SPORT_CONFIG[sports[0]].color : '#a78bfa';
   const emoji = sports.length === 1 ? SPORT_CONFIG[sports[0]].emoji : '🏟️';
@@ -378,50 +400,56 @@ function makeMarkerIcon(venue, state) {
 
 function makePopup(venue) {
   const state = getVenueState(venue);
-  const allSports = [...new Set(venue.teams.map(t=>t.sport))].filter(s=>activeSports.has(s));
   const teamsToShow = venue.teams.filter(t=>activeSports.has(t.sport));
-  const visitedCount = teamsToShow.filter(t=>selectedTeams.has(t.team)).length;
+  const visitedCount = teamsToShow.filter(t=>visitedTeams.has(t.team)).length;
 
   let teamsHtml = teamsToShow.map(t=>{
-    const vis = selectedTeams.has(t.team);
+    const vis = visitedTeams.has(t.team);
+    const seen = seenTeams.has(t.team);
     const cfg = SPORT_CONFIG[t.sport];
-    return `<div class="popup-team ${vis?'visited':''}">
-      <span class="sport-emoji">${cfg.emoji}</span>
-      <span>${t.team}</span>
-      ${vis?'<span class="check" style="margin-left:auto">✓</span>':''}
+    return `<div class="popup-team ${vis?'visited':''}" style="flex-direction:column;align-items:flex-start;padding:5px 0;border-bottom:1px solid var(--border);">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+        <span class="sport-emoji">${cfg.emoji}</span>
+        <span style="font-weight:600;font-size:12px;color:var(--text)">${t.team}</span>
+      </div>
+      <div style="display:flex;gap:10px;padding-left:2px;">
+        <span style="font-size:11px;color:${vis?'#6366f1':'var(--text-dim)'}">🏟️ ${vis?'Visited ✓':'Not visited'}</span>
+        <span style="font-size:11px;color:${seen?'#f59e0b':'var(--text-dim)'}">👀 ${seen?'Seen ✓':'Not seen'}</span>
+      </div>
     </div>`;
   }).join('');
   if(!teamsToShow.length) teamsHtml = '<div style="font-size:11px;color:var(--text-dim)">No teams for active sports</div>';
 
   const footer = teamsToShow.length > 0
-    ? `<div class="popup-footer">Visited: ${visitedCount} / ${teamsToShow.length} team${teamsToShow.length>1?'s':''}</div>` : '';
+    ? `<div class="popup-footer" style="margin-top:6px">🏟️ ${visitedCount}/${teamsToShow.length} team${teamsToShow.length>1?'s':''} visited</div>` : '';
 
   return `<div>
     <div class="popup-venue">${venue.venue}</div>
     <div class="popup-city">${venue.city}${venue.state?', '+venue.state:''} · ${venue.country}</div>
-    ${teamsHtml}
+    <div style="margin:8px 0">${teamsHtml}</div>
     ${footer}
-    <button class="popup-btn" onclick="toggleVenueTeams('${venue.venue_id}')">
-      ${visitedCount > 0 ? 'Remove from visited' : 'Mark as visited'}
-    </button>
   </div>`;
 }
 
-function toggleVenueTeams(venue_id) {
-  const venue = VENUES.find(v=>v.venue_id===venue_id);
-  if(!venue)return;
-  const relevantTeams = venue.teams.filter(t=>activeSports.has(t.sport));
-  const allVisited = relevantTeams.every(t=>selectedTeams.has(t.team));
-  relevantTeams.forEach(t=>{
-    if(allVisited) selectedTeams.delete(t.team);
-    else selectedTeams.add(t.team);
-  });
-  save();
-  renderAll();
-  // Reopen popup
-  if(markers[venue_id]){
-    markers[venue_id].setPopupContent(makePopup(venue));
+function toggleVisited(team, e) {
+  e.stopPropagation();
+  if(visitedTeams.has(team)) visitedTeams.delete(team);
+  else visitedTeams.add(team);
+  save(); renderAll();
+}
+function toggleSeenAway(team, e) {
+  e.stopPropagation();
+  // Only toggle seenTeams — if already in visitedTeams, seen is implied, so toggle visited off first
+  if(visitedTeams.has(team)){
+    // Clicking seen-away when already visited: remove from visited, keep in seenTeams
+    visitedTeams.delete(team);
+    seenTeams.add(team);
+  } else if(seenTeams.has(team)){
+    seenTeams.delete(team);
+  } else {
+    seenTeams.add(team);
   }
+  save(); renderAll();
 }
 
 function renderMarkers() {
@@ -446,65 +474,78 @@ function renderMarkers() {
 // STATS
 // ═══════════════════════════════════════════════════
 function updateStats() {
-  const visited = new Set();
+  const visitedVenueIds = new Set();
   const cities = new Set();
-  const sportsVisited = new Set();
-  let teamsCount = 0;
-
-  // Deduplicate venues by venue_id
+  const sportsWithVisited = new Set();
   const uniqueVenues = [...new Map(VENUES.map(v=>[v.venue_id,v])).values()];
+  const allTeams = [...new Set(VENUES.flatMap(v=>v.teams.filter(t=>activeSports.has(t.sport)).map(t=>t.team)))];
 
   uniqueVenues.forEach(venue=>{
-    const relevantTeams = venue.teams.filter(t=>activeSports.has(t.sport));
-    const visitedHere = relevantTeams.filter(t=>selectedTeams.has(t.team));
-    if(visitedHere.length>0){
-      visited.add(venue.venue_id);
+    const relevant = venue.teams.filter(t=>activeSports.has(t.sport));
+    const visHere  = relevant.filter(t=>visitedTeams.has(t.team));
+    if(visHere.length>0){
+      visitedVenueIds.add(venue.venue_id);
       cities.add(venue.city+','+venue.country);
-      visitedHere.forEach(t=>sportsVisited.add(t.sport));
-      teamsCount += visitedHere.length;
+      visHere.forEach(t=>sportsWithVisited.add(t.sport));
     }
   });
 
-  const totalVenues = new Set(uniqueVenues.filter(v=>v.teams.some(t=>activeSports.has(t.sport))).map(v=>v.venue_id)).size;
+  const teamsSeenCount    = allTeams.filter(t=>seenTeams.has(t)||visitedTeams.has(t)).length;
+  const seenNotVisited    = allTeams.filter(t=>seenTeams.has(t)&&!visitedTeams.has(t)).length;
+  const totalVenues       = new Set(uniqueVenues.filter(v=>v.teams.some(t=>activeSports.has(t.sport))).map(v=>v.venue_id)).size;
 
-  document.getElementById('stat-venues').innerHTML = `${visited.size}<span>/${totalVenues}</span>`;
-  document.getElementById('stat-cities').textContent = cities.size;
-  document.getElementById('stat-sports').innerHTML = `${sportsVisited.size}<span>/4</span>`;
-  document.getElementById('stat-teams').textContent = teamsCount;
+  document.getElementById('stat-venues').innerHTML         = `${visitedVenueIds.size}<span>/${totalVenues}</span>`;
+  document.getElementById('stat-cities').textContent       = cities.size;
+  document.getElementById('stat-sports').innerHTML         = `${sportsWithVisited.size}<span>/4</span>`;
+  document.getElementById('stat-teams-seen').innerHTML     = `${teamsSeenCount}<span>/${allTeams.length}</span>`;
+  document.getElementById('stat-seen-note').textContent    = seenNotVisited>0?`${seenNotVisited} seen, venue not visited`:'';
 
-  // Progress bars
+  // Progress bars — double: visited + seen per sport
   const pb = document.getElementById('progress-bars');
   pb.innerHTML = Object.entries(SPORT_CONFIG).map(([sport,cfg])=>{
-    const allVenues = [...new Set(VENUES.filter(v=>v.teams.some(t=>t.sport===sport)).map(v=>v.venue_id))].length;
-    const visitedV = [...new Set(VENUES.filter(v=>v.teams.some(t=>t.sport===sport&&selectedTeams.has(t.team))).map(v=>v.venue_id))].length;
-    const pct = allVenues>0?Math.round(visitedV/allVenues*100):0;
+    const sportTeams  = [...new Set(VENUES.flatMap(v=>v.teams.filter(t=>t.sport===sport).map(t=>t.team)))];
+    const total       = sportTeams.length;
+    const visCount    = sportTeams.filter(t=>visitedTeams.has(t)).length;
+    const seenCount   = sportTeams.filter(t=>seenTeams.has(t)||visitedTeams.has(t)).length;
+    const visPct      = total>0?Math.round(visCount/total*100):0;
+    const seenPct     = total>0?Math.round(seenCount/total*100):0;
     return `<div class="progress-sport">
       <div class="progress-label">
         <span class="progress-name" style="color:${cfg.color}">${cfg.emoji} ${sport}</span>
-        <span class="progress-count">${visitedV}/${allVenues}</span>
       </div>
-      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${cfg.color}"></div></div>
+      <div class="progress-sub-label" style="color:#6366f1">🏟️ Visited</div>
+      <div class="progress-bar-row">
+        <div class="progress-bar"><div class="progress-fill" style="width:${visPct}%;background:#6366f1"></div></div>
+        <span class="pb-count">${visCount}/${total}</span>
+      </div>
+      <div class="progress-sub-label" style="color:#f59e0b">👀 Seen</div>
+      <div class="progress-bar-row">
+        <div class="progress-bar"><div class="progress-fill" style="width:${seenPct}%;background:#f59e0b"></div></div>
+        <span class="pb-count">${seenCount}/${total}</span>
+      </div>
     </div>`;
   }).join('');
 
-  // Venue table
+  // Venue table (visited venues)
   const visitedVenueRows = [];
   uniqueVenues.forEach(venue=>{
-    venue.teams.filter(t=>activeSports.has(t.sport)&&selectedTeams.has(t.team)).forEach(t=>{
+    venue.teams.filter(t=>activeSports.has(t.sport)&&visitedTeams.has(t.team)).forEach(t=>{
       visitedVenueRows.push({venue:venue.venue,city:venue.city,country:venue.country,sport:t.sport,team:t.team});
     });
   });
   const tbody = document.getElementById('venue-tbody');
-  const wrap = document.getElementById('venue-table-wrap');
+  const wrap  = document.getElementById('venue-table-wrap');
   if(visitedVenueRows.length>0){
     wrap.style.display='block';
     tbody.innerHTML = visitedVenueRows.sort((a,b)=>a.sport.localeCompare(b.sport)).map(r=>{
       const cfg = SPORT_CONFIG[r.sport];
+      const seen = seenTeams.has(r.team)||visitedTeams.has(r.team);
       return `<tr>
         <td>${r.venue}</td>
         <td>${r.city}, ${r.country}</td>
         <td><span class="sport-badge" style="background:${cfg.color}22;color:${cfg.color}">${cfg.emoji} ${r.sport}</span></td>
         <td>${r.team}</td>
+        <td style="font-size:11px;color:${seen?'#f59e0b':'var(--text-dim)'}">👀 ${seen?'✓':'—'}</td>
       </tr>`;
     }).join('');
   } else {
@@ -522,28 +563,39 @@ function buildTeamList() {
     .map(([sport,cfg])=>{
       const teams = [...new Set(VENUES.flatMap(v=>v.teams.filter(t=>t.sport===sport).map(t=>t.team)))].sort();
       const items = teams.map(team=>{
-        const sel = selectedTeams.has(team);
-        const venue = VENUES.find(v=>v.teams.some(t=>t.team===team));
-        return `<div class="team-item ${sel?'selected':''}" onclick="toggleTeam('${team.replace(/'/g,"\\'")}')">
-          <div class="team-check">${sel?'✓':''}</div>
-          <span class="team-name">${team}</span>
-          <span class="team-venue-tag">${venue?venue.city:''}</span>
+        const vis  = visitedTeams.has(team);
+        const seen = seenTeams.has(team)||vis; // visited implies seen
+        const ts   = team.replace(/'/g,"\\'");
+        // status dot
+        let dotClass = '';
+        if(vis && (seenTeams.has(team)||vis)) dotClass='both';
+        else if(!vis && seenTeams.has(team)) dotClass='seen-only';
+        else if(vis && !seenTeams.has(team)) dotClass='visited-only';
+        const anySelected = vis||seenTeams.has(team);
+        return `<div class="team-item ${anySelected?'any-selected':''}">
+          <div class="team-status-dot ${dotClass}"></div>
+          <span class="team-name" title="${team}">${team}</span>
+          <div class="team-checks">
+            <div class="chk ${vis?'visited':''}" title="Stadium visited" onclick="toggleVisited('${ts}',event)">${vis?'🏟️':''}</div>
+            <div class="chk ${!vis&&seenTeams.has(team)?'seen':''}" title="Seen away" onclick="toggleSeenAway('${ts}',event)">${!vis&&seenTeams.has(team)?'👀':''}</div>
+          </div>
         </div>`;
       }).join('');
       return `<div class="sport-group">
         <div class="sport-group-header">
           <div class="sport-dot" style="background:${cfg.color}"></div>${cfg.emoji} ${sport}
-        </div>${items}
+        </div>
+        <div class="team-list-header">
+          <span class="tlh-name">Team</span>
+          <div class="tlh-checks">
+            <span class="tlh-label" title="Stadium visited" style="color:#6366f1">🏟️</span>
+            <span class="tlh-label" title="Seen away" style="color:#f59e0b">👀</span>
+          </div>
+        </div>
+        ${items}
       </div>`;
     }).join('');
   container.innerHTML = html;
-}
-
-function toggleTeam(team) {
-  if(selectedTeams.has(team)) selectedTeams.delete(team);
-  else selectedTeams.add(team);
-  save();
-  renderAll();
 }
 
 // ═══════════════════════════════════════════════════
@@ -563,8 +615,9 @@ function handleSearch(q) {
   box.innerHTML = results.map(v=>{
     const teamsHtml = v.teams.filter(t=>activeSports.has(t.sport)).map(t=>{
       const cfg=SPORT_CONFIG[t.sport];
-      const vis=selectedTeams.has(t.team);
-      return `<span class="sr-badge" style="background:${cfg.color}22;color:${cfg.color}">${cfg.emoji} ${t.team}${vis?' ✓':''}</span>`;
+      const vis=visitedTeams.has(t.team);
+      const seen=seenTeams.has(t.team)||vis;
+      return `<span class="sr-badge" style="background:${cfg.color}22;color:${cfg.color}">${cfg.emoji} ${t.team}${vis?' 🏟️':seen?' 👀':''}</span>`;
     }).join('');
     return `<div class="sr-item" onmousedown="selectSearchResult('${v.venue_id}')">
       <div class="sr-venue">📍 ${v.venue} — ${v.city}</div>
@@ -604,24 +657,26 @@ function toggleVisitedOnly() {
 }
 
 function fitVisited() {
-  const pts = VENUES.filter(v=>v.teams.some(t=>selectedTeams.has(t.team)&&activeSports.has(t.sport))).map(v=>[v.lat,v.lng]);
+  const pts = VENUES.filter(v=>v.teams.some(t=>visitedTeams.has(t.team)&&activeSports.has(t.sport))).map(v=>[v.lat,v.lng]);
   if(pts.length) map.fitBounds(pts,{padding:[40,40]});
 }
 
 function resetAll() {
   if(!confirm('Reset all your selections?'))return;
-  selectedTeams.clear();
-  save();
-  renderAll();
+  visitedTeams.clear(); seenTeams.clear();
+  save(); renderAll();
 }
 
 function exportData() {
+  const uniqueVenues = [...new Map(VENUES.map(v=>[v.venue_id,v])).values()];
   const data = {
     exported: new Date().toISOString(),
-    teams: [...selectedTeams],
-    venues: [...new Map(VENUES.map(v=>[v.venue_id,v])).values()]
-      .filter(v=>v.teams.some(t=>selectedTeams.has(t.team)))
-      .map(v=>({venue:v.venue,city:v.city,country:v.country,teams:v.teams.filter(t=>selectedTeams.has(t.team)).map(t=>t.team)}))
+    visited_teams: [...visitedTeams],
+    seen_teams: [...seenTeams],
+    venues: uniqueVenues
+      .filter(v=>v.teams.some(t=>visitedTeams.has(t.team)||seenTeams.has(t.team)))
+      .map(v=>({venue:v.venue,city:v.city,country:v.country,
+        teams:v.teams.map(t=>({team:t.team,sport:t.sport,visited:visitedTeams.has(t.team),seen:seenTeams.has(t.team)||visitedTeams.has(t.team)}))}))
   };
   const a = document.createElement('a');
   a.href = 'data:text/json,' + encodeURIComponent(JSON.stringify(data,null,2));
@@ -633,7 +688,8 @@ function exportData() {
 // PERSISTENCE
 // ═══════════════════════════════════════════════════
 function save() {
-  localStorage.setItem('stadium_selected', JSON.stringify([...selectedTeams]));
+  localStorage.setItem('stadium_visited', JSON.stringify([...visitedTeams]));
+  localStorage.setItem('stadium_seen',    JSON.stringify([...seenTeams]));
 }
 
 // ═══════════════════════════════════════════════════
