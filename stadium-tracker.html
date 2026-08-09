@@ -78,6 +78,19 @@ html,body{height:100%;font-family:var(--font-display);background:var(--bg);color
 /* Team list */
 .sport-group{margin-bottom:12px;}
 .sport-group-header{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:4px 0;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.sport-group-toggle{display:none;} /* hidden on desktop */
+.sport-group-body{display:block;} /* always visible on desktop */
+/* Mobile accordion */
+@media(max-width:900px){
+  .sport-group{margin-bottom:0;border-bottom:1px solid var(--border);}
+  .sport-group-header{cursor:pointer;padding:12px 8px;margin-bottom:0;justify-content:space-between;user-select:none;}
+  .sport-group-header:hover{background:var(--surface2);}
+  .sport-group-toggle{font-size:12px;color:var(--text-dim);transition:transform .2s;}
+  .sport-group.open .sport-group-toggle{transform:rotate(180deg);}
+  .sport-group-body{display:none;padding:6px 4px 10px;}
+  .sport-group.open .sport-group-body{display:block;}
+  .team-list-header{display:none;}
+}
 .sport-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
 .team-item{display:flex;align-items:center;gap:6px;padding:5px 6px;border-radius:5px;user-select:none;transition:background .1s;}
 .team-item:hover{background:var(--surface2);}
@@ -620,7 +633,17 @@ function updateStats() {
 // ═══════════════════════════════════════════════════
 // TEAM LIST (sidebar)
 // ═══════════════════════════════════════════════════
+function toggleSportGroup(sport) {
+  const el = document.getElementById('sg-'+sport);
+  if(el) el.classList.toggle('open');
+}
+
 function buildTeamList() {
+  // Remember which groups are open before re-render
+  const openGroups = new Set(['NBA','NFL','NHL','MLB'].filter(s=>{
+    const el=document.getElementById('sg-'+s);
+    return el&&el.classList.contains('open');
+  }));
   const container = document.getElementById('team-list');
   const html = Object.entries(SPORT_CONFIG)
     .filter(([s])=>activeSports.has(s))
@@ -645,21 +668,31 @@ function buildTeamList() {
           </div>
         </div>`;
       }).join('');
-      return `<div class="sport-group">
-        <div class="sport-group-header">
-          <div class="sport-dot" style="background:${cfg.color}"></div>${cfg.emoji} ${sport}
+      const visCount = teams.filter(t=>visitedTeams.has(t)||seenTeams.has(t)).length;
+      const badge = visCount>0 ? `<span style="font-size:9px;background:${cfg.color}22;color:${cfg.color};padding:1px 6px;border-radius:10px;font-weight:700">${visCount}</span>` : '';
+      return `<div class="sport-group" id="sg-${sport}">
+        <div class="sport-group-header" onclick="toggleSportGroup('${sport}')">
+          <div style="display:flex;align-items:center;gap:6px"><div class="sport-dot" style="background:${cfg.color}"></div>${cfg.emoji} ${sport} ${badge}</div>
+          <span class="sport-group-toggle">▾</span>
         </div>
-        <div class="team-list-header">
-          <span class="tlh-name">Team</span>
-          <div class="tlh-checks">
-            <span class="tlh-label" title="Stadium visited" style="color:#6366f1">🏟️</span>
-            <span class="tlh-label" title="Seen away" style="color:#f59e0b">👀</span>
+        <div class="sport-group-body">
+          <div class="team-list-header">
+            <span class="tlh-name">Team</span>
+            <div class="tlh-checks">
+              <span class="tlh-label" title="Stadium visited" style="color:#6366f1">🏟️</span>
+              <span class="tlh-label" title="Seen away" style="color:#f59e0b">👀</span>
+            </div>
           </div>
+          ${items}
         </div>
-        ${items}
       </div>`;
     }).join('');
   container.innerHTML = html;
+  // Re-apply open state (desktop: always show body via CSS, mobile: restore open class)
+  openGroups.forEach(s=>{
+    const el=document.getElementById('sg-'+s);
+    if(el) el.classList.add('open');
+  });
 }
 
 // ═══════════════════════════════════════════════════
@@ -822,15 +855,6 @@ function exportImage() {
       <div>${sportBlock('NFL')}${sportBlock('MLB')}</div>
     </div>
 
-    <!-- LEGEND -->
-    <div style="margin-top:16px;display:flex;gap:20px;align-items:center;">
-      <div style="display:flex;align-items:center;gap:6px;font-size:10px;color:#8b90b0;">
-        <div style="width:24px;height:7px;background:#6366f1;border-radius:3px;"></div> Stadium visited
-      </div>
-      <div style="display:flex;align-items:center;gap:6px;font-size:10px;color:#8b90b0;">
-        <div style="width:24px;height:7px;background:#f97316;border-radius:3px;"></div> Seen (home or away)
-      </div>
-    </div>
   </div>`;
 
   const btn = document.querySelector('.header-actions .btn-sm');
