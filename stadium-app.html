@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Stadium Tracker">
+<meta name="theme-color" content="#0f1117">
+<title>Stadium Tracker</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+:root{
+  --bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3350;
+  --text:#f0f2ff;--text-mid:#8b90b0;--text-dim:#4a4f6a;
+  --nba:#f97316;--nfl:#3b82f6;--nhl:#ef4444;--mlb:#22c55e;
+  --indigo:#6366f1;--amber:#f59e0b;--purple:#a78bfa;
+  --tab-h:60px;--header-h:52px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;width:100%;overflow:hidden;font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);}
+
+/* ── SHELL ── */
+.shell{display:flex;flex-direction:column;height:100%;width:100%;}
+.top-bar{height:var(--header-h);background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0;z-index:100;}
+.top-bar-title{font-size:15px;font-weight:800;color:var(--text);letter-spacing:-.01em;}
+.top-bar-sub{font-size:10px;color:var(--text-dim);letter-spacing:.05em;text-transform:uppercase;}
+.top-bar-icon{font-size:22px;}
+.top-bar-right{margin-left:auto;display:flex;gap:8px;}
+.icon-btn{width:34px;height:34px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;}
+
+/* ── TABS ── */
+.tab-content{flex:1;overflow:hidden;position:relative;}
+.tab-pane{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;display:none;}
+.tab-pane.active{display:block;}
+.tab-bar{height:var(--tab-h);background:var(--surface);border-top:1px solid var(--border);display:flex;flex-shrink:0;z-index:100;}
+.tab-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;border:none;background:none;color:var(--text-dim);transition:color .15s;-webkit-tap-highlight-color:transparent;}
+.tab-btn.active{color:var(--indigo);}
+.tab-btn .t-icon{font-size:20px;}
+.tab-btn .t-label{font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;}
+
+/* ── SHARED ── */
+.page-pad{padding:16px;}
+.section-title{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-mid);margin-bottom:12px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px;}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.04em;}
+
+/* ── TAB 1: STATS ── */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
+.stat-tile{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 12px;text-align:center;}
+.stat-tile .sn{font-size:26px;font-weight:900;line-height:1;margin-bottom:3px;}
+.stat-tile .sl{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-mid);}
+.progress-sport{margin-bottom:14px;}
+.ps-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}
+.ps-name{font-size:12px;font-weight:700;}
+.ps-count{font-size:10px;color:var(--text-mid);}
+.ps-bar{height:7px;background:var(--border);border-radius:4px;overflow:hidden;position:relative;}
+.ps-fill-seen{position:absolute;left:0;top:0;height:100%;border-radius:4px;transition:width .3s;}
+.ps-fill-vis{position:absolute;left:0;top:0;height:100%;border-radius:4px;transition:width .3s;}
+/* Team rankings */
+.team-rank-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);}
+.team-rank-item:last-child{border-bottom:none;}
+.tr-num{font-size:11px;font-weight:800;color:var(--text-dim);width:18px;text-align:right;}
+.tr-name{font-size:13px;font-weight:600;flex:1;}
+.tr-count{font-size:11px;font-weight:700;color:var(--text-mid);}
+
+/* ── TAB 2: MAP ── */
+#map{width:100%;height:100%;}
+.map-filters{position:absolute;top:10px;left:10px;right:10px;z-index:500;display:flex;gap:6px;flex-wrap:wrap;}
+.mf-btn{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:6px 12px;border-radius:20px;cursor:pointer;border:2px solid transparent;background:rgba(26,29,39,.92);color:var(--text-mid);backdrop-filter:blur(4px);transition:all .15s;}
+.mf-btn[data-sport="NBA"].active{background:var(--nba);color:#fff;border-color:var(--nba);}
+.mf-btn[data-sport="NFL"].active{background:var(--nfl);color:#fff;border-color:var(--nfl);}
+.mf-btn[data-sport="NHL"].active{background:var(--nhl);color:#fff;border-color:var(--nhl);}
+.mf-btn[data-sport="MLB"].active{background:var(--mlb);color:#fff;border-color:var(--mlb);}
+.mf-btn:hover:not(.active){color:var(--text);}
+.map-search-bar{position:absolute;top:52px;left:10px;right:10px;z-index:500;}
+.map-search-input{width:100%;padding:9px 14px;background:rgba(26,29,39,.95);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;backdrop-filter:blur(4px);}
+.map-search-input:focus{outline:none;border-color:var(--text-dim);}
+.map-search-results{background:var(--surface2);border:1px solid var(--border);border-radius:0 0 8px 8px;max-height:200px;overflow-y:auto;margin-top:1px;}
+.msr-item{padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);font-size:12px;}
+.msr-item:last-child{border-bottom:none;}
+.msr-item:hover{background:var(--surface);}
+.msr-venue{font-weight:600;color:var(--text);}
+.msr-teams{font-size:10px;color:var(--text-mid);margin-top:2px;}
+.leaflet-popup-content-wrapper{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:0;box-shadow:0 8px 32px rgba(0,0,0,.5);}
+.leaflet-popup-content{margin:0;padding:12px 14px;min-width:190px;}
+.leaflet-popup-tip{background:var(--surface2);}
+.leaflet-popup-close-button{color:var(--text-mid)!important;font-size:18px!important;padding:6px!important;}
+.popup-venue{font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.popup-city{font-size:10px;color:var(--text-mid);margin-bottom:8px;}
+.popup-team-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0;font-size:12px;}
+.popup-team-left{display:flex;align-items:center;gap:5px;}
+.popup-badges{display:flex;gap:4px;}
+.popup-badge{font-size:9px;padding:2px 5px;border-radius:4px;font-weight:700;}
+.popup-footer{margin-top:6px;padding-top:6px;border-top:1px solid var(--border);font-size:10px;color:var(--text-mid);}
+.popup-mark-btn{margin-top:8px;width:100%;padding:6px;background:var(--surface);border:1px solid var(--border);color:var(--text-mid);border-radius:5px;cursor:pointer;font-size:10px;font-family:inherit;font-weight:600;text-transform:uppercase;letter-spacing:.06em;}
+.popup-mark-btn:hover{border-color:var(--text-mid);color:var(--text);}
+
+/* ── TAB 3: HISTORY ── */
+.add-match-btn{width:100%;padding:14px;background:var(--indigo);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:16px;letter-spacing:.04em;}
+.match-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;}
+.mc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.mc-date{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-mid);}
+.mc-sport{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;}
+.mc-teams{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.mc-team{font-size:14px;font-weight:700;}
+.mc-vs{font-size:11px;color:var(--text-dim);}
+.mc-score{font-size:16px;font-weight:900;color:var(--text);letter-spacing:.02em;}
+.mc-venue{font-size:10px;color:var(--text-dim);display:flex;align-items:center;gap:4px;}
+.mc-delete{background:none;border:none;cursor:pointer;color:var(--text-dim);font-size:16px;padding:4px;}
+.mc-delete:hover{color:var(--nhl);}
+.empty-state{text-align:center;padding:48px 20px;color:var(--text-dim);}
+.empty-icon{font-size:48px;margin-bottom:12px;}
+.empty-text{font-size:13px;line-height:1.6;}
+
+/* ── TAB 4: PROFILE ── */
+.profile-avatar{width:72px;height:72px;border-radius:50%;background:var(--indigo);display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto 12px;}
+.profile-name{text-align:center;font-size:18px;font-weight:800;margin-bottom:4px;}
+.profile-sub{text-align:center;font-size:11px;color:var(--text-mid);margin-bottom:20px;}
+.profile-field{margin-bottom:12px;}
+.pf-label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-mid);margin-bottom:5px;}
+.pf-input{width:100%;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;}
+.pf-input:focus{outline:none;border-color:var(--indigo);}
+.pf-save{width:100%;padding:13px;background:var(--indigo);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.04em;margin-top:4px;}
+.pf-save:hover{opacity:.88;}
+.danger-btn{width:100%;padding:12px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--text-mid);font-size:12px;font-weight:600;cursor:pointer;letter-spacing:.06em;text-transform:uppercase;}
+.danger-btn:hover{border-color:var(--nhl);color:var(--nhl);}
+.profile-divider{height:1px;background:var(--border);margin:16px 0;}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9000;display:none;align-items:flex-end;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal-sheet{background:var(--surface);border-radius:16px 16px 0 0;width:100%;max-width:600px;padding:20px 16px 32px;max-height:90vh;overflow-y:auto;}
+.modal-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px;}
+.modal-title{font-size:16px;font-weight:800;margin-bottom:16px;text-align:center;}
+.modal-field{margin-bottom:12px;}
+.mf-label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-mid);margin-bottom:5px;}
+.mf-input,.mf-select{width:100%;padding:11px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;font-family:inherit;appearance:none;}
+.mf-input:focus,.mf-select:focus{outline:none;border-color:var(--indigo);}
+.mf-select option{background:var(--surface2);}
+.modal-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.modal-venue-preview{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--text-mid);}
+.mvp-name{font-weight:700;color:var(--text);margin-bottom:2px;}
+.modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;}
+.btn-cancel{padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text-mid);font-size:13px;font-weight:600;cursor:pointer;}
+.btn-save{padding:12px;background:var(--indigo);border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;}
+.btn-save:hover{opacity:.88;}
+
+/* Autocomplete dropdown */
+.autocomplete-wrap{position:relative;}
+.autocomplete-list{position:absolute;top:100%;left:0;right:0;background:var(--surface2);border:1px solid var(--border);border-radius:0 0 8px 8px;z-index:100;max-height:160px;overflow-y:auto;display:none;}
+.autocomplete-list.open{display:block;}
+.ac-item{padding:9px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);}
+.ac-item:last-child{border-bottom:none;}
+.ac-item:hover{background:var(--surface);}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <div class="top-bar-icon">🏟️</div>
+    <div>
+      <div class="top-bar-title">Stadium Tracker</div>
+      <div class="top-bar-sub">North America</div>
+    </div>
+    <div class="top-bar-right">
+      <div class="icon-btn" onclick="showResetConfirm()" title="Reset data">🗑️</div>
+    </div>
+  </div>
+
+  <!-- TAB CONTENT -->
+  <div class="tab-content">
+
+    <!-- ═══ TAB 1: STATS ═══ -->
+    <div class="tab-pane active" id="pane-stats">
+      <div class="page-pad">
+        <div class="stats-grid" id="stats-grid"></div>
+        <div class="section-title">My Progress by Sport</div>
+        <div class="card" id="progress-section"></div>
+        <div class="section-title" style="margin-top:4px">Most Seen Teams</div>
+        <div class="card" id="rank-seen"></div>
+        <div class="section-title" style="margin-top:4px">Most Visited (Home Venue)</div>
+        <div class="card" id="rank-visited"></div>
+      </div>
+    </div>
+
+    <!-- ═══ TAB 2: MAP ═══ -->
+    <div class="tab-pane" id="pane-map" style="overflow:hidden;position:relative;">
+      <div class="map-filters" id="map-filters">
+        <div class="mf-btn active" data-sport="NBA" onclick="toggleMapSport('NBA',this)">🏀</div>
+        <div class="mf-btn active" data-sport="NFL" onclick="toggleMapSport('NFL',this)">🏈</div>
+        <div class="mf-btn active" data-sport="NHL" onclick="toggleMapSport('NHL',this)">🏒</div>
+        <div class="mf-btn active" data-sport="MLB" onclick="toggleMapSport('MLB',this)">⚾</div>
+        <div class="mf-btn" style="margin-left:auto" onclick="fitVisited()">📍 Fit</div>
+      </div>
+      <div class="map-search-bar">
+        <input class="map-search-input" type="text" id="map-search" placeholder="Search venue or team..." oninput="handleMapSearch(this.value)" onblur="closeSearch()">
+        <div class="map-search-results" id="map-search-results" style="display:none"></div>
+      </div>
+      <div id="map" style="position:absolute;inset:0;z-index:1;"></div>
+    </div>
+
+    <!-- ═══ TAB 3: HISTORY ═══ -->
+    <div class="tab-pane" id="pane-history">
+      <div class="page-pad">
+        <button class="add-match-btn" onclick="openAddMatch()">＋ Add a Match</button>
+        <div class="section-title">Match History</div>
+        <div id="match-list"></div>
+      </div>
+    </div>
+
+    <!-- ═══ TAB 4: PROFILE ═══ -->
+    <div class="tab-pane" id="pane-profile">
+      <div class="page-pad">
+        <div class="profile-avatar" id="profile-avatar">👤</div>
+        <div class="profile-name" id="profile-name-display">Your Name</div>
+        <div class="profile-sub" id="profile-city-display">City · Country</div>
+
+        <div class="section-title">Edit Profile</div>
+        <div class="card">
+          <div class="profile-field">
+            <div class="pf-label">Name</div>
+            <input class="pf-input" type="text" id="pf-name" placeholder="Your name">
+          </div>
+          <div class="profile-field">
+            <div class="pf-label">City</div>
+            <input class="pf-input" type="text" id="pf-city" placeholder="e.g. Toronto">
+          </div>
+          <div class="profile-field">
+            <div class="pf-label">Favourite Sport</div>
+            <select class="pf-input" id="pf-sport">
+              <option value="">— Select —</option>
+              <option>NBA</option><option>NFL</option><option>NHL</option><option>MLB</option>
+            </select>
+          </div>
+          <div class="profile-field">
+            <div class="pf-label">Favourite Team</div>
+            <input class="pf-input" type="text" id="pf-team" placeholder="e.g. Toronto Raptors">
+          </div>
+          <button class="pf-save" onclick="saveProfile()">Save Profile</button>
+        </div>
+
+        <div class="profile-divider"></div>
+        <div class="section-title">Data</div>
+        <div class="card">
+          <p style="font-size:12px;color:var(--text-mid);margin-bottom:12px;line-height:1.6">All your data is stored locally on this device. Nothing is sent to any server.</p>
+          <button class="danger-btn" onclick="showResetConfirm()">🗑️ Reset All Data</button>
+        </div>
+
+        <div style="height:8px"></div>
+        <div class="section-title">About</div>
+        <div class="card">
+          <p style="font-size:12px;color:var(--text-mid);line-height:1.7">Stadium Tracker · v2.0<br>Built by Martin Delhomme<br><a href="https://martindelhomme.github.io/portfolio" style="color:var(--indigo)">martindelhomme.github.io/portfolio</a></p>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end tab-content -->
+
+  <!-- TAB BAR -->
+  <div class="tab-bar">
+    <button class="tab-btn active" id="tab-stats" onclick="switchTab('stats')">
+      <span class="t-icon">📊</span><span class="t-label">Stats</span>
+    </button>
+    <button class="tab-btn" id="tab-map" onclick="switchTab('map')">
+      <span class="t-icon">🗺️</span><span class="t-label">Map</span>
+    </button>
+    <button class="tab-btn" id="tab-history" onclick="switchTab('history')">
+      <span class="t-icon">🎟️</span><span class="t-label">History</span>
+    </button>
+    <button class="tab-btn" id="tab-profile" onclick="switchTab('profile')">
+      <span class="t-icon">👤</span><span class="t-label">Profile</span>
+    </button>
+  </div>
+</div>
+
+<!-- ADD MATCH MODAL -->
+<div class="modal-overlay" id="match-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Add a Match</div>
+    <div class="modal-field">
+      <div class="mf-label">Sport</div>
+      <select class="mf-select" id="m-sport" onchange="onSportChange()">
+        <option value="">— Select sport —</option>
+        <option>NBA</option><option>NFL</option><option>NHL</option><option>MLB</option>
+      </select>
+    </div>
+    <div class="modal-field">
+      <div class="mf-label">Date</div>
+      <input class="mf-input" type="date" id="m-date">
+    </div>
+    <div class="modal-row">
+      <div class="modal-field">
+        <div class="mf-label">Home Team</div>
+        <div class="autocomplete-wrap">
+          <input class="mf-input" type="text" id="m-home" placeholder="Home team" oninput="acFilter('home',this.value)" onblur="acBlur('home')" autocomplete="off">
+          <div class="autocomplete-list" id="ac-home"></div>
+        </div>
+      </div>
+      <div class="modal-field">
+        <div class="mf-label">Away Team</div>
+        <div class="autocomplete-wrap">
+          <input class="mf-input" type="text" id="m-away" placeholder="Away team" oninput="acFilter('away',this.value)" onblur="acBlur('away')" autocomplete="off">
+          <div class="autocomplete-list" id="ac-away"></div>
+        </div>
+      </div>
+    </div>
+    <div id="venue-preview" class="modal-venue-preview" style="display:none">
+      <div class="mvp-name" id="vp-name">—</div>
+      <div id="vp-city" style="font-size:11px;color:var(--text-dim)"></div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-field">
+        <div class="mf-label">Home Score</div>
+        <input class="mf-input" type="number" id="m-score-home" placeholder="—" min="0">
+      </div>
+      <div class="modal-field">
+        <div class="mf-label">Away Score</div>
+        <input class="mf-input" type="number" id="m-score-away" placeholder="—" min="0">
+      </div>
+    </div>
+    <div class="modal-field">
+      <div class="mf-label">Notes (optional)</div>
+      <input class="mf-input" type="text" id="m-notes" placeholder="e.g. Great atmosphere!">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveMatch()">Save Match</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESET CONFIRM -->
+<div class="modal-overlay" id="reset-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Reset All Data?</div>
+    <p style="text-align:center;color:var(--text-mid);font-size:13px;margin-bottom:20px;line-height:1.6">This will delete all your matches, visited venues and profile. This cannot be undone.</p>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="document.getElementById('reset-modal').classList.remove('open')">Cancel</button>
+      <button class="btn-save" style="background:var(--nhl)" onclick="resetAll()">Reset</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════
+const VENUES = [
+  {venue_id:"scotiabank_arena",venue:"Scotiabank Arena",city:"Toronto",state:"ON",country:"Canada",lat:43.6435,lng:-79.3791,teams:[{sport:"NBA",team:"Toronto Raptors"},{sport:"NHL",team:"Toronto Maple Leafs"}]},
+  {venue_id:"msg",venue:"Madison Square Garden",city:"New York",state:"NY",country:"USA",lat:40.7505,lng:-73.9934,teams:[{sport:"NBA",team:"New York Knicks"},{sport:"NHL",team:"New York Rangers"}]},
+  {venue_id:"united_center",venue:"United Center",city:"Chicago",state:"IL",country:"USA",lat:41.8806,lng:-87.6742,teams:[{sport:"NBA",team:"Chicago Bulls"},{sport:"NHL",team:"Chicago Blackhawks"}]},
+  {venue_id:"td_garden",venue:"TD Garden",city:"Boston",state:"MA",country:"USA",lat:42.3662,lng:-71.0621,teams:[{sport:"NBA",team:"Boston Celtics"},{sport:"NHL",team:"Boston Bruins"}]},
+  {venue_id:"wells_fargo",venue:"Wells Fargo Center",city:"Philadelphia",state:"PA",country:"USA",lat:39.9012,lng:-75.1719,teams:[{sport:"NBA",team:"Philadelphia 76ers"},{sport:"NHL",team:"Philadelphia Flyers"}]},
+  {venue_id:"little_caesars",venue:"Little Caesars Arena",city:"Detroit",state:"MI",country:"USA",lat:42.3410,lng:-83.0552,teams:[{sport:"NBA",team:"Detroit Pistons"},{sport:"NHL",team:"Detroit Red Wings"}]},
+  {venue_id:"ball_arena",venue:"Ball Arena",city:"Denver",state:"CO",country:"USA",lat:39.7486,lng:-105.0077,teams:[{sport:"NBA",team:"Denver Nuggets"},{sport:"NHL",team:"Colorado Avalanche"}]},
+  {venue_id:"kaseya",venue:"Kaseya Center",city:"Miami",state:"FL",country:"USA",lat:25.7814,lng:-80.1870,teams:[{sport:"NBA",team:"Miami Heat"}]},
+  {venue_id:"amalie",venue:"Amalie Arena",city:"Tampa",state:"FL",country:"USA",lat:27.9428,lng:-82.4519,teams:[{sport:"NHL",team:"Tampa Bay Lightning"}]},
+  {venue_id:"cryptoarena",venue:"Crypto.com Arena",city:"Los Angeles",state:"CA",country:"USA",lat:34.0430,lng:-118.2673,teams:[{sport:"NBA",team:"Los Angeles Lakers"},{sport:"NBA",team:"Los Angeles Clippers"},{sport:"NHL",team:"Los Angeles Kings"}]},
+  {venue_id:"xcel",venue:"Xcel Energy Center",city:"Saint Paul",state:"MN",country:"USA",lat:44.9447,lng:-93.1010,teams:[{sport:"NHL",team:"Minnesota Wild"}]},
+  {venue_id:"target_center",venue:"Target Center",city:"Minneapolis",state:"MN",country:"USA",lat:44.9795,lng:-93.2760,teams:[{sport:"NBA",team:"Minnesota Timberwolves"}]},
+  {venue_id:"enterprise",venue:"Enterprise Center",city:"St. Louis",state:"MO",country:"USA",lat:38.6267,lng:-90.2025,teams:[{sport:"NHL",team:"St. Louis Blues"}]},
+  {venue_id:"rocket_mortgage",venue:"Rocket Mortgage FieldHouse",city:"Cleveland",state:"OH",country:"USA",lat:41.4965,lng:-81.6882,teams:[{sport:"NBA",team:"Cleveland Cavaliers"}]},
+  {venue_id:"nationwide",venue:"Nationwide Arena",city:"Columbus",state:"OH",country:"USA",lat:39.9690,lng:-83.0061,teams:[{sport:"NHL",team:"Columbus Blue Jackets"}]},
+  {venue_id:"pnc_arena",venue:"PNC Arena",city:"Raleigh",state:"NC",country:"USA",lat:35.8032,lng:-78.7219,teams:[{sport:"NHL",team:"Carolina Hurricanes"}]},
+  {venue_id:"bridgestone",venue:"Bridgestone Arena",city:"Nashville",state:"TN",country:"USA",lat:36.1592,lng:-86.7785,teams:[{sport:"NHL",team:"Nashville Predators"}]},
+  {venue_id:"smoothie_king",venue:"Smoothie King Center",city:"New Orleans",state:"LA",country:"USA",lat:29.9490,lng:-90.0821,teams:[{sport:"NBA",team:"New Orleans Pelicans"}]},
+  {venue_id:"gainbridge",venue:"Gainbridge Fieldhouse",city:"Indianapolis",state:"IN",country:"USA",lat:39.7638,lng:-86.1555,teams:[{sport:"NBA",team:"Indiana Pacers"}]},
+  {venue_id:"fedex_forum",venue:"FedEx Forum",city:"Memphis",state:"TN",country:"USA",lat:35.1383,lng:-90.0505,teams:[{sport:"NBA",team:"Memphis Grizzlies"}]},
+  {venue_id:"spectrum",venue:"Spectrum Center",city:"Charlotte",state:"NC",country:"USA",lat:35.2251,lng:-80.8392,teams:[{sport:"NBA",team:"Charlotte Hornets"}]},
+  {venue_id:"state_farm_atl",venue:"State Farm Arena",city:"Atlanta",state:"GA",country:"USA",lat:33.7573,lng:-84.3963,teams:[{sport:"NBA",team:"Atlanta Hawks"}]},
+  {venue_id:"footprint",venue:"Footprint Center",city:"Phoenix",state:"AZ",country:"USA",lat:33.4457,lng:-112.0712,teams:[{sport:"NBA",team:"Phoenix Suns"}]},
+  {venue_id:"golden1",venue:"Golden 1 Center",city:"Sacramento",state:"CA",country:"USA",lat:38.5802,lng:-121.4997,teams:[{sport:"NBA",team:"Sacramento Kings"}]},
+  {venue_id:"chase_center",venue:"Chase Center",city:"San Francisco",state:"CA",country:"USA",lat:37.7680,lng:-122.3877,teams:[{sport:"NBA",team:"Golden State Warriors"}]},
+  {venue_id:"moda",venue:"Moda Center",city:"Portland",state:"OR",country:"USA",lat:45.5316,lng:-122.6668,teams:[{sport:"NBA",team:"Portland Trail Blazers"}]},
+  {venue_id:"climate_pledge",venue:"Climate Pledge Arena",city:"Seattle",state:"WA",country:"USA",lat:47.6221,lng:-122.3540,teams:[{sport:"NHL",team:"Seattle Kraken"}]},
+  {venue_id:"paycom",venue:"Paycom Center",city:"Oklahoma City",state:"OK",country:"USA",lat:35.4634,lng:-97.5151,teams:[{sport:"NBA",team:"Oklahoma City Thunder"}]},
+  {venue_id:"delta_center",venue:"Delta Center",city:"Salt Lake City",state:"UT",country:"USA",lat:40.7683,lng:-111.9011,teams:[{sport:"NBA",team:"Utah Jazz"},{sport:"NHL",team:"Utah Mammoth"}]},
+  {venue_id:"toyota_center",venue:"Toyota Center",city:"Houston",state:"TX",country:"USA",lat:29.7508,lng:-95.3621,teams:[{sport:"NBA",team:"Houston Rockets"}]},
+  {venue_id:"aa_dallas",venue:"American Airlines Center",city:"Dallas",state:"TX",country:"USA",lat:32.7905,lng:-96.8103,teams:[{sport:"NBA",team:"Dallas Mavericks"},{sport:"NHL",team:"Dallas Stars"}]},
+  {venue_id:"frost_bank",venue:"Frost Bank Center",city:"San Antonio",state:"TX",country:"USA",lat:29.4269,lng:-98.4375,teams:[{sport:"NBA",team:"San Antonio Spurs"}]},
+  {venue_id:"fiserv",venue:"Fiserv Forum",city:"Milwaukee",state:"WI",country:"USA",lat:43.0450,lng:-87.9170,teams:[{sport:"NBA",team:"Milwaukee Bucks"}]},
+  {venue_id:"barclays",venue:"Barclays Center",city:"Brooklyn",state:"NY",country:"USA",lat:40.6826,lng:-73.9754,teams:[{sport:"NBA",team:"Brooklyn Nets"}]},
+  {venue_id:"kia_center",venue:"Kia Center",city:"Orlando",state:"FL",country:"USA",lat:28.5392,lng:-81.3839,teams:[{sport:"NBA",team:"Orlando Magic"}]},
+  {venue_id:"capital_one",venue:"Capital One Arena",city:"Washington",state:"DC",country:"USA",lat:38.8981,lng:-77.0209,teams:[{sport:"NBA",team:"Washington Wizards"},{sport:"NHL",team:"Washington Capitals"}]},
+  {venue_id:"canada_life",venue:"Canada Life Centre",city:"Winnipeg",state:"MB",country:"Canada",lat:49.8928,lng:-97.1436,teams:[{sport:"NHL",team:"Winnipeg Jets"}]},
+  {venue_id:"rogers_place",venue:"Rogers Place",city:"Edmonton",state:"AB",country:"Canada",lat:53.5461,lng:-113.4938,teams:[{sport:"NHL",team:"Edmonton Oilers"}]},
+  {venue_id:"saddledome",venue:"Scotiabank Saddledome",city:"Calgary",state:"AB",country:"Canada",lat:51.0375,lng:-114.0519,teams:[{sport:"NHL",team:"Calgary Flames"}]},
+  {venue_id:"rogers_arena",venue:"Rogers Arena",city:"Vancouver",state:"BC",country:"Canada",lat:49.2778,lng:-123.1088,teams:[{sport:"NHL",team:"Vancouver Canucks"}]},
+  {venue_id:"bell_centre",venue:"Bell Centre",city:"Montreal",state:"QC",country:"Canada",lat:45.4961,lng:-73.5693,teams:[{sport:"NHL",team:"Montreal Canadiens"}]},
+  {venue_id:"canadian_tire",venue:"Canadian Tire Centre",city:"Ottawa",state:"ON",country:"Canada",lat:45.2969,lng:-75.9271,teams:[{sport:"NHL",team:"Ottawa Senators"}]},
+  {venue_id:"prudential",venue:"Prudential Center",city:"Newark",state:"NJ",country:"USA",lat:40.7337,lng:-74.1711,teams:[{sport:"NHL",team:"New Jersey Devils"}]},
+  {venue_id:"ubs",venue:"UBS Arena",city:"Elmont",state:"NY",country:"USA",lat:40.7229,lng:-73.7288,teams:[{sport:"NHL",team:"New York Islanders"}]},
+  {venue_id:"keybank",venue:"KeyBank Center",city:"Buffalo",state:"NY",country:"USA",lat:42.8744,lng:-78.8762,teams:[{sport:"NHL",team:"Buffalo Sabres"}]},
+  {venue_id:"amerant",venue:"Amerant Bank Arena",city:"Sunrise",state:"FL",country:"USA",lat:26.1584,lng:-80.3256,teams:[{sport:"NHL",team:"Florida Panthers"}]},
+  {venue_id:"sap_center",venue:"SAP Center",city:"San Jose",state:"CA",country:"USA",lat:37.3326,lng:-121.9010,teams:[{sport:"NHL",team:"San Jose Sharks"}]},
+  {venue_id:"honda",venue:"Honda Center",city:"Anaheim",state:"CA",country:"USA",lat:33.8078,lng:-117.8765,teams:[{sport:"NHL",team:"Anaheim Ducks"}]},
+  {venue_id:"ppg",venue:"PPG Paints Arena",city:"Pittsburgh",state:"PA",country:"USA",lat:40.4395,lng:-79.9892,teams:[{sport:"NHL",team:"Pittsburgh Penguins"}]},
+  {venue_id:"allegiant",venue:"Allegiant Stadium",city:"Las Vegas",state:"NV",country:"USA",lat:36.0909,lng:-115.1833,teams:[{sport:"NFL",team:"Las Vegas Raiders"},{sport:"NHL",team:"Vegas Golden Knights"}]},
+  {venue_id:"metlife",venue:"MetLife Stadium",city:"East Rutherford",state:"NJ",country:"USA",lat:40.8135,lng:-74.0745,teams:[{sport:"NFL",team:"New York Giants"},{sport:"NFL",team:"New York Jets"}]},
+  {venue_id:"gillette",venue:"Gillette Stadium",city:"Foxborough",state:"MA",country:"USA",lat:42.0909,lng:-71.2643,teams:[{sport:"NFL",team:"New England Patriots"}]},
+  {venue_id:"lincoln_fin",venue:"Lincoln Financial Field",city:"Philadelphia",state:"PA",country:"USA",lat:39.9008,lng:-75.1675,teams:[{sport:"NFL",team:"Philadelphia Eagles"}]},
+  {venue_id:"mt_bank",venue:"M&T Bank Stadium",city:"Baltimore",state:"MD",country:"USA",lat:39.2780,lng:-76.6227,teams:[{sport:"NFL",team:"Baltimore Ravens"}]},
+  {venue_id:"northwest",venue:"Northwest Stadium",city:"Landover",state:"MD",country:"USA",lat:38.9077,lng:-76.8645,teams:[{sport:"NFL",team:"Washington Commanders"}]},
+  {venue_id:"bofa",venue:"Bank of America Stadium",city:"Charlotte",state:"NC",country:"USA",lat:35.2258,lng:-80.8528,teams:[{sport:"NFL",team:"Carolina Panthers"}]},
+  {venue_id:"mercedes",venue:"Mercedes-Benz Stadium",city:"Atlanta",state:"GA",country:"USA",lat:33.7554,lng:-84.4009,teams:[{sport:"NFL",team:"Atlanta Falcons"}]},
+  {venue_id:"raymond_james",venue:"Raymond James Stadium",city:"Tampa",state:"FL",country:"USA",lat:27.9759,lng:-82.5033,teams:[{sport:"NFL",team:"Tampa Bay Buccaneers"}]},
+  {venue_id:"empower",venue:"Empower Field at Mile High",city:"Denver",state:"CO",country:"USA",lat:39.7439,lng:-105.0201,teams:[{sport:"NFL",team:"Denver Broncos"}]},
+  {venue_id:"arrowhead",venue:"GEHA Field at Arrowhead",city:"Kansas City",state:"MO",country:"USA",lat:39.0489,lng:-94.4839,teams:[{sport:"NFL",team:"Kansas City Chiefs"}]},
+  {venue_id:"lucas_oil",venue:"Lucas Oil Stadium",city:"Indianapolis",state:"IN",country:"USA",lat:39.7601,lng:-86.1639,teams:[{sport:"NFL",team:"Indianapolis Colts"}]},
+  {venue_id:"ford_field",venue:"Ford Field",city:"Detroit",state:"MI",country:"USA",lat:42.3400,lng:-83.0456,teams:[{sport:"NFL",team:"Detroit Lions"}]},
+  {venue_id:"lambeau",venue:"Lambeau Field",city:"Green Bay",state:"WI",country:"USA",lat:44.5013,lng:-88.0622,teams:[{sport:"NFL",team:"Green Bay Packers"}]},
+  {venue_id:"soldier_field",venue:"Soldier Field",city:"Chicago",state:"IL",country:"USA",lat:41.8623,lng:-87.6167,teams:[{sport:"NFL",team:"Chicago Bears"}]},
+  {venue_id:"us_bank",venue:"U.S. Bank Stadium",city:"Minneapolis",state:"MN",country:"USA",lat:44.9737,lng:-93.2577,teams:[{sport:"NFL",team:"Minnesota Vikings"}]},
+  {venue_id:"paycor",venue:"Paycor Stadium",city:"Cincinnati",state:"OH",country:"USA",lat:39.0954,lng:-84.5160,teams:[{sport:"NFL",team:"Cincinnati Bengals"}]},
+  {venue_id:"huntington",venue:"Huntington Bank Field",city:"Cleveland",state:"OH",country:"USA",lat:41.5061,lng:-81.6995,teams:[{sport:"NFL",team:"Cleveland Browns"}]},
+  {venue_id:"acrisure",venue:"Acrisure Stadium",city:"Pittsburgh",state:"PA",country:"USA",lat:40.4468,lng:-80.0158,teams:[{sport:"NFL",team:"Pittsburgh Steelers"}]},
+  {venue_id:"nissan",venue:"Nissan Stadium",city:"Nashville",state:"TN",country:"USA",lat:36.1665,lng:-86.7713,teams:[{sport:"NFL",team:"Tennessee Titans"}]},
+  {venue_id:"lumen",venue:"Lumen Field",city:"Seattle",state:"WA",country:"USA",lat:47.5952,lng:-122.3316,teams:[{sport:"NFL",team:"Seattle Seahawks"}]},
+  {venue_id:"sofi",venue:"SoFi Stadium",city:"Inglewood",state:"CA",country:"USA",lat:33.9535,lng:-118.3392,teams:[{sport:"NFL",team:"Los Angeles Rams"},{sport:"NFL",team:"Los Angeles Chargers"}]},
+  {venue_id:"state_farm_az",venue:"State Farm Stadium",city:"Glendale",state:"AZ",country:"USA",lat:33.5276,lng:-112.2626,teams:[{sport:"NFL",team:"Arizona Cardinals"}]},
+  {venue_id:"levis",venue:"Levi's Stadium",city:"Santa Clara",state:"CA",country:"USA",lat:37.4033,lng:-121.9694,teams:[{sport:"NFL",team:"San Francisco 49ers"}]},
+  {venue_id:"superdome",venue:"Caesars Superdome",city:"New Orleans",state:"LA",country:"USA",lat:29.9511,lng:-90.0812,teams:[{sport:"NFL",team:"New Orleans Saints"}]},
+  {venue_id:"everbank",venue:"EverBank Stadium",city:"Jacksonville",state:"FL",country:"USA",lat:30.3240,lng:-81.6373,teams:[{sport:"NFL",team:"Jacksonville Jaguars"}]},
+  {venue_id:"hard_rock",venue:"Hard Rock Stadium",city:"Miami Gardens",state:"FL",country:"USA",lat:25.9580,lng:-80.2389,teams:[{sport:"NFL",team:"Miami Dolphins"}]},
+  {venue_id:"att",venue:"AT&T Stadium",city:"Arlington",state:"TX",country:"USA",lat:32.7478,lng:-97.0928,teams:[{sport:"NFL",team:"Dallas Cowboys"}]},
+  {venue_id:"nrg",venue:"NRG Stadium",city:"Houston",state:"TX",country:"USA",lat:29.6847,lng:-95.4107,teams:[{sport:"NFL",team:"Houston Texans"}]},
+  {venue_id:"highmark",venue:"Highmark Stadium",city:"Orchard Park",state:"NY",country:"USA",lat:42.7738,lng:-78.7870,teams:[{sport:"NFL",team:"Buffalo Bills"}]},
+  {venue_id:"yankee",venue:"Yankee Stadium",city:"New York",state:"NY",country:"USA",lat:40.8296,lng:-73.9262,teams:[{sport:"MLB",team:"New York Yankees"}]},
+  {venue_id:"citi_field",venue:"Citi Field",city:"Queens",state:"NY",country:"USA",lat:40.7571,lng:-73.8458,teams:[{sport:"MLB",team:"New York Mets"}]},
+  {venue_id:"fenway",venue:"Fenway Park",city:"Boston",state:"MA",country:"USA",lat:42.3467,lng:-71.0972,teams:[{sport:"MLB",team:"Boston Red Sox"}]},
+  {venue_id:"wrigley",venue:"Wrigley Field",city:"Chicago",state:"IL",country:"USA",lat:41.9484,lng:-87.6553,teams:[{sport:"MLB",team:"Chicago Cubs"}]},
+  {venue_id:"guaranteed_rate",venue:"Guaranteed Rate Field",city:"Chicago",state:"IL",country:"USA",lat:41.8300,lng:-87.6338,teams:[{sport:"MLB",team:"Chicago White Sox"}]},
+  {venue_id:"pnc_park",venue:"PNC Park",city:"Pittsburgh",state:"PA",country:"USA",lat:40.4469,lng:-80.0057,teams:[{sport:"MLB",team:"Pittsburgh Pirates"}]},
+  {venue_id:"citizens_bank",venue:"Citizens Bank Park",city:"Philadelphia",state:"PA",country:"USA",lat:39.9057,lng:-75.1665,teams:[{sport:"MLB",team:"Philadelphia Phillies"}]},
+  {venue_id:"camden",venue:"Oriole Park at Camden Yards",city:"Baltimore",state:"MD",country:"USA",lat:39.2838,lng:-76.6216,teams:[{sport:"MLB",team:"Baltimore Orioles"}]},
+  {venue_id:"nationals_park",venue:"Nationals Park",city:"Washington",state:"DC",country:"USA",lat:38.8730,lng:-77.0074,teams:[{sport:"MLB",team:"Washington Nationals"}]},
+  {venue_id:"truist",venue:"Truist Park",city:"Atlanta",state:"GA",country:"USA",lat:33.8908,lng:-84.4678,teams:[{sport:"MLB",team:"Atlanta Braves"}]},
+  {venue_id:"loandepot",venue:"loanDepot park",city:"Miami",state:"FL",country:"USA",lat:25.7781,lng:-80.2197,teams:[{sport:"MLB",team:"Miami Marlins"}]},
+  {venue_id:"tropicana",venue:"Tropicana Field",city:"St. Petersburg",state:"FL",country:"USA",lat:27.7683,lng:-82.6534,teams:[{sport:"MLB",team:"Tampa Bay Rays"}]},
+  {venue_id:"progressive",venue:"Progressive Field",city:"Cleveland",state:"OH",country:"USA",lat:41.4962,lng:-81.6852,teams:[{sport:"MLB",team:"Cleveland Guardians"}]},
+  {venue_id:"comerica",venue:"Comerica Park",city:"Detroit",state:"MI",country:"USA",lat:42.3390,lng:-83.0485,teams:[{sport:"MLB",team:"Detroit Tigers"}]},
+  {venue_id:"great_american",venue:"Great American Ball Park",city:"Cincinnati",state:"OH",country:"USA",lat:39.0974,lng:-84.5082,teams:[{sport:"MLB",team:"Cincinnati Reds"}]},
+  {venue_id:"american_family",venue:"American Family Field",city:"Milwaukee",state:"WI",country:"USA",lat:43.0280,lng:-87.9712,teams:[{sport:"MLB",team:"Milwaukee Brewers"}]},
+  {venue_id:"busch",venue:"Busch Stadium",city:"St. Louis",state:"MO",country:"USA",lat:38.6226,lng:-90.1928,teams:[{sport:"MLB",team:"St. Louis Cardinals"}]},
+  {venue_id:"target_field",venue:"Target Field",city:"Minneapolis",state:"MN",country:"USA",lat:44.9817,lng:-93.2781,teams:[{sport:"MLB",team:"Minnesota Twins"}]},
+  {venue_id:"kauffman",venue:"Kauffman Stadium",city:"Kansas City",state:"MO",country:"USA",lat:39.0517,lng:-94.4803,teams:[{sport:"MLB",team:"Kansas City Royals"}]},
+  {venue_id:"minute_maid",venue:"Minute Maid Park",city:"Houston",state:"TX",country:"USA",lat:29.7572,lng:-95.3555,teams:[{sport:"MLB",team:"Houston Astros"}]},
+  {venue_id:"globe_life",venue:"Globe Life Field",city:"Arlington",state:"TX",country:"USA",lat:32.7474,lng:-97.0832,teams:[{sport:"MLB",team:"Texas Rangers"}]},
+  {venue_id:"coors",venue:"Coors Field",city:"Denver",state:"CO",country:"USA",lat:39.7559,lng:-104.9942,teams:[{sport:"MLB",team:"Colorado Rockies"}]},
+  {venue_id:"chase_field",venue:"Chase Field",city:"Phoenix",state:"AZ",country:"USA",lat:33.4453,lng:-112.0667,teams:[{sport:"MLB",team:"Arizona Diamondbacks"}]},
+  {venue_id:"petco",venue:"Petco Park",city:"San Diego",state:"CA",country:"USA",lat:32.7076,lng:-117.1570,teams:[{sport:"MLB",team:"San Diego Padres"}]},
+  {venue_id:"dodger",venue:"Dodger Stadium",city:"Los Angeles",state:"CA",country:"USA",lat:34.0739,lng:-118.2400,teams:[{sport:"MLB",team:"Los Angeles Dodgers"}]},
+  {venue_id:"angel",venue:"Angel Stadium",city:"Anaheim",state:"CA",country:"USA",lat:33.8003,lng:-117.8827,teams:[{sport:"MLB",team:"Los Angeles Angels"}]},
+  {venue_id:"sutter_health",venue:"Sutter Health Park",city:"Sacramento",state:"CA",country:"USA",lat:38.5802,lng:-121.5085,teams:[{sport:"MLB",team:"Athletics"}]},
+  {venue_id:"oracle",venue:"Oracle Park",city:"San Francisco",state:"CA",country:"USA",lat:37.7786,lng:-122.3893,teams:[{sport:"MLB",team:"San Francisco Giants"}]},
+  {venue_id:"tmobile_park",venue:"T-Mobile Park",city:"Seattle",state:"WA",country:"USA",lat:47.5914,lng:-122.3325,teams:[{sport:"MLB",team:"Seattle Mariners"}]},
+  {venue_id:"rogers_centre",venue:"Rogers Centre",city:"Toronto",state:"ON",country:"Canada",lat:43.6414,lng:-79.3894,teams:[{sport:"MLB",team:"Toronto Blue Jays"}]},
+];
+
+const SC={
+  NBA:{color:'#f97316',emoji:'🏀'},
+  NFL:{color:'#3b82f6',emoji:'🏈'},
+  NHL:{color:'#ef4444',emoji:'🏒'},
+  MLB:{color:'#22c55e',emoji:'⚾'},
+};
+
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+const UQ = [...new Map(VENUES.map(v=>[v.venue_id,v])).values()];
+
+function load(k,def){try{return JSON.parse(localStorage.getItem(k))||def;}catch{return def;}}
+function save(k,v){localStorage.setItem(k,JSON.stringify(v));}
+
+let visitedTeams = new Set(load('st_visited',[]));
+let seenTeams    = new Set(load('st_seen',[]));
+let matches      = load('st_matches',[]); // [{id,sport,date,home,away,homeScore,awayScore,venue_id,notes}]
+let activeSports = new Set(['NBA','NFL','NHL','MLB']);
+let profile      = load('st_profile',{name:'',city:'',sport:'',team:''});
+let mapMarkers   = {};
+let mapReady     = false;
+let leafletMap;
+
+// ═══════════════════════════════════════════════════════
+// TEAM HELPERS
+// ═══════════════════════════════════════════════════════
+function allTeamsForSport(sport){
+  return [...new Set(VENUES.flatMap(v=>v.teams.filter(t=>t.sport===sport).map(t=>t.team)))].sort();
+}
+function venueForHomeTeam(team){
+  return VENUES.find(v=>v.teams.some(t=>t.team===team));
+}
+
+// Derive visited/seen from matches
+function rebuildFromMatches(){
+  // Clear then rebuild from match history
+  visitedTeams = new Set(load('st_visited',[]));
+  seenTeams    = new Set(load('st_seen',[]));
+  matches.forEach(m=>{
+    // Home team: seen + visited
+    visitedTeams.add(m.home);
+    seenTeams.add(m.home);
+    // Away team: seen only
+    seenTeams.add(m.away);
+  });
+  save('st_visited',[...visitedTeams]);
+  save('st_seen',[...seenTeams]);
+}
+
+// ═══════════════════════════════════════════════════════
+// TAB SWITCHING
+// ═══════════════════════════════════════════════════════
+let currentTab = 'stats';
+function switchTab(tab){
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('pane-'+tab).classList.add('active');
+  document.getElementById('tab-'+tab).classList.add('active');
+  currentTab = tab;
+  if(tab==='map' && !mapReady){ initMap(); mapReady=true; }
+  if(tab==='map'){ setTimeout(()=>leafletMap&&leafletMap.invalidateSize(),100); }
+  if(tab==='stats') renderStats();
+  if(tab==='history') renderHistory();
+  if(tab==='profile') renderProfile();
+}
+
+// ═══════════════════════════════════════════════════════
+// TAB 1 — STATS
+// ═══════════════════════════════════════════════════════
+function renderStats(){
+  const allTeams = Object.keys(SC).flatMap(s=>allTeamsForSport(s));
+  const visitedV = new Set(UQ.filter(v=>v.teams.some(t=>visitedTeams.has(t.team))).map(v=>v.venue_id));
+  const cities   = new Set(UQ.filter(v=>v.teams.some(t=>visitedTeams.has(t.team))).map(v=>v.city));
+  const seenAll  = allTeams.filter(t=>seenTeams.has(t)||visitedTeams.has(t));
+  const sportsAct= new Set([...visitedTeams,...seenTeams].flatMap(t=>VENUES.flatMap(v=>v.teams.filter(tt=>tt.team===t).map(tt=>tt.sport))));
+
+  // Stats grid
+  document.getElementById('stats-grid').innerHTML = [
+    {n:`${visitedV.size}`,s:`/${UQ.filter(v=>v.teams.length>0).length}`,l:'Venues Visited',c:'var(--indigo)',i:'🏟️'},
+    {n:`${cities.size}`,s:'',l:'Cities',c:'var(--nfl)',i:'📍'},
+    {n:`${sportsAct.size}`,s:'/4',l:'Sports',c:'var(--purple)',i:'🎯'},
+    {n:`${seenAll.length}`,s:`/${allTeams.length}`,l:'Teams Seen',c:'var(--amber)',i:'👀'},
+  ].map(s=>`<div class="stat-tile">
+    <div style="font-size:20px;margin-bottom:4px">${s.i}</div>
+    <div class="sn" style="color:${s.c}">${s.n}<span style="font-size:14px;font-weight:400;color:var(--text-mid)">${s.s}</span></div>
+    <div class="sl">${s.l}</div>
+  </div>`).join('');
+
+  // Progress
+  document.getElementById('progress-section').innerHTML = Object.keys(SC).map(sport=>{
+    const cfg=SC[sport];
+    const teams=allTeamsForSport(sport), total=teams.length;
+    const vis=teams.filter(t=>visitedTeams.has(t)).length;
+    const seen=teams.filter(t=>seenTeams.has(t)&&!visitedTeams.has(t)).length;
+    const visPct=total?Math.round(vis/total*100):0;
+    const seenPct=total?Math.round((vis+seen)/total*100):0;
+    return `<div class="progress-sport">
+      <div class="ps-header">
+        <span class="ps-name" style="color:${cfg.color}">${cfg.emoji} ${sport}</span>
+        <span class="ps-count"><span style="color:var(--indigo)">🏟️${vis}</span> &nbsp;<span style="color:${cfg.color}">👀${seen}</span> &nbsp;/ ${total}</span>
+      </div>
+      <div class="ps-bar">
+        <div class="ps-fill-seen" style="width:${seenPct}%;background:${cfg.color}66"></div>
+        <div class="ps-fill-vis"  style="width:${visPct}%;background:var(--indigo)"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Rankings from match history
+  const seenCount={}, homeCount={};
+  matches.forEach(m=>{
+    seenCount[m.home]=(seenCount[m.home]||0)+1;
+    seenCount[m.away]=(seenCount[m.away]||0)+1;
+    homeCount[m.home]=(homeCount[m.home]||0)+1;
+  });
+
+  const topSeen = Object.entries(seenCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const topHome = Object.entries(homeCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
+
+  const rankHtml=(entries,empty)=>entries.length===0
+    ?`<div style="color:var(--text-dim);font-size:12px;font-style:italic;padding:6px 0">${empty}</div>`
+    :entries.map(([team,count],i)=>{
+      const sport=VENUES.flatMap(v=>v.teams.filter(t=>t.team===team).map(t=>t.sport))[0]||'';
+      const cfg=SC[sport]||{color:'#8b90b0',emoji:''};
+      return `<div class="team-rank-item">
+        <span class="tr-num">${i+1}</span>
+        <span style="font-size:14px">${cfg.emoji}</span>
+        <span class="tr-name">${team}</span>
+        <span class="tr-count">${count}x</span>
+      </div>`;
+    }).join('');
+
+  document.getElementById('rank-seen').innerHTML    = rankHtml(topSeen,'No matches logged yet');
+  document.getElementById('rank-visited').innerHTML = rankHtml(topHome,'No home matches logged yet');
+}
+
+// ═══════════════════════════════════════════════════════
+// TAB 2 — MAP
+// ═══════════════════════════════════════════════════════
+function initMap(){
+  leafletMap = L.map('map',{center:[39.5,-97],zoom:4,zoomControl:false});
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap © CARTO',maxZoom:19}).addTo(leafletMap);
+  renderMapMarkers();
+}
+
+function renderMapMarkers(){
+  if(!leafletMap)return;
+  Object.values(mapMarkers).forEach(m=>leafletMap.removeLayer(m));
+  mapMarkers={};
+  UQ.forEach(venue=>{
+    const rel=venue.teams.filter(t=>activeSports.has(t.sport));
+    if(!rel.length)return;
+    const vis=rel.filter(t=>visitedTeams.has(t.team));
+    const isVis=vis.length>0;
+    let icon;
+    if(isVis){
+      const sports=[...new Set(vis.map(t=>t.sport))];
+      const col=sports.length===1?SC[sports[0]].color:'#a78bfa';
+      const em=sports.length===1?SC[sports[0]].emoji:'🏟️';
+      icon=L.divIcon({className:'',html:`<div style="background:${col};color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 0 10px ${col}88;border:2px solid #fff;">${em}</div>`,iconSize:[28,28],iconAnchor:[14,14]});
+    } else {
+      const sports=[...new Set(rel.map(t=>t.sport))];
+      const col=sports.length===1?SC[sports[0]].color+'44':'#4a4f6a';
+      icon=L.divIcon({className:'',html:`<div style="width:10px;height:10px;border-radius:50%;background:${col};border:1.5px solid ${col.replace('44','aa')};"></div>`,iconSize:[10,10],iconAnchor:[5,5]});
+    }
+    const m=L.marker([venue.lat,venue.lng],{icon}).addTo(leafletMap);
+    m.bindPopup(makePopupContent(venue),{maxWidth:240});
+    mapMarkers[venue.venue_id]=m;
+  });
+}
+
+function makePopupContent(venue){
+  const rel=venue.teams.filter(t=>activeSports.has(t.sport));
+  const rows=rel.map(t=>{
+    const vis=visitedTeams.has(t.team),seen=seenTeams.has(t.team)||vis;
+    const cfg=SC[t.sport];
+    return `<div class="popup-team-row">
+      <div class="popup-team-left"><span>${cfg.emoji}</span><span>${t.team}</span></div>
+      <div class="popup-badges">
+        <span class="popup-badge" style="background:${vis?'var(--indigo)':'var(--border)'}22;color:${vis?'var(--indigo)':'var(--text-dim)'}">${vis?'🏟️✓':'🏟️'}</span>
+        <span class="popup-badge" style="background:${seen?'var(--amber)':'var(--border)'}22;color:${seen?'var(--amber)':'var(--text-dim)'}">${seen?'👀✓':'👀'}</span>
+      </div>
+    </div>`;
+  }).join('');
+  const visCount=rel.filter(t=>visitedTeams.has(t.team)).length;
+  return `<div>
+    <div class="popup-venue">${venue.venue}</div>
+    <div class="popup-city">${venue.city}${venue.state?', '+venue.state:''} · ${venue.country}</div>
+    ${rows||'<div style="font-size:11px;color:var(--text-dim)">No active sport teams</div>'}
+    <div class="popup-footer">🏟️ ${visCount}/${rel.length} visited</div>
+  </div>`;
+}
+
+function toggleMapSport(sport,btn){
+  if(activeSports.has(sport))activeSports.delete(sport);else activeSports.add(sport);
+  btn.classList.toggle('active',activeSports.has(sport));
+  renderMapMarkers();
+}
+
+function fitVisited(){
+  const pts=UQ.filter(v=>v.teams.some(t=>visitedTeams.has(t.team))).map(v=>[v.lat,v.lng]);
+  if(pts.length)leafletMap.fitBounds(pts,{padding:[40,40]});
+}
+
+function handleMapSearch(q){
+  const box=document.getElementById('map-search-results');
+  if(!q.trim()){box.style.display='none';return;}
+  const ql=q.toLowerCase();
+  const res=UQ.filter(v=>v.venue.toLowerCase().includes(ql)||v.city.toLowerCase().includes(ql)||v.teams.some(t=>t.team.toLowerCase().includes(ql))).slice(0,6);
+  if(!res.length){box.style.display='none';return;}
+  box.innerHTML=res.map(v=>`<div class="msr-item" onmousedown="goToVenue('${v.venue_id}')">
+    <div class="msr-venue">📍 ${v.venue}</div>
+    <div class="msr-teams">${v.teams.filter(t=>activeSports.has(t.sport)).map(t=>`${SC[t.sport]?.emoji||''} ${t.team}`).join(' · ')}</div>
+  </div>`).join('');
+  box.style.display='block';
+}
+
+function closeSearch(){setTimeout(()=>{document.getElementById('map-search-results').style.display='none';},180);}
+
+function goToVenue(vid){
+  const v=VENUES.find(x=>x.venue_id===vid);
+  if(!v)return;
+  document.getElementById('map-search').value='';
+  document.getElementById('map-search-results').style.display='none';
+  leafletMap.setView([v.lat,v.lng],14);
+  setTimeout(()=>{if(mapMarkers[vid])mapMarkers[vid].openPopup();},300);
+}
+
+// ═══════════════════════════════════════════════════════
+// TAB 3 — HISTORY
+// ═══════════════════════════════════════════════════════
+function renderHistory(){
+  const el=document.getElementById('match-list');
+  if(!matches.length){
+    el.innerHTML=`<div class="empty-state"><div class="empty-icon">🎟️</div><div class="empty-text">No matches logged yet.<br>Tap <strong>+ Add a Match</strong> to start tracking your game history.</div></div>`;
+    return;
+  }
+  const sorted=[...matches].sort((a,b)=>b.date.localeCompare(a.date));
+  el.innerHTML=sorted.map(m=>{
+    const cfg=SC[m.sport]||{color:'#8b90b0',emoji:'🏟️'};
+    const v=VENUES.find(x=>x.venue_id===m.venue_id);
+    const hasScore=m.homeScore!==''&&m.awayScore!=='';
+    const homeW=hasScore&&parseInt(m.homeScore)>parseInt(m.awayScore);
+    const awayW=hasScore&&parseInt(m.awayScore)>parseInt(m.homeScore);
+    return `<div class="match-card">
+      <div class="mc-header">
+        <span class="mc-date">${formatDate(m.date)}</span>
+        <span class="mc-sport" style="background:${cfg.color}22;color:${cfg.color}">${cfg.emoji} ${m.sport}</span>
+        <button class="mc-delete" onclick="deleteMatch('${m.id}')">✕</button>
+      </div>
+      <div class="mc-teams">
+        <span class="mc-team" style="${homeW?'color:var(--mlb)':''}">${m.home}</span>
+        <span class="mc-vs">vs</span>
+        <span class="mc-team" style="${awayW?'color:var(--mlb)':''}">${m.away}</span>
+      </div>
+      ${hasScore?`<div class="mc-score">${m.homeScore} — ${m.awayScore}</div>`:''}
+      ${v?`<div class="mc-venue">📍 ${v.venue}, ${v.city}</div>`:''}
+      ${m.notes?`<div style="font-size:11px;color:var(--text-dim);margin-top:4px;font-style:italic">"${m.notes}"</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function formatDate(d){
+  if(!d)return'';
+  const [y,mo,dy]=d.split('-');
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${months[parseInt(mo)-1]} ${parseInt(dy)}, ${y}`;
+}
+
+function deleteMatch(id){
+  matches=matches.filter(m=>m.id!==id);
+  save('st_matches',matches);
+  rebuildFromMatches();
+  renderHistory();
+  renderMapMarkers();
+}
+
+// ═══════════════════════════════════════════════════════
+// ADD MATCH MODAL
+// ═══════════════════════════════════════════════════════
+let acHomeTeam='', acAwayTeam='';
+
+function openAddMatch(){
+  // Set today's date
+  document.getElementById('m-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('m-sport').value='';
+  document.getElementById('m-home').value='';
+  document.getElementById('m-away').value='';
+  document.getElementById('m-score-home').value='';
+  document.getElementById('m-score-away').value='';
+  document.getElementById('m-notes').value='';
+  document.getElementById('venue-preview').style.display='none';
+  document.getElementById('ac-home').classList.remove('open');
+  document.getElementById('ac-away').classList.remove('open');
+  acHomeTeam=''; acAwayTeam='';
+  document.getElementById('match-modal').classList.add('open');
+}
+
+function closeModal(){document.getElementById('match-modal').classList.remove('open');}
+
+function onSportChange(){
+  document.getElementById('m-home').value='';
+  document.getElementById('m-away').value='';
+  acHomeTeam=''; acAwayTeam='';
+  document.getElementById('venue-preview').style.display='none';
+}
+
+function getTeamList(){
+  const sport=document.getElementById('m-sport').value;
+  if(!sport)return[];
+  return allTeamsForSport(sport);
+}
+
+function acFilter(side,val){
+  const list=getTeamList();
+  const q=val.toLowerCase();
+  const res=q?list.filter(t=>t.toLowerCase().includes(q)).slice(0,8):list.slice(0,8);
+  const el=document.getElementById('ac-'+side);
+  if(!res.length){el.classList.remove('open');return;}
+  el.innerHTML=res.map(t=>`<div class="ac-item" onmousedown="selectTeam('${side}','${t.replace(/'/g,"\\'")}')">
+    ${t}
+  </div>`).join('');
+  el.classList.add('open');
+}
+
+function acBlur(side){setTimeout(()=>document.getElementById('ac-'+side).classList.remove('open'),200);}
+
+function selectTeam(side,team){
+  document.getElementById('m-'+side).value=team;
+  document.getElementById('ac-'+side).classList.remove('open');
+  if(side==='home'){acHomeTeam=team; updateVenuePreview();}
+  else{acAwayTeam=team;}
+}
+
+function updateVenuePreview(){
+  const v=venueForHomeTeam(acHomeTeam);
+  const pre=document.getElementById('venue-preview');
+  if(v){
+    document.getElementById('vp-name').textContent=v.venue;
+    document.getElementById('vp-city').textContent=`${v.city}${v.state?', '+v.state:''} · ${v.country}`;
+    pre.style.display='block';
+  } else {
+    pre.style.display='none';
+  }
+}
+
+function saveMatch(){
+  const sport=document.getElementById('m-sport').value;
+  const date =document.getElementById('m-date').value;
+  const home =document.getElementById('m-home').value.trim();
+  const away =document.getElementById('m-away').value.trim();
+  if(!sport||!date||!home||!away){alert('Please fill in sport, date, home and away team.');return;}
+
+  const venue=venueForHomeTeam(home);
+  const m={
+    id:Date.now().toString(),
+    sport, date, home, away,
+    homeScore:document.getElementById('m-score-home').value,
+    awayScore:document.getElementById('m-score-away').value,
+    venue_id:venue?venue.venue_id:null,
+    notes:document.getElementById('m-notes').value.trim(),
+  };
+  matches.push(m);
+  save('st_matches',matches);
+  rebuildFromMatches();
+  closeModal();
+  renderHistory();
+  renderStats();
+  if(mapReady)renderMapMarkers();
+}
+
+// ═══════════════════════════════════════════════════════
+// TAB 4 — PROFILE
+// ═══════════════════════════════════════════════════════
+function renderProfile(){
+  document.getElementById('pf-name').value=profile.name||'';
+  document.getElementById('pf-city').value=profile.city||'';
+  document.getElementById('pf-sport').value=profile.sport||'';
+  document.getElementById('pf-team').value=profile.team||'';
+  document.getElementById('profile-name-display').textContent=profile.name||'Your Name';
+  document.getElementById('profile-city-display').textContent=(profile.city&&profile.sport)?`${profile.city} · ${profile.sport} fan`:(profile.city||'Set your city');
+}
+
+function saveProfile(){
+  profile={
+    name:document.getElementById('pf-name').value.trim(),
+    city:document.getElementById('pf-city').value.trim(),
+    sport:document.getElementById('pf-sport').value,
+    team:document.getElementById('pf-team').value.trim(),
+  };
+  save('st_profile',profile);
+  renderProfile();
+  // Brief feedback
+  const btn=document.querySelector('.pf-save');
+  btn.textContent='✓ Saved';
+  setTimeout(()=>btn.textContent='Save Profile',1500);
+}
+
+// ═══════════════════════════════════════════════════════
+// RESET
+// ═══════════════════════════════════════════════════════
+function showResetConfirm(){document.getElementById('reset-modal').classList.add('open');}
+
+function resetAll(){
+  matches=[]; visitedTeams=new Set(); seenTeams=new Set(); profile={};
+  ['st_matches','st_visited','st_seen','st_profile'].forEach(k=>localStorage.removeItem(k));
+  document.getElementById('reset-modal').classList.remove('open');
+  renderStats(); renderHistory(); renderProfile();
+  if(mapReady)renderMapMarkers();
+}
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+rebuildFromMatches();
+renderStats();
+renderProfile();
+renderHistory();
+</script>
+</body>
+</html>
