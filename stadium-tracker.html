@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>US Sports Stadium Tracker</title>
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-HP2Y5FE8CR"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-HP2Y5FE8CR');
+</script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -302,7 +310,8 @@ const VENUES = [
   {venue_id:"ball_arena",venue:"Ball Arena",city:"Denver",state:"CO",country:"USA",lat:39.7486,lng:-105.0077,teams:[{sport:"NBA",team:"Denver Nuggets"},{sport:"NHL",team:"Colorado Avalanche"}]},
   {venue_id:"american_airlines_arena",venue:"Kaseya Center",city:"Miami",state:"FL",country:"USA",lat:25.7814,lng:-80.1870,teams:[{sport:"NBA",team:"Miami Heat"}]},
   {venue_id:"amalie_arena",venue:"Amalie Arena",city:"Tampa",state:"FL",country:"USA",lat:27.9428,lng:-82.4519,teams:[{sport:"NHL",team:"Tampa Bay Lightning"}]},
-  {venue_id:"staples",venue:"Crypto.com Arena",city:"Los Angeles",state:"CA",country:"USA",lat:34.0430,lng:-118.2673,teams:[{sport:"NBA",team:"Los Angeles Lakers"},{sport:"NBA",team:"Los Angeles Clippers"},{sport:"NHL",team:"Los Angeles Kings"}]},
+  {venue_id:"staples",venue:"Crypto.com Arena",city:"Los Angeles",state:"CA",country:"USA",lat:34.0430,lng:-118.2673,teams:[{sport:"NBA",team:"Los Angeles Lakers"},{sport:"NHL",team:"Los Angeles Kings"}]},
+  {venue_id:"intuit_dome",venue:"Intuit Dome",city:"Inglewood",state:"CA",country:"USA",lat:33.9583,lng:-118.3417,teams:[{sport:"NBA",team:"Los Angeles Clippers"}]},
   {venue_id:"xcel",venue:"Xcel Energy Center",city:"Saint Paul",state:"MN",country:"USA",lat:44.9447,lng:-93.1010,teams:[{sport:"NHL",team:"Minnesota Wild"}]},
   {venue_id:"target_center",venue:"Target Center",city:"Minneapolis",state:"MN",country:"USA",lat:44.9795,lng:-93.2760,teams:[{sport:"NBA",team:"Minnesota Timberwolves"}]},
   {venue_id:"enterprise_center",venue:"Enterprise Center",city:"St. Louis",state:"MO",country:"USA",lat:38.6267,lng:-90.2025,teams:[{sport:"NHL",team:"St. Louis Blues"}]},
@@ -368,7 +377,8 @@ const VENUES = [
   {venue_id:"nissan_stadium",venue:"Nissan Stadium",city:"Nashville",state:"TN",country:"USA",lat:36.1665,lng:-86.7713,teams:[{sport:"NFL",team:"Tennessee Titans"}]},
   {venue_id:"lumen_field",venue:"Lumen Field",city:"Seattle",state:"WA",country:"USA",lat:47.5952,lng:-122.3316,teams:[{sport:"NFL",team:"Seattle Seahawks"}]},
   {venue_id:"sofi",venue:"SoFi Stadium",city:"Inglewood",state:"CA",country:"USA",lat:33.9535,lng:-118.3392,teams:[{sport:"NFL",team:"Los Angeles Rams"},{sport:"NFL",team:"Los Angeles Chargers"}]},
-  {venue_id:"allegiant",venue:"Allegiant Stadium",city:"Las Vegas",state:"NV",country:"USA",lat:36.0909,lng:-115.1833,teams:[{sport:"NFL",team:"Las Vegas Raiders"},{sport:"NHL",team:"Vegas Golden Knights"}]},
+  {venue_id:"allegiant",venue:"Allegiant Stadium",city:"Las Vegas",state:"NV",country:"USA",lat:36.0909,lng:-115.1833,teams:[{sport:"NFL",team:"Las Vegas Raiders"}]},
+  {venue_id:"tmobile_arena",venue:"T-Mobile Arena",city:"Las Vegas",state:"NV",country:"USA",lat:36.1028,lng:-115.1784,teams:[{sport:"NHL",team:"Vegas Golden Knights"}]},
   {venue_id:"state_farm_nfl",venue:"State Farm Stadium",city:"Glendale",state:"AZ",country:"USA",lat:33.5276,lng:-112.2626,teams:[{sport:"NFL",team:"Arizona Cardinals"}]},
   {venue_id:"levis",venue:"Levi's Stadium",city:"Santa Clara",state:"CA",country:"USA",lat:37.4033,lng:-121.9694,teams:[{sport:"NFL",team:"San Francisco 49ers"}]},
   {venue_id:"sofi_chargers",venue:"SoFi Stadium",city:"Inglewood",state:"CA",country:"USA",lat:33.9535,lng:-118.3392,teams:[]},
