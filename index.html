@@ -143,6 +143,15 @@
     gap: 2px; background: var(--ink);
   }
   .stat-block { background: var(--sand); padding: 28px 24px; }
+
+  /* LIVE TOOLS */
+  .live-tools { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; background: var(--ink); margin-top: 2px; }
+  .tool-link { background: var(--sand); padding: 16px 18px; text-decoration: none; color: var(--ink); transition: background .15s; display: flex; flex-direction: column; gap: 6px; }
+  .tool-link:hover { background: var(--ink); }
+  .tool-link:hover .tool-label, .tool-link:hover .tool-name { color: var(--sand); }
+  .tool-label { font-family: 'Space Mono', monospace; font-size: 8px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-light); }
+  .tool-name { font-family: 'DM Serif Display', serif; font-size: 14px; line-height: 1.2; color: var(--ink); }
+  .tool-arrow { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--ink-light); margin-top: 2px; }
   .stat-number { font-family: 'DM Serif Display', serif; font-size: 36px; line-height: 1; margin-bottom: 6px; }
   .stat-label { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-light); }
 
@@ -263,6 +272,18 @@
         <div class="stat-number">9</div>
         <div class="stat-label">Articles published</div>
       </div>
+    </div>
+    <div class="live-tools">
+      <a href="https://martindelhomme.github.io/portfolio/stadium-tracker.html" class="tool-link" target="_blank">
+        <div class="tool-label">Live Tool</div>
+        <div class="tool-name">🏟️ Stadium Tracker</div>
+        <div class="tool-arrow">Open →</div>
+      </a>
+      <a href="https://martindelhomme.github.io/portfolio/project-finance-portfolio-tracker.html" class="tool-link" target="_blank">
+        <div class="tool-label">Live Tool</div>
+        <div class="tool-name">📊 Portfolio Tracker</div>
+        <div class="tool-arrow">Open →</div>
+      </a>
     </div>
   </div>
 </section>
