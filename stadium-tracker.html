@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>US Sports Stadium Tracker</title>
-<!-- Google Analytics -->
+<!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-HP2Y5FE8CR"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -86,7 +86,53 @@ html,body{height:100%;font-family:var(--font-display);background:var(--bg);color
 /* Team list */
 .sport-group{margin-bottom:12px;}
 .sport-group-header{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:4px 0;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
-.sport-group-toggle{display:none;} /* hidden on desktop */
+.sport-group-toggle{display:none;}
+/* SIDEBAR HEADER with Add Match btn */
+.sidebar-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.sidebar-header .sidebar-title{margin-bottom:0;}
+.btn-add-match{font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:5px 10px;border-radius:5px;cursor:pointer;border:1px solid var(--border);background:var(--indigo,#6366f1);color:#fff;transition:opacity .15s;white-space:nowrap;}
+.btn-add-match:hover{opacity:.85;}
+/* MATCH MODAL */
+.match-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:8000;display:none;align-items:center;justify-content:center;padding:20px;}
+.match-overlay.open{display:flex;}
+.match-sheet{background:var(--surface);border:1px solid var(--border);border-radius:14px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;padding:24px;}
+.match-sheet-title{font-size:15px;font-weight:800;color:var(--text);margin-bottom:16px;text-align:center;}
+.mfield{margin-bottom:12px;}
+.mfield-label{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-mid);margin-bottom:5px;}
+.mfield-input,.mfield-select{width:100%;padding:9px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:13px;font-family:inherit;appearance:none;}
+.mfield-input:focus,.mfield-select:focus{outline:none;border-color:var(--text-mid);}
+.mfield-select option{background:var(--surface2);}
+.mrow{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.match-results-area{margin:14px 0;}
+.mr-label{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-mid);margin-bottom:8px;}
+.mr-loading{text-align:center;padding:20px;color:var(--text-dim);font-size:13px;}
+.mr-game{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;cursor:pointer;transition:border-color .15s;}
+.mr-game:hover{border-color:var(--text-mid);}
+.mr-game.selected{border-color:#6366f1;background:rgba(99,102,241,.08);}
+.mr-game-teams{font-size:12px;font-weight:700;color:var(--text);}
+.mr-game-detail{font-size:10px;color:var(--text-mid);margin-top:2px;}
+.mr-game-score{font-size:14px;font-weight:900;color:var(--text);text-align:right;}
+.mr-game-status{font-size:9px;color:var(--text-mid);text-align:right;margin-top:2px;}
+.mr-empty{text-align:center;padding:16px;color:var(--text-dim);font-size:12px;}
+.mr-manual-btn{width:100%;padding:8px;background:none;border:1px dashed var(--border);border-radius:7px;color:var(--text-mid);font-size:11px;font-weight:600;cursor:pointer;margin-top:6px;letter-spacing:.04em;}
+.mr-manual-btn:hover{border-color:var(--text-mid);color:var(--text);}
+.manual-scores{display:none;margin-top:10px;}
+.manual-scores.open{display:block;}
+.match-actions{display:flex;gap:10px;margin-top:16px;}
+.match-btn-cancel{flex:1;padding:11px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;color:var(--text-mid);font-size:12px;font-weight:600;cursor:pointer;}
+.match-btn-save{flex:2;padding:11px;background:#6366f1;border:none;border-radius:7px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;}
+.match-btn-save:hover{opacity:.88;}
+.match-btn-save:disabled{opacity:.4;cursor:default;}
+/* Matches in stats section */
+.match-history-wrap{margin-top:12px;}
+.match-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;}
+.mc-sport{font-size:16px;flex-shrink:0;}
+.mc-body{flex:1;min-width:0;}
+.mc-teams{font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mc-detail{font-size:10px;color:var(--text-dim);margin-top:2px;}
+.mc-score{font-size:13px;font-weight:900;color:var(--text);text-align:right;flex-shrink:0;}
+.mc-del{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:14px;padding:2px 6px;flex-shrink:0;}
+.mc-del:hover{color:#ef4444;} /* hidden on desktop */
 .sport-group-body{display:block;} /* always visible on desktop */
 /* Mobile accordion */
 @media(max-width:900px){
@@ -253,7 +299,10 @@ html,body{height:100%;font-family:var(--font-display);background:var(--bg);color
   <div id="map"></div>
   <div class="sidebar">
     <div class="sidebar-section" style="flex:1">
-      <div class="sidebar-title">Select Teams</div>
+      <div class="sidebar-header">
+        <div class="sidebar-title">Select Teams</div>
+        <button class="btn-add-match" onclick="openMatchModal()">＋ Add Match</button>
+      </div>
       <div id="team-list"></div>
     </div>
   </div>
@@ -275,7 +324,91 @@ html,body{height:100%;font-family:var(--font-display);background:var(--bg);color
     </table>
   </div>
 </div>
+<div class="below-map" style="margin-top:12px" id="match-history-section" style="display:none">
+  <div style="grid-column:1/-1">
+    <div class="progress-panel" style="width:100%">
+      <div class="sidebar-title">Match History</div>
+      <div id="match-history-list"></div>
+    </div>
+  </div>
+</div>
 <div style="height:32px"></div>
+
+
+<!-- MATCH MODAL -->
+<div class="match-overlay" id="match-modal" onclick="if(event.target===this)closeMatchModal()">
+  <div class="match-sheet">
+    <div class="match-sheet-title">Add a Match</div>
+    <!-- STEP 1: search params -->
+    <div id="match-step1">
+      <div class="mrow">
+        <div class="mfield">
+          <div class="mfield-label">Sport *</div>
+          <select class="mfield-select" id="m-sport" onchange="onMatchSportChange()">
+            <option value="">— Sport —</option>
+            <option value="mlb">MLB ⚾</option>
+            <option value="nba">NBA 🏀</option>
+            <option value="nhl">NHL 🏒</option>
+            <option value="nfl">NFL 🏈</option>
+          </select>
+        </div>
+        <div class="mfield">
+          <div class="mfield-label">Year *</div>
+          <select class="mfield-select" id="m-year"></select>
+        </div>
+      </div>
+      <div class="mrow">
+        <div class="mfield">
+          <div class="mfield-label">Month *</div>
+          <select class="mfield-select" id="m-month">
+            <option value="">— Month —</option>
+            <option value="01">January</option><option value="02">February</option>
+            <option value="03">March</option><option value="04">April</option>
+            <option value="05">May</option><option value="06">June</option>
+            <option value="07">July</option><option value="08">August</option>
+            <option value="09">September</option><option value="10">October</option>
+            <option value="11">November</option><option value="12">December</option>
+          </select>
+        </div>
+        <div class="mfield">
+          <div class="mfield-label">Home Team *</div>
+          <select class="mfield-select" id="m-home-team">
+            <option value="">— Select sport first —</option>
+          </select>
+        </div>
+      </div>
+      <div class="mfield">
+        <div class="mfield-label">Away Team (optional)</div>
+        <select class="mfield-select" id="m-away-team">
+          <option value="">— Any —</option>
+        </select>
+      </div>
+      <button class="match-btn-save" style="width:100%;margin-top:4px" onclick="fetchESPNGames()" id="btn-fetch">🔍 Search Games</button>
+    </div>
+    <!-- RESULTS -->
+    <div class="match-results-area" id="match-results-area" style="display:none">
+      <div class="mr-label" id="mr-label">Games found</div>
+      <div id="match-results-list"></div>
+      <button class="mr-manual-btn" onclick="toggleManualEntry()">✏️ Score not found? Enter manually</button>
+      <div class="manual-scores" id="manual-scores">
+        <div class="mrow" style="margin-top:8px">
+          <div class="mfield">
+            <div class="mfield-label">Home Score</div>
+            <input class="mfield-input" type="number" id="m-score-h" placeholder="0" min="0">
+          </div>
+          <div class="mfield">
+            <div class="mfield-label">Away Score</div>
+            <input class="mfield-input" type="number" id="m-score-a" placeholder="0" min="0">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="match-actions">
+      <button class="match-btn-cancel" onclick="closeMatchModal()">Cancel</button>
+      <button class="match-btn-save" id="btn-save-match" onclick="saveSelectedMatch()" disabled>Save Match</button>
+    </div>
+  </div>
+</div>
 
 <!-- EXPORT MODAL -->
 <div class="export-overlay" id="export-overlay" onclick="if(event.target===this)this.classList.remove('open')">
@@ -904,6 +1037,341 @@ function renderAll() {
 renderAll();
 // Fix Leaflet tile render after mobile layout settles
 setTimeout(()=>map.invalidateSize(),100);
+
+// ═══════════════════════════════════════════════════
+// MATCH HISTORY STATE
+// ═══════════════════════════════════════════════════
+let matchHistory = JSON.parse(localStorage.getItem('stadium_matches')||'[]');
+
+function saveMatches(){localStorage.setItem('stadium_matches',JSON.stringify(matchHistory));}
+
+// ═══════════════════════════════════════════════════
+// ESPN API CONFIG
+// ═══════════════════════════════════════════════════
+const ESPN_SPORT_MAP = {
+  mlb: {path:'baseball/mlb',   label:'MLB', emoji:'⚾'},
+  nba: {path:'basketball/nba', label:'NBA', emoji:'🏀'},
+  nhl: {path:'hockey/nhl',     label:'NHL', emoji:'🏒'},
+  nfl: {path:'football/nfl',   label:'NFL', emoji:'🏈'},
+};
+
+// ESPN team name → our internal team name normalization (key differences only)
+const ESPN_NAME_MAP = {
+  'LA Clippers':'Los Angeles Clippers','LA Lakers':'Los Angeles Lakers',
+  'LA Rams':'Los Angeles Rams','LA Chargers':'Los Angeles Chargers',
+  'Golden Knights':'Vegas Golden Knights','Maple Leafs':'Toronto Maple Leafs',
+  'Montréal Canadiens':'Montreal Canadiens',
+};
+function normalizeTeam(n){return ESPN_NAME_MAP[n]||n;}
+
+// All teams per sport (for dropdowns)
+function getTeamsForSport(sport){
+  const label = sport.toUpperCase();
+  return [...new Set(VENUES.flatMap(v=>v.teams.filter(t=>t.sport===label).map(t=>t.team)))].sort();
+}
+
+// ── MODAL OPEN / CLOSE ───────────────────────────────────────────
+let selectedGameData = null;
+
+function openMatchModal(){
+  selectedGameData = null;
+  document.getElementById('match-results-area').style.display='none';
+  document.getElementById('match-results-list').innerHTML='';
+  document.getElementById('manual-scores').className='manual-scores';
+  document.getElementById('btn-save-match').disabled=true;
+  document.getElementById('m-sport').value='';
+  document.getElementById('m-home-team').innerHTML='<option value="">— Select sport first —</option>';
+  document.getElementById('m-away-team').innerHTML='<option value="">— Any —</option>';
+  // Year select: 2015 → current year
+  const yearSel=document.getElementById('m-year');
+  yearSel.innerHTML='';
+  const curY=new Date().getFullYear();
+  for(let y=curY;y>=2015;y--){
+    const o=document.createElement('option');o.value=y;o.textContent=y;
+    yearSel.appendChild(o);
+  }
+  // Default month to current
+  document.getElementById('m-month').value=String(new Date().getMonth()+1).padStart(2,'0');
+  document.getElementById('match-modal').classList.add('open');
+}
+
+function closeMatchModal(){document.getElementById('match-modal').classList.remove('open');}
+
+function onMatchSportChange(){
+  const sport=document.getElementById('m-sport').value;
+  const homeSel=document.getElementById('m-home-team');
+  const awaySel=document.getElementById('m-away-team');
+  homeSel.innerHTML='<option value="">— Select home team —</option>';
+  awaySel.innerHTML='<option value="">— Any away team —</option>';
+  if(!sport)return;
+  getTeamsForSport(sport).forEach(t=>{
+    homeSel.innerHTML+=`<option value="${t}">${t}</option>`;
+    awaySel.innerHTML+=`<option value="${t}">${t}</option>`;
+  });
+  document.getElementById('match-results-area').style.display='none';
+  document.getElementById('btn-save-match').disabled=true;
+  selectedGameData=null;
+}
+
+// ── ESPN FETCH ───────────────────────────────────────────────────
+async function fetchESPNGames(){
+  const sport  = document.getElementById('m-sport').value;
+  const year   = document.getElementById('m-year').value;
+  const month  = document.getElementById('m-month').value;
+  const home   = document.getElementById('m-home-team').value;
+  const away   = document.getElementById('m-away-team').value;
+
+  if(!sport||!year||!month||!home){
+    alert('Please select sport, year, month and home team.');return;
+  }
+
+  const area  = document.getElementById('match-results-area');
+  const list  = document.getElementById('match-results-list');
+  const label = document.getElementById('mr-label');
+  area.style.display='block';
+  list.innerHTML='<div class="mr-loading">⏳ Fetching games from ESPN…</div>';
+  document.getElementById('btn-fetch').disabled=true;
+  selectedGameData=null;
+  document.getElementById('btn-save-match').disabled=true;
+
+  const cfg = ESPN_SPORT_MAP[sport];
+  // Build date range for the full month
+  const lastDay=new Date(year,parseInt(month),0).getDate();
+  const dateFrom=`${year}${month}01`;
+  const dateTo  =`${year}${month}${String(lastDay).padStart(2,'0')}`;
+
+  const url=`https://site.api.espn.com/apis/site/v2/sports/${cfg.path}/scoreboard?dates=${dateFrom}-${dateTo}&limit=200`;
+
+  try{
+    const res=await fetch(url);
+    if(!res.ok)throw new Error('ESPN returned '+res.status);
+    const data=await res.json();
+    const events=(data.events||[]);
+
+    // Filter by home team (and optionally away)
+    const homeLow=home.toLowerCase();
+    const awayLow=away?away.toLowerCase():'';
+
+    const filtered=events.filter(ev=>{
+      const comps=ev.competitions||[];
+      return comps.some(c=>{
+        const teams=(c.competitors||[]);
+        const homeTeam=teams.find(t=>t.homeAway==='home');
+        const awayTeam=teams.find(t=>t.homeAway==='away');
+        if(!homeTeam||!awayTeam)return false;
+        const hName=normalizeTeam(homeTeam.team.displayName||homeTeam.team.shortDisplayName||'');
+        const aName=normalizeTeam(awayTeam.team.displayName||awayTeam.team.shortDisplayName||'');
+        const homeMatch=hName.toLowerCase().includes(homeLow)||homeLow.includes(hName.toLowerCase().split(' ').pop());
+        const awayMatch=!awayLow||aName.toLowerCase().includes(awayLow)||awayLow.includes(aName.toLowerCase().split(' ').pop());
+        return homeMatch&&awayMatch;
+      });
+    });
+
+    if(!filtered.length){
+      list.innerHTML=`<div class="mr-empty">No games found for <strong>${home}</strong> in ${getMonthName(month)} ${year}.<br><span style="font-size:10px">Check spelling or try without away team filter.</span></div>`;
+      label.textContent='No games found';
+      document.getElementById('btn-fetch').disabled=false;
+      return;
+    }
+
+    label.textContent=`${filtered.length} game${filtered.length>1?'s':''} found`;
+    list.innerHTML='';
+
+    filtered.forEach((ev,idx)=>{
+      const comp=ev.competitions[0];
+      const teams=comp.competitors||[];
+      const homeC=teams.find(t=>t.homeAway==='home');
+      const awayC=teams.find(t=>t.homeAway==='away');
+      if(!homeC||!awayC)return;
+      const hName=normalizeTeam(homeC.team.displayName||homeC.team.shortDisplayName||'');
+      const aName=normalizeTeam(awayC.team.displayName||awayC.team.shortDisplayName||'');
+      const hScore=homeC.score||'';
+      const aScore=awayC.score||'';
+      const status=comp.status?.type?.description||'';
+      const isFinal=status.toLowerCase().includes('final')||status==='STATUS_FINAL';
+      const dateStr=ev.date?new Date(ev.date).toLocaleDateString('en-CA',{weekday:'short',month:'short',day:'numeric'}):'';
+      const venue=comp.venue?.fullName||'';
+      const scoreStr=(isFinal&&hScore!=='')?`${hScore} — ${aScore}`:'TBD';
+
+      const card=document.createElement('div');
+      card.className='mr-game';
+      card.dataset.idx=idx;
+      card.innerHTML=`
+        <div style="flex:1">
+          <div class="mr-game-teams">${hName} vs ${aName}</div>
+          <div class="mr-game-detail">${dateStr}${venue?' · '+venue:''}</div>
+        </div>
+        <div>
+          <div class="mr-game-score">${scoreStr}</div>
+          <div class="mr-game-status">${isFinal?'Final':status}</div>
+        </div>`;
+      card.onclick=()=>selectGame(card,{
+        sport:cfg.label, home:hName, away:aName,
+        homeScore:hScore, awayScore:aScore,
+        date:ev.date?new Date(ev.date).toISOString().split('T')[0]:'',
+        venue:venue, status:isFinal?'final':status,
+        espnId:ev.id
+      });
+      list.appendChild(card);
+    });
+
+  }catch(err){
+    list.innerHTML=`<div class="mr-empty">⚠️ Could not reach ESPN API.<br><small>${err.message}</small><br><span style="font-size:10px;margin-top:6px;display:block">You can enter the score manually below.</span></div>`;
+    label.textContent='API error';
+  }
+  document.getElementById('btn-fetch').disabled=false;
+}
+
+function getMonthName(m){return['','January','February','March','April','May','June','July','August','September','October','November','December'][parseInt(m)];}
+
+function selectGame(card, gameData){
+  document.querySelectorAll('.mr-game').forEach(c=>c.classList.remove('selected'));
+  card.classList.add('selected');
+  selectedGameData=gameData;
+  document.getElementById('btn-save-match').disabled=false;
+}
+
+function toggleManualEntry(){
+  const el=document.getElementById('manual-scores');
+  el.classList.toggle('open');
+  if(el.classList.contains('open')){
+    // Pre-fill from selected game if any
+    if(selectedGameData){
+      document.getElementById('m-score-h').value=selectedGameData.homeScore||'';
+      document.getElementById('m-score-a').value=selectedGameData.awayScore||'';
+    }
+    // Allow saving with manual data even without selected ESPN game
+    if(!selectedGameData){
+      const sport=document.getElementById('m-sport').value;
+      const home=document.getElementById('m-home-team').value;
+      const away=document.getElementById('m-away-team').value;
+      const year=document.getElementById('m-year').value;
+      const month=document.getElementById('m-month').value;
+      if(sport&&home){
+        selectedGameData={
+          sport:sport.toUpperCase(),home,away:away||'',
+          homeScore:'',awayScore:'',
+          date:`${year}-${month}-01`,venue:'',status:'manual',espnId:null
+        };
+        document.getElementById('btn-save-match').disabled=false;
+      }
+    }
+  }
+}
+
+// ── SAVE MATCH ───────────────────────────────────────────────────
+function saveSelectedMatch(){
+  if(!selectedGameData)return;
+  // Override scores with manual if entered
+  const mh=document.getElementById('m-score-h').value;
+  const ma=document.getElementById('m-score-a').value;
+  if(mh!==''&&ma!==''){selectedGameData.homeScore=mh;selectedGameData.awayScore=ma;}
+
+  matchHistory.push({...selectedGameData, id:Date.now().toString(), savedAt:new Date().toISOString()});
+  saveMatches();
+
+  // Auto-mark teams as seen/visited
+  if(selectedGameData.home){
+    visitedTeams.add(selectedGameData.home);
+    seenTeams.add(selectedGameData.home);
+  }
+  if(selectedGameData.away) seenTeams.add(selectedGameData.away);
+  save();
+
+  closeMatchModal();
+  renderAll();
+  renderMatchHistory();
+  alert(`✓ Match saved: ${selectedGameData.home} vs ${selectedGameData.away}`);
+}
+
+// ── RENDER MATCH HISTORY ─────────────────────────────────────────
+function renderMatchHistory(){
+  const section=document.getElementById('match-history-section');
+  const list=document.getElementById('match-history-list');
+  if(!matchHistory.length){section.style.display='none';return;}
+  section.style.display='';
+
+  const sorted=[...matchHistory].sort((a,b)=>b.date.localeCompare(a.date));
+  list.innerHTML=sorted.map(m=>{
+    const cfg=Object.values(ESPN_SPORT_MAP).find(x=>x.label===m.sport)||{emoji:'🏟️'};
+    const hasScore=m.homeScore!==''&&m.homeScore!=null;
+    const hW=hasScore&&parseInt(m.homeScore)>parseInt(m.awayScore);
+    const aW=hasScore&&parseInt(m.awayScore)>parseInt(m.homeScore);
+    return`<div class="match-card">
+      <div class="mc-sport">${cfg.emoji}</div>
+      <div class="mc-body">
+        <div class="mc-teams"><span style="${hW?'color:var(--mlb)':''}">${m.home}</span> vs <span style="${aW?'color:var(--mlb)':''}">${m.away||'—'}</span></div>
+        <div class="mc-detail">${m.date}${m.venue?' · '+m.venue:''}</div>
+      </div>
+      ${hasScore?`<div class="mc-score">${m.homeScore}–${m.awayScore}</div>`:''}
+      <button class="mc-del" onclick="deleteMatch('${m.id}')" title="Remove">✕</button>
+    </div>`;
+  }).join('');
+
+  // Also update stats section with match counts
+  updateMatchStats();
+}
+
+function deleteMatch(id){
+  matchHistory=matchHistory.filter(m=>m.id!==id);
+  saveMatches();
+  renderMatchHistory();
+}
+
+function updateMatchStats(){
+  // Inject match count stats into progress panel
+  const total=matchHistory.length;
+  const existing=document.getElementById('match-count-stat');
+  const panel=document.querySelector('.progress-panel');
+  if(!panel)return;
+  if(!existing&&total>0){
+    const div=document.createElement('div');
+    div.id='match-count-stat';
+    div.style.cssText='margin-top:14px;padding-top:12px;border-top:1px solid var(--border)';
+    panel.appendChild(div);
+  }
+  const el=document.getElementById('match-count-stat');
+  if(!el)return;
+  if(total===0){el.remove();return;}
+
+  // Team frequency
+  const freq={};
+  matchHistory.forEach(m=>{
+    if(m.home)freq[m.home]=(freq[m.home]||0)+1;
+    if(m.away)freq[m.away]=(freq[m.away]||0)+1;
+  });
+  const homeFreq={};
+  matchHistory.forEach(m=>{if(m.home)homeFreq[m.home]=(homeFreq[m.home]||0)+1;});
+
+  const topSeen=Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const topHome=Object.entries(homeFreq).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+  // Home win rate
+  const played=matchHistory.filter(m=>m.homeScore!==''&&m.homeScore!=null);
+  const homeWins=played.filter(m=>parseInt(m.homeScore)>parseInt(m.awayScore)).length;
+  const hwPct=played.length?Math.round(homeWins/played.length*100):null;
+
+  el.innerHTML=`
+    <div class="section-title" style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-mid);margin-bottom:8px">Match Stats</div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:8px 12px;flex:1;min-width:80px;text-align:center">
+        <div style="font-size:20px;font-weight:900;color:#6366f1">${total}</div>
+        <div style="font-size:8px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-mid)">Games Seen</div>
+      </div>
+      ${hwPct!==null?`<div style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:8px 12px;flex:1;min-width:80px;text-align:center">
+        <div style="font-size:20px;font-weight:900;color:#22c55e">${hwPct}%</div>
+        <div style="font-size:8px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-mid)">Home Win %</div>
+      </div>`:''}
+    </div>
+    ${topSeen.length?`<div style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-mid);margin-bottom:5px">Most Seen (Home+Away)</div>
+    ${topSeen.map(([t,n],i)=>`<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border)"><span style="font-size:10px;font-weight:800;color:var(--text-dim);width:14px">${i+1}</span><span style="flex:1;font-size:11px;font-weight:600">${t}</span><span style="font-size:10px;font-weight:700;color:var(--text-mid)">${n}x</span></div>`).join('')}`:''}
+    ${topHome.length?`<div style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-mid);margin-top:10px;margin-bottom:5px">Most Seen at Home</div>
+    ${topHome.map(([t,n],i)=>`<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border)"><span style="font-size:10px;font-weight:800;color:var(--text-dim);width:14px">${i+1}</span><span style="flex:1;font-size:11px;font-weight:600">🏟️ ${t}</span><span style="font-size:10px;font-weight:700;color:var(--text-mid)">${n}x</span></div>`).join('')}`:''}
+  `;
+}
+
+// Initialise match history on load
+renderMatchHistory();
 </script>
 </body>
 </html>
