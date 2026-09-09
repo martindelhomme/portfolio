@@ -401,6 +401,10 @@ html,body{height:100%;font-family:var(--font-display);background:var(--bg);color
             <input class="mfield-input" type="number" id="m-score-a" placeholder="0" min="0">
           </div>
         </div>
+        <div class="mfield" style="margin-top:4px">
+          <div class="mfield-label">Date (optional)</div>
+          <input class="mfield-input" type="date" id="m-manual-date">
+        </div>
       </div>
     </div>
     <div class="match-actions">
@@ -1078,6 +1082,9 @@ function openMatchModal(){
   document.getElementById('match-results-area').style.display='none';
   document.getElementById('match-results-list').innerHTML='';
   document.getElementById('manual-scores').className='manual-scores';
+  document.getElementById('m-score-h').value='';
+  document.getElementById('m-score-a').value='';
+  document.getElementById('m-manual-date').value='';
   document.getElementById('btn-save-match').disabled=true;
   document.getElementById('m-sport').value='';
   document.getElementById('m-home-team').innerHTML='<option value="">— Select sport first —</option>';
@@ -1262,10 +1269,16 @@ function toggleManualEntry(){
 // ── SAVE MATCH ───────────────────────────────────────────────────
 function saveSelectedMatch(){
   if(!selectedGameData)return;
-  // Override scores with manual if entered
-  const mh=document.getElementById('m-score-h').value;
-  const ma=document.getElementById('m-score-a').value;
-  if(mh!==''&&ma!==''){selectedGameData.homeScore=mh;selectedGameData.awayScore=ma;}
+  // Only override scores if the manual panel is explicitly open
+  const manualOpen=document.getElementById('manual-scores').classList.contains('open');
+  if(manualOpen){
+    const mh=document.getElementById('m-score-h').value;
+    const ma=document.getElementById('m-score-a').value;
+    if(mh!==''&&ma!==''){selectedGameData.homeScore=mh;selectedGameData.awayScore=ma;}
+    // Optional manual date
+    const md=document.getElementById('m-manual-date').value;
+    if(md) selectedGameData.date=md;
+  }
 
   matchHistory.push({...selectedGameData, id:Date.now().toString(), savedAt:new Date().toISOString()});
   saveMatches();
