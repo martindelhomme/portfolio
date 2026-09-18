@@ -1147,12 +1147,29 @@ async function fetchESPNGames(){
   const dateFrom=`${year}${month}01`;
   const dateTo  =`${year}${month}${String(lastDay).padStart(2,'0')}`;
 
-  const url=`https://site.api.espn.com/apis/site/v2/sports/${cfg.path}/scoreboard?dates=${dateFrom}-${dateTo}&limit=200`;
+  const espnUrl=`https://site.api.espn.com/apis/site/v2/sports/${cfg.path}/scoreboard?dates=${dateFrom}-${dateTo}&limit=200`;
+
+  // Try multiple CORS proxies in sequence
+  async function fetchWithProxy(targetUrl){
+    const proxies=[
+      u=>`https://corsproxy.io/?${encodeURIComponent(u)}`,
+      u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+      u=>`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+    ];
+    let lastErr;
+    for(const proxy of proxies){
+      try{
+        const r=await fetch(proxy(targetUrl),{signal:AbortSignal.timeout(8000)});
+        if(!r.ok)throw new Error('HTTP '+r.status);
+        const text=await r.text();
+        return JSON.parse(text);
+      }catch(e){lastErr=e;}
+    }
+    throw lastErr||new Error('All proxies failed');
+  }
 
   try{
-    const res=await fetch(url);
-    if(!res.ok)throw new Error('ESPN returned '+res.status);
-    const data=await res.json();
+    const data=await fetchWithProxy(espnUrl);
     const events=(data.events||[]);
 
     // Filter by home team (and optionally away)
