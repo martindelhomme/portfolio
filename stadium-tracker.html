@@ -1149,21 +1149,33 @@ async function fetchESPNGames(){
 
   const espnUrl=`https://site.api.espn.com/apis/site/v2/sports/${cfg.path}/scoreboard?dates=${dateFrom}-${dateTo}&limit=200`;
 
-  // Try multiple CORS proxies in sequence
   async function fetchWithProxy(targetUrl){
+    const encoded=encodeURIComponent(targetUrl);
     const proxies=[
-      u=>`https://corsproxy.io/?${encodeURIComponent(u)}`,
-      u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-      u=>`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+      // Direct — works if ESPN allows it from the browser
+      ()=>fetch(targetUrl,{mode:'cors',signal:AbortSignal.timeout(6000)}),
+      // allorigins — most reliable free proxy
+      ()=>fetch(`https://api.allorigins.win/raw?url=${encoded}`,{signal:AbortSignal.timeout(8000)}),
+      // corsproxy.io — alternate syntax
+      ()=>fetch(`https://corsproxy.io/?url=${encoded}`,{signal:AbortSignal.timeout(8000)}),
+      // thingproxy
+      ()=>fetch(`https://thingproxy.freeboard.io/fetch/${targetUrl}`,{signal:AbortSignal.timeout(8000)}),
+      // jsonp-style via cdn.jsdelivr
+      ()=>fetch(`https://api.allorigins.win/get?url=${encoded}`,{signal:AbortSignal.timeout(8000)})
+        .then(r=>r.json()).then(d=>{
+          const r2=new Response(d.contents,{status:200});
+          return r2;
+        }),
     ];
     let lastErr;
-    for(const proxy of proxies){
+    for(const attemptFn of proxies){
       try{
-        const r=await fetch(proxy(targetUrl),{signal:AbortSignal.timeout(8000)});
+        const r=await attemptFn();
         if(!r.ok)throw new Error('HTTP '+r.status);
         const text=await r.text();
+        if(!text||text.trim().startsWith('<'))throw new Error('Non-JSON response');
         return JSON.parse(text);
-      }catch(e){lastErr=e;}
+      }catch(e){lastErr=e;continue;}
     }
     throw lastErr||new Error('All proxies failed');
   }
@@ -1240,8 +1252,8 @@ async function fetchESPNGames(){
     });
 
   }catch(err){
-    list.innerHTML=`<div class="mr-empty">⚠️ Could not reach ESPN API.<br><small>${err.message}</small><br><span style="font-size:10px;margin-top:6px;display:block">You can enter the score manually below.</span></div>`;
-    label.textContent='API error';
+    list.innerHTML=`<div class="mr-empty">⚠️ Could not reach ESPN API.<br><small style="color:var(--text-dim)">${err.message}</small><br><span style="font-size:10px;margin-top:6px;display:block">Enter the score manually below — or try a different month/sport combination.</span></div>`;
+    label.textContent='API unavailable';
   }
   document.getElementById('btn-fetch').disabled=false;
 }
