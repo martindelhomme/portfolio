@@ -12,8 +12,8 @@
   gtag('js', new Date());
   gtag('config', 'G-HP2Y5FE8CR');
 </script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -191,10 +191,11 @@ html,body{height:100%;font-family:var(--font-display);background:var(--bg);color
 .sport-badge{display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;letter-spacing:.05em;}
 
 /* LEAFLET OVERRIDES */
-.leaflet-popup-content-wrapper{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:0;box-shadow:0 8px 32px rgba(0,0,0,.5);}
-.leaflet-popup-content{margin:0;padding:14px 16px;min-width:200px;}
-.leaflet-popup-tip{background:var(--surface2);}
-.leaflet-popup-close-button{color:var(--text-mid) !important;font-size:18px !important;padding:8px !important;}
+.maplibregl-popup-content{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:14px 16px;min-width:200px;box-shadow:0 8px 32px rgba(0,0,0,.5);font-family:system-ui,sans-serif;}
+.maplibregl-popup-anchor-bottom .maplibregl-popup-tip{border-top-color:var(--surface2);}
+.maplibregl-popup-anchor-top .maplibregl-popup-tip{border-bottom-color:var(--surface2);}
+.maplibregl-popup-close-button{color:var(--text-mid);font-size:18px;padding:6px 10px;background:none;border:none;cursor:pointer;line-height:1;}
+.maplibregl-popup-close-button:hover{color:var(--text);}
 .popup-venue{font-size:14px;font-weight:700;color:var(--text);margin-bottom:2px;}
 .popup-city{font-size:11px;color:var(--text-mid);margin-bottom:10px;}
 .popup-team{display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 0;color:var(--text-mid);}
@@ -581,15 +582,24 @@ let seenTeams    = new Set(JSON.parse(localStorage.getItem('stadium_seen')||'[]'
 (()=>{const old=localStorage.getItem('stadium_selected');if(old){JSON.parse(old).forEach(t=>visitedTeams.add(t));localStorage.removeItem('stadium_selected');}})();
 let activeSports = new Set(['NBA','NFL','NHL','MLB']);
 let visitedOnly = false;
-let markers = {}; // venue_id -> leaflet marker
+let markers = {}; // venue_id -> MapLibre popup+marker
+let mlMap = null; // MapLibre map instance
 
 // ═══════════════════════════════════════════════════
-// MAP INIT
+// MAP INIT — MapLibre GL + OpenFreeMap (vector, crisp at all zooms)
 // ═══════════════════════════════════════════════════
-const map = L.map('map',{center:[39.5,-97],zoom:4,zoomControl:true});
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
-  attribution:'© OpenStreetMap © CARTO',maxZoom:19
-}).addTo(map);
+function initMap() {
+  mlMap = new maplibregl.Map({
+    container: 'map',
+    style: 'https://tiles.openfreemap.org/styles/dark',
+    center: [-97, 39.5],
+    zoom: 3.5,
+    attributionControl: false,
+  });
+  mlMap.addControl(new maplibregl.NavigationControl({showCompass:false}), 'top-right');
+  mlMap.addControl(new maplibregl.AttributionControl({compact:true}), 'bottom-right');
+  mlMap.on('load', () => renderMarkers());
+}
 
 // ═══════════════════════════════════════════════════
 // MARKER CREATION
@@ -601,25 +611,25 @@ function getVenueState(venue) {
   return { relevantTeams, visitedHere, seenHere, isVisited: visitedHere.length > 0, hasRelevant: relevantTeams.length > 0 };
 }
 
-function makeMarkerIcon(venue, state) {
+function makeMarkerEl(venue, state) {
+  const el = document.createElement('div');
   if (!state.hasRelevant) {
-    return L.divIcon({className:'',html:`<div style="width:8px;height:8px;border-radius:50%;background:#2e3350;border:1px solid #4a4f6a;"></div>`,iconSize:[8,8],iconAnchor:[4,4]});
+    el.style.cssText='width:8px;height:8px;border-radius:50%;background:#2e3350;border:1px solid #4a4f6a;cursor:pointer';
+    return el;
   }
   if (!state.isVisited) {
     const sports = [...new Set(state.relevantTeams.map(t=>t.sport))];
-    const col = sports.length === 1 ? SPORT_CONFIG[sports[0]].color+'33' : '#4a4f6a';
-    const border = sports.length === 1 ? SPORT_CONFIG[sports[0]].color+'66' : '#6a7090';
-    return L.divIcon({className:'',html:`<div style="width:10px;height:10px;border-radius:50%;background:${col};border:1.5px solid ${border};"></div>`,iconSize:[10,10],iconAnchor:[5,5]});
+    const col = sports.length === 1 ? SPORT_CONFIG[sports[0]].color+'55' : '#4a4f6a';
+    const border = sports.length === 1 ? SPORT_CONFIG[sports[0]].color+'99' : '#6a7090';
+    el.style.cssText=`width:10px;height:10px;border-radius:50%;background:${col};border:1.5px solid ${border};cursor:pointer`;
+    return el;
   }
-  // Visited — marker driven by visited status only
   const sports = [...new Set(state.visitedHere.map(t=>t.sport))];
   const col = sports.length === 1 ? SPORT_CONFIG[sports[0]].color : '#a78bfa';
   const emoji = sports.length === 1 ? SPORT_CONFIG[sports[0]].emoji : '🏟️';
-  return L.divIcon({
-    className:'',
-    html:`<div style="background:${col};color:white;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 0 12px ${col}88;border:2px solid white;">${emoji}</div>`,
-    iconSize:[28,28],iconAnchor:[14,14]
-  });
+  el.style.cssText=`background:${col};color:white;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 0 14px ${col}99;border:2px solid white;cursor:pointer`;
+  el.textContent = emoji;
+  return el;
 }
 
 function makePopup(venue) {
@@ -677,8 +687,9 @@ function toggleSeenAway(team, e) {
 }
 
 function renderMarkers() {
-  // Clear existing markers
-  Object.values(markers).forEach(m=>map.removeLayer(m));
+  if(!mlMap) return;
+  // Remove existing markers
+  Object.values(markers).forEach(m=>{if(m._popup)m._popup.remove();m.remove();});
   markers = {};
 
   const seen = new Set();
@@ -687,10 +698,15 @@ function renderMarkers() {
     seen.add(venue.venue_id);
     const state = getVenueState(venue);
     if(visitedOnly && !state.isVisited)return;
-    const icon = makeMarkerIcon(venue, state);
-    const m = L.marker([venue.lat,venue.lng],{icon}).addTo(map);
-    m.bindPopup(makePopup(venue),{maxWidth:260});
-    markers[venue.venue_id] = m;
+    const el = makeMarkerEl(venue, state);
+    const popup = new maplibregl.Popup({maxWidth:'280px',offset:16,closeButton:true})
+      .setHTML(makePopup(venue));
+    const marker = new maplibregl.Marker({element:el,anchor:'center'})
+      .setLngLat([venue.lng, venue.lat])
+      .setPopup(popup)
+      .addTo(mlMap);
+    marker._popup = popup;
+    markers[venue.venue_id] = marker;
   });
 }
 
@@ -901,8 +917,12 @@ function toggleVisitedOnly() {
 }
 
 function fitVisited() {
-  const pts = VENUES.filter(v=>v.teams.some(t=>visitedTeams.has(t.team)&&activeSports.has(t.sport))).map(v=>[v.lat,v.lng]);
-  if(pts.length) map.fitBounds(pts,{padding:[40,40]});
+  const pts = VENUES.filter(v=>v.teams.some(t=>visitedTeams.has(t.team)&&activeSports.has(t.sport)));
+  if(!pts.length||!mlMap) return;
+  if(pts.length===1){mlMap.flyTo({center:[pts[0].lng,pts[0].lat],zoom:12});return;}
+  const bounds = pts.reduce((b,v)=>b.extend([v.lng,v.lat]),
+    new maplibregl.LngLatBounds([pts[0].lng,pts[0].lat],[pts[0].lng,pts[0].lat]));
+  mlMap.fitBounds(bounds,{padding:60});
 }
 
 function resetAll() {
@@ -1039,8 +1059,8 @@ function renderAll() {
 // INIT
 // ═══════════════════════════════════════════════════
 renderAll();
-// Fix Leaflet tile render after mobile layout settles
-setTimeout(()=>map.invalidateSize(),100);
+initMap();
+setTimeout(()=>{if(mlMap)mlMap.resize();},200);
 
 // ═══════════════════════════════════════════════════
 // MATCH HISTORY STATE
@@ -1147,91 +1167,59 @@ async function fetchESPNGames(){
   const dateFrom=`${year}${month}01`;
   const dateTo  =`${year}${month}${String(lastDay).padStart(2,'0')}`;
 
-  const espnUrl=`https://site.api.espn.com/apis/site/v2/sports/${cfg.path}/scoreboard?dates=${dateFrom}-${dateTo}&limit=200`;
-
-  async function fetchWithProxy(targetUrl){
-    const encoded=encodeURIComponent(targetUrl);
-    const proxies=[
-      // Direct — works if ESPN allows it from the browser
-      ()=>fetch(targetUrl,{mode:'cors',signal:AbortSignal.timeout(6000)}),
-      // allorigins — most reliable free proxy
-      ()=>fetch(`https://api.allorigins.win/raw?url=${encoded}`,{signal:AbortSignal.timeout(8000)}),
-      // corsproxy.io — alternate syntax
-      ()=>fetch(`https://corsproxy.io/?url=${encoded}`,{signal:AbortSignal.timeout(8000)}),
-      // thingproxy
-      ()=>fetch(`https://thingproxy.freeboard.io/fetch/${targetUrl}`,{signal:AbortSignal.timeout(8000)}),
-      // jsonp-style via cdn.jsdelivr
-      ()=>fetch(`https://api.allorigins.win/get?url=${encoded}`,{signal:AbortSignal.timeout(8000)})
-        .then(r=>r.json()).then(d=>{
-          const r2=new Response(d.contents,{status:200});
-          return r2;
-        }),
-    ];
-    let lastErr;
-    for(const attemptFn of proxies){
-      try{
-        const r=await attemptFn();
-        if(!r.ok)throw new Error('HTTP '+r.status);
-        const text=await r.text();
-        if(!text||text.trim().startsWith('<'))throw new Error('Non-JSON response');
-        return JSON.parse(text);
-      }catch(e){lastErr=e;continue;}
-    }
-    throw lastErr||new Error('All proxies failed');
-  }
+  // TheSportsDB API — free, no key, CORS-friendly
+  // Map our sport labels to TSDB league IDs
+  const TSDB_LEAGUE = {MLB:'4424',NBA:'4387',NHL:'4380',NFL:'4391'};
+  const leagueId = TSDB_LEAGUE[cfg.label];
 
   try{
-    const data=await fetchWithProxy(espnUrl);
-    const events=(data.events||[]);
+    // TSDB: get events by round/season — we search by team name for the month
+    // Use the events-by-league-and-season endpoint, then filter by month+team
+    const season = year; // TSDB uses start year of season
+    const tsdbUrl = `https://www.thesportsdb.com/api/v1/json/3/eventsseason.php?id=${leagueId}&s=${season}`;
+    const res = await fetch(tsdbUrl, {signal: AbortSignal.timeout(10000)});
+    if(!res.ok) throw new Error('TSDB HTTP '+res.status);
+    const data = await res.json();
+    const allEvents = data.events || [];
 
-    // Filter by home team (and optionally away)
-    const homeLow=home.toLowerCase();
-    const awayLow=away?away.toLowerCase():'';
+    // Filter by month and home team name
+    const homeLow = home.toLowerCase();
+    const awayLow = away ? away.toLowerCase() : '';
+    const monthNum = parseInt(month);
 
-    const filtered=events.filter(ev=>{
-      const comps=ev.competitions||[];
-      return comps.some(c=>{
-        const teams=(c.competitors||[]);
-        const homeTeam=teams.find(t=>t.homeAway==='home');
-        const awayTeam=teams.find(t=>t.homeAway==='away');
-        if(!homeTeam||!awayTeam)return false;
-        const hName=normalizeTeam(homeTeam.team.displayName||homeTeam.team.shortDisplayName||'');
-        const aName=normalizeTeam(awayTeam.team.displayName||awayTeam.team.shortDisplayName||'');
-        const homeMatch=hName.toLowerCase().includes(homeLow)||homeLow.includes(hName.toLowerCase().split(' ').pop());
-        const awayMatch=!awayLow||aName.toLowerCase().includes(awayLow)||awayLow.includes(aName.toLowerCase().split(' ').pop());
-        return homeMatch&&awayMatch;
-      });
+    const events = allEvents.filter(ev=>{
+      if(!ev.dateEvent) return false;
+      const evDate = new Date(ev.dateEvent);
+      if(evDate.getMonth()+1 !== monthNum) return false;
+      const hName = (ev.strHomeTeam||'').toLowerCase();
+      const aName = (ev.strAwayTeam||'').toLowerCase();
+      const homeMatch = hName.includes(homeLow.split(' ').pop()) || homeLow.includes(hName.split(' ').pop());
+      const awayMatch = !awayLow || aName.includes(awayLow.split(' ').pop()) || awayLow.includes(aName.split(' ').pop());
+      return homeMatch && awayMatch;
     });
 
-    if(!filtered.length){
-      list.innerHTML=`<div class="mr-empty">No games found for <strong>${home}</strong> in ${getMonthName(month)} ${year}.<br><span style="font-size:10px">Check spelling or try without away team filter.</span></div>`;
+    if(!events.length){
+      list.innerHTML=`<div class="mr-empty">No games found for <strong>${home}</strong> in ${getMonthName(month)} ${year}.<br><span style="font-size:10px">Try without away team filter, or check the team name spelling.</span></div>`;
       label.textContent='No games found';
       document.getElementById('btn-fetch').disabled=false;
       return;
     }
 
-    label.textContent=`${filtered.length} game${filtered.length>1?'s':''} found`;
+    label.textContent=`${events.length} game${events.length>1?'s':''} found`;
     list.innerHTML='';
 
-    filtered.forEach((ev,idx)=>{
-      const comp=ev.competitions[0];
-      const teams=comp.competitors||[];
-      const homeC=teams.find(t=>t.homeAway==='home');
-      const awayC=teams.find(t=>t.homeAway==='away');
-      if(!homeC||!awayC)return;
-      const hName=normalizeTeam(homeC.team.displayName||homeC.team.shortDisplayName||'');
-      const aName=normalizeTeam(awayC.team.displayName||awayC.team.shortDisplayName||'');
-      const hScore=homeC.score||'';
-      const aScore=awayC.score||'';
-      const status=comp.status?.type?.description||'';
-      const isFinal=status.toLowerCase().includes('final')||status==='STATUS_FINAL';
-      const dateStr=ev.date?new Date(ev.date).toLocaleDateString('en-CA',{weekday:'short',month:'short',day:'numeric'}):'';
-      const venue=comp.venue?.fullName||'';
-      const scoreStr=(isFinal&&hScore!=='')?`${hScore} — ${aScore}`:'TBD';
+    events.sort((a,b)=>a.dateEvent.localeCompare(b.dateEvent)).forEach((ev,idx)=>{
+      const hName = normalizeTeam(ev.strHomeTeam||'');
+      const aName = normalizeTeam(ev.strAwayTeam||'');
+      const hScore = ev.intHomeScore!=null ? ev.intHomeScore : '';
+      const aScore = ev.intAwayScore!=null ? ev.intAwayScore : '';
+      const isFinal = ev.strStatus==='Match Finished' || (hScore!==''&&aScore!=='');
+      const dateStr = ev.dateEvent ? new Date(ev.dateEvent+'T12:00:00').toLocaleDateString('en-CA',{weekday:'short',month:'short',day:'numeric'}) : '';
+      const venue = ev.strVenue||'';
+      const scoreStr = (isFinal&&hScore!=='') ? `${hScore} — ${aScore}` : 'TBD';
 
       const card=document.createElement('div');
       card.className='mr-game';
-      card.dataset.idx=idx;
       card.innerHTML=`
         <div style="flex:1">
           <div class="mr-game-teams">${hName} vs ${aName}</div>
@@ -1239,14 +1227,14 @@ async function fetchESPNGames(){
         </div>
         <div>
           <div class="mr-game-score">${scoreStr}</div>
-          <div class="mr-game-status">${isFinal?'Final':status}</div>
+          <div class="mr-game-status" style="color:${isFinal?'var(--mlb)':'var(--text-dim)'}">${isFinal?'Final':'Scheduled'}</div>
         </div>`;
       card.onclick=()=>selectGame(card,{
         sport:cfg.label, home:hName, away:aName,
-        homeScore:hScore, awayScore:aScore,
-        date:ev.date?new Date(ev.date).toISOString().split('T')[0]:'',
-        venue:venue, status:isFinal?'final':status,
-        espnId:ev.id
+        homeScore:String(hScore), awayScore:String(aScore),
+        date:ev.dateEvent||'',
+        venue:venue, status:isFinal?'final':'scheduled',
+        tsdbId:ev.idEvent
       });
       list.appendChild(card);
     });
