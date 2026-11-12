@@ -206,6 +206,15 @@ html,body{height:100%;font-family:var(--font-display);background:var(--bg);color
 .popup-btn{margin-top:8px;width:100%;padding:6px;background:var(--surface);border:1px solid var(--border);color:var(--text-mid);border-radius:5px;cursor:pointer;font-size:11px;font-family:inherit;font-weight:600;transition:all .15s;}
 .popup-btn:hover{border-color:var(--text-mid);color:var(--text);}
 
+/* SYNC MODAL */
+.sync-status{font-size:11px;padding:8px 10px;border-radius:7px;background:var(--surface2);border:1px solid var(--border);margin-bottom:12px;color:var(--text-mid);line-height:1.5;}
+.sync-id{font-family:ui-monospace,Menlo,monospace;font-size:12px;word-break:break-all;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--text);}
+.sync-btn{width:100%;padding:10px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;margin-top:8px;font-family:inherit;}
+.sync-btn:hover{border-color:var(--text-mid);}
+.sync-btn.primary{background:#6366f1;border-color:#6366f1;color:#fff;}
+.sync-btn.danger:hover{border-color:#ef4444;color:#ef4444;}
+.sync-sep{height:1px;background:var(--border);margin:14px 0;}
+.sync-note{font-size:10px;color:var(--text-dim);line-height:1.5;margin-top:10px;}
 /* EXPORT MODAL */
 .export-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;display:none;align-items:center;justify-content:center;padding:16px;}
 .export-overlay.open{display:flex;}
@@ -256,6 +265,7 @@ html,body{height:100%;font-family:var(--font-display);background:var(--bg);color
   </div>
   <div class="header-actions">
     <button class="btn-sm" onclick="document.getElementById('export-overlay').classList.add('open')">Export</button>
+    <button class="btn-sm" id="btn-sync" onclick="openSync()">☁ Sync</button>
     <button class="btn-sm danger" onclick="resetAll()">Reset All</button>
   </div>
 </div>
@@ -325,7 +335,7 @@ html,body{height:100%;font-family:var(--font-display);background:var(--bg);color
     </table>
   </div>
 </div>
-<div class="below-map" style="margin-top:12px" id="match-history-section" style="display:none">
+<div class="below-map" style="margin-top:12px;display:none" id="match-history-section">
   <div style="grid-column:1/-1">
     <div class="progress-panel" style="width:100%">
       <div class="sidebar-title">Match History</div>
@@ -412,6 +422,15 @@ html,body{height:100%;font-family:var(--font-display);background:var(--bg);color
       <button class="match-btn-cancel" onclick="closeMatchModal()">Cancel</button>
       <button class="match-btn-save" id="btn-save-match" onclick="saveSelectedMatch()" disabled>Save Match</button>
     </div>
+  </div>
+</div>
+
+<!-- SYNC MODAL -->
+<div class="match-overlay" id="sync-modal" onclick="if(event.target===this)closeSync()">
+  <div class="match-sheet">
+    <div class="match-sheet-title">☁ Sync &amp; Backup</div>
+    <div id="sync-body"></div>
+    <button class="match-btn-cancel" style="width:100%;margin-top:14px" onclick="closeSync()">Close</button>
   </div>
 </div>
 
@@ -892,10 +911,9 @@ function selectSearchResult(venue_id) {
   if(!venue)return;
   document.getElementById('search-results').classList.remove('open');
   document.getElementById('search-input').value='';
-  map.setView([venue.lat,venue.lng],14);
-  if(markers[venue_id]){
-    setTimeout(()=>markers[venue_id].openPopup(),300);
-  }
+  if(!mlMap)return;
+  mlMap.flyTo({center:[venue.lng,venue.lat],zoom:13,duration:600});
+  setTimeout(()=>{if(markers[venue_id])markers[venue_id].togglePopup();},700);
 }
 
 function closeSearchDelay(){setTimeout(()=>document.getElementById('search-results').classList.remove('open'),200);}
@@ -926,9 +944,9 @@ function fitVisited() {
 }
 
 function resetAll() {
-  if(!confirm('Reset all your selections?'))return;
-  visitedTeams.clear(); seenTeams.clear();
-  save(); renderAll();
+  if(!confirm('Reset all your data (teams and matches)?'))return;
+  visitedTeams.clear(); seenTeams.clear(); matchHistory=[];
+  save(); saveMatches(); renderAll(); renderMatchHistory();
 }
 
 function exportImage() {
@@ -1044,6 +1062,7 @@ function exportImage() {
 function save() {
   localStorage.setItem('stadium_visited', JSON.stringify([...visitedTeams]));
   localStorage.setItem('stadium_seen',    JSON.stringify([...seenTeams]));
+  touchLocal();
 }
 
 // ═══════════════════════════════════════════════════
@@ -1067,7 +1086,7 @@ setTimeout(()=>{if(mlMap)mlMap.resize();},200);
 // ═══════════════════════════════════════════════════
 let matchHistory = JSON.parse(localStorage.getItem('stadium_matches')||'[]');
 
-function saveMatches(){localStorage.setItem('stadium_matches',JSON.stringify(matchHistory));}
+function saveMatches(){localStorage.setItem('stadium_matches',JSON.stringify(matchHistory));touchLocal();}
 
 // ═══════════════════════════════════════════════════
 // ESPN API CONFIG
@@ -1141,109 +1160,147 @@ function onMatchSportChange(){
 }
 
 // ── ESPN FETCH ───────────────────────────────────────────────────
+// ── ESPN day-by-day lookup (one scoreboard call per day of the month) ──
+var espnMode = 0; // 0 = direct, then proxies as fallback; remembers what worked
+const ESPN_PROXIES = [
+  u=>u,
+  u=>`https://corsproxy.io/?url=${encodeURIComponent(u)}`,
+  u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+];
+async function espnFetchJSON(url){
+  let lastErr;
+  for(let m=espnMode;m<ESPN_PROXIES.length;m++){
+    try{
+      const r=await fetch(ESPN_PROXIES[m](url),{signal:AbortSignal.timeout(9000)});
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      const txt=await r.text();
+      if(!txt||txt.trim().startsWith('<'))throw new Error('Non-JSON response');
+      espnMode=m;
+      return JSON.parse(txt);
+    }catch(e){lastErr=e;}
+  }
+  throw lastErr||new Error('ESPN unreachable');
+}
+function normName(s){
+  return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+}
+// Does one of our team names (e.g. "Los Angeles Clippers") match an ESPN team object?
+function teamMatches(selected,t){
+  if(!t)return false;
+  const s=normName(selected);
+  const cands=[t.displayName,t.shortDisplayName,t.name].map(normName).filter(Boolean);
+  if(cands.includes(s))return true;
+  const nick=normName(t.name);
+  return !!nick&&(s===nick||s.endsWith(' '+nick));
+}
+function canonicalTeam(t,sport){
+  return getTeamsForSport(sport).find(n=>teamMatches(n,t))||'';
+}
+
 async function fetchESPNGames(){
   const sport  = document.getElementById('m-sport').value;
   const year   = document.getElementById('m-year').value;
   const month  = document.getElementById('m-month').value;
   const home   = document.getElementById('m-home-team').value;
   const away   = document.getElementById('m-away-team').value;
-
-  if(!sport||!year||!month||!home){
-    alert('Please select sport, year, month and home team.');return;
-  }
+  if(!sport||!year||!month||!home){alert('Please select sport, year, month and home team.');return;}
 
   const area  = document.getElementById('match-results-area');
   const list  = document.getElementById('match-results-list');
   const label = document.getElementById('mr-label');
+  const btn   = document.getElementById('btn-fetch');
   area.style.display='block';
-  list.innerHTML='<div class="mr-loading">⏳ Fetching games from ESPN…</div>';
-  document.getElementById('btn-fetch').disabled=true;
+  btn.disabled=true;
   selectedGameData=null;
   document.getElementById('btn-save-match').disabled=true;
+  label.textContent='Searching…';
 
-  const cfg = ESPN_SPORT_MAP[sport];
-  // Build date range for the full month
+  const cfg=ESPN_SPORT_MAP[sport];
   const lastDay=new Date(year,parseInt(month),0).getDate();
-  const dateFrom=`${year}${month}01`;
-  const dateTo  =`${year}${month}${String(lastDay).padStart(2,'0')}`;
+  const days=Array.from({length:lastDay},(_,i)=>`${year}${month}${String(i+1).padStart(2,'0')}`);
+  const base=`https://site.api.espn.com/apis/site/v2/sports/${cfg.path}/scoreboard?dates=`;
+  const found=[];
+  let done=0,failed=0,firstErr='';
+  const progress=()=>{list.innerHTML=`<div class="mr-loading">⏳ Scanning ESPN… ${done}/${lastDay} days</div>`;};
+  progress();
 
-  // TheSportsDB API — free, no key, CORS-friendly
-  // Map our sport labels to TSDB league IDs
-  const TSDB_LEAGUE = {MLB:'4424',NBA:'4387',NHL:'4380',NFL:'4391'};
-  const leagueId = TSDB_LEAGUE[cfg.label];
+  const scanDay=async(d)=>{
+    try{
+      const data=await espnFetchJSON(base+d);
+      (data.events||[]).forEach(ev=>{
+        const comp=(ev.competitions||[])[0];
+        if(!comp)return;
+        const comps=comp.competitors||[];
+        const hC=comps.find(c=>c.homeAway==='home');
+        const aC=comps.find(c=>c.homeAway==='away');
+        if(!hC||!aC||!teamMatches(home,hC.team))return;
+        if(away&&!teamMatches(away,aC.team))return;
+        const st=(comp.status&&comp.status.type)||{};
+        const completed=!!st.completed;
+        found.push({
+          sport:cfg.label,
+          home:canonicalTeam(hC.team,sport)||home,
+          away:canonicalTeam(aC.team,sport)||(aC.team.displayName||''),
+          homeScore:completed&&hC.score!=null?String(hC.score):'',
+          awayScore:completed&&aC.score!=null?String(aC.score):'',
+          date:`${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}`,
+          venue:(comp.venue&&comp.venue.fullName)||'',
+          completed:completed,
+          statusText:st.shortDetail||st.description||'',
+          espnId:ev.id
+        });
+      });
+    }catch(e){failed++;if(!firstErr)firstErr=e.message;}
+    done++;
+    progress();
+  };
 
   try{
-    // TSDB: get events by round/season — we search by team name for the month
-    // Use the events-by-league-and-season endpoint, then filter by month+team
-    const season = year; // TSDB uses start year of season
-    const tsdbUrl = `https://www.thesportsdb.com/api/v1/json/3/eventsseason.php?id=${leagueId}&s=${season}`;
-    const res = await fetch(tsdbUrl, {signal: AbortSignal.timeout(10000)});
-    if(!res.ok) throw new Error('TSDB HTTP '+res.status);
-    const data = await res.json();
-    const allEvents = data.events || [];
-
-    // Filter by month and home team name
-    const homeLow = home.toLowerCase();
-    const awayLow = away ? away.toLowerCase() : '';
-    const monthNum = parseInt(month);
-
-    const events = allEvents.filter(ev=>{
-      if(!ev.dateEvent) return false;
-      const evDate = new Date(ev.dateEvent);
-      if(evDate.getMonth()+1 !== monthNum) return false;
-      const hName = (ev.strHomeTeam||'').toLowerCase();
-      const aName = (ev.strAwayTeam||'').toLowerCase();
-      const homeMatch = hName.includes(homeLow.split(' ').pop()) || homeLow.includes(hName.split(' ').pop());
-      const awayMatch = !awayLow || aName.includes(awayLow.split(' ').pop()) || awayLow.includes(aName.split(' ').pop());
-      return homeMatch && awayMatch;
-    });
-
-    if(!events.length){
-      list.innerHTML=`<div class="mr-empty">No games found for <strong>${home}</strong> in ${getMonthName(month)} ${year}.<br><span style="font-size:10px">Try without away team filter, or check the team name spelling.</span></div>`;
-      label.textContent='No games found';
-      document.getElementById('btn-fetch').disabled=false;
+    // Probe the first day alone so we settle on a working route (direct or proxy) before going parallel
+    await scanDay(days[0]);
+    if(failed===1){
+      list.innerHTML=`<div class="mr-empty">⚠️ Could not reach ESPN.<br><small style="color:var(--text-dim)">${firstErr}</small><br><span style="font-size:10px;margin-top:6px;display:block">Use “Enter manually” below, or retry in a moment.</span></div>`;
+      label.textContent='API unavailable';
       return;
     }
+    const rest=days.slice(1);
+    for(let i=0;i<rest.length;i+=8){
+      await Promise.all(rest.slice(i,i+8).map(scanDay));
+    }
 
-    label.textContent=`${events.length} game${events.length>1?'s':''} found`;
+    found.sort((a,b)=>a.date.localeCompare(b.date));
+    if(!found.length){
+      list.innerHTML=`<div class="mr-empty">No games found for <strong>${home}</strong> in ${getMonthName(month)} ${year}.${failed?`<br><span style="font-size:10px">${failed} day(s) could not be loaded — try again.</span>`:''}<br><span style="font-size:10px">Try without the away team filter.</span></div>`;
+      label.textContent='No games found';
+      return;
+    }
+    label.textContent=`${found.length} game${found.length>1?'s':''} found${failed?` (${failed} day(s) failed)`:''}`;
     list.innerHTML='';
-
-    events.sort((a,b)=>a.dateEvent.localeCompare(b.dateEvent)).forEach((ev,idx)=>{
-      const hName = normalizeTeam(ev.strHomeTeam||'');
-      const aName = normalizeTeam(ev.strAwayTeam||'');
-      const hScore = ev.intHomeScore!=null ? ev.intHomeScore : '';
-      const aScore = ev.intAwayScore!=null ? ev.intAwayScore : '';
-      const isFinal = ev.strStatus==='Match Finished' || (hScore!==''&&aScore!=='');
-      const dateStr = ev.dateEvent ? new Date(ev.dateEvent+'T12:00:00').toLocaleDateString('en-CA',{weekday:'short',month:'short',day:'numeric'}) : '';
-      const venue = ev.strVenue||'';
-      const scoreStr = (isFinal&&hScore!=='') ? `${hScore} — ${aScore}` : 'TBD';
-
+    found.forEach(g=>{
+      const dateStr=new Date(g.date+'T12:00:00').toLocaleDateString('en-CA',{weekday:'short',month:'short',day:'numeric'});
+      const scoreStr=g.completed&&g.homeScore!==''?`${g.homeScore} — ${g.awayScore}`:'TBD';
       const card=document.createElement('div');
       card.className='mr-game';
       card.innerHTML=`
         <div style="flex:1">
-          <div class="mr-game-teams">${hName} vs ${aName}</div>
-          <div class="mr-game-detail">${dateStr}${venue?' · '+venue:''}</div>
+          <div class="mr-game-teams">${g.home} vs ${g.away}</div>
+          <div class="mr-game-detail">${dateStr}${g.venue?' · '+g.venue:''}</div>
         </div>
         <div>
           <div class="mr-game-score">${scoreStr}</div>
-          <div class="mr-game-status" style="color:${isFinal?'var(--mlb)':'var(--text-dim)'}">${isFinal?'Final':'Scheduled'}</div>
+          <div class="mr-game-status" style="color:${g.completed?'var(--mlb)':'var(--text-dim)'}">${g.completed?'Final':(g.statusText||'Scheduled')}</div>
         </div>`;
       card.onclick=()=>selectGame(card,{
-        sport:cfg.label, home:hName, away:aName,
-        homeScore:String(hScore), awayScore:String(aScore),
-        date:ev.dateEvent||'',
-        venue:venue, status:isFinal?'final':'scheduled',
-        tsdbId:ev.idEvent
+        sport:g.sport,home:g.home,away:g.away,
+        homeScore:g.homeScore,awayScore:g.awayScore,
+        date:g.date,venue:g.venue,
+        status:g.completed?'final':'scheduled',espnId:g.espnId
       });
       list.appendChild(card);
     });
-
-  }catch(err){
-    list.innerHTML=`<div class="mr-empty">⚠️ Could not reach ESPN API.<br><small style="color:var(--text-dim)">${err.message}</small><br><span style="font-size:10px;margin-top:6px;display:block">Enter the score manually below — or try a different month/sport combination.</span></div>`;
-    label.textContent='API unavailable';
+  }finally{
+    btn.disabled=false;
   }
-  document.getElementById('btn-fetch').disabled=false;
 }
 
 function getMonthName(m){return['','January','February','March','April','May','June','July','August','September','October','November','December'][parseInt(m)];}
@@ -1318,7 +1375,7 @@ function saveSelectedMatch(){
 function renderMatchHistory(){
   const section=document.getElementById('match-history-section');
   const list=document.getElementById('match-history-list');
-  if(!matchHistory.length){section.style.display='none';return;}
+  if(!matchHistory.length){section.style.display='none';updateMatchStats();return;}
   section.style.display='';
 
   const sorted=[...matchHistory].sort((a,b)=>b.date.localeCompare(a.date));
@@ -1529,6 +1586,186 @@ function updateMatchStats(){
 
 // Initialise match history on load
 renderMatchHistory();
+
+// ═══════════════════════════════════════════════════
+// CLOUD SYNC — JSONBlob (no account, no key) + JSON backup
+// ═══════════════════════════════════════════════════
+const SYNC_API='https://jsonblob.com/api/jsonBlob';
+const SYNC_HEADERS={'Content-Type':'application/json','Accept':'application/json'};
+var syncPushTimer=null, syncBusy=false, syncApplying=false, syncState='none', syncMsg='', syncAt=0, lastPull=0;
+
+function getSyncId(){return localStorage.getItem('stadium_sync_id')||'';}
+function getLocalUpdated(){return parseInt(localStorage.getItem('stadium_updated')||'0',10);}
+function touchLocal(){
+  if(syncApplying)return;
+  localStorage.setItem('stadium_updated',String(Date.now()));
+  scheduleSyncPush();
+}
+function scheduleSyncPush(){
+  if(!getSyncId())return;
+  setSyncStatus('pending');
+  clearTimeout(syncPushTimer);
+  syncPushTimer=setTimeout(syncPush,1500);
+}
+function snapshot(){
+  return {v:1,updated:getLocalUpdated(),visited:[...visitedTeams],seen:[...seenTeams],matches:matchHistory};
+}
+function statusText(){
+  if(syncState==='error')return '⚠ '+syncMsg+' — your data is safe on this device and will retry on the next change.';
+  if(!getSyncId())return 'Not connected — data is stored on this device only.';
+  if(syncState==='syncing')return '↻ Syncing…';
+  if(syncState==='pending')return '⏳ Changes waiting to upload…';
+  if(syncState==='ok')return '✓ Synced at '+new Date(syncAt).toLocaleTimeString();
+  return 'Connected.';
+}
+function setSyncStatus(state,msg){
+  syncState=state; syncMsg=msg||'';
+  if(state==='ok')syncAt=Date.now();
+  const b=document.getElementById('btn-sync');
+  if(b)b.textContent=state==='ok'?'☁ Synced':(state==='pending'||state==='syncing')?'☁ …':state==='error'?'☁ ⚠':'☁ Sync';
+  const el=document.getElementById('sync-status-line');
+  if(el)el.textContent=statusText();
+}
+async function syncPush(){
+  const id=getSyncId();if(!id)return;
+  try{
+    setSyncStatus('syncing');
+    const r=await fetch(`${SYNC_API}/${encodeURIComponent(id)}`,{method:'PUT',headers:SYNC_HEADERS,body:JSON.stringify(snapshot())});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    setSyncStatus('ok');
+  }catch(e){setSyncStatus('error',e.message);}
+}
+function applySnapshot(s){
+  syncApplying=true;
+  visitedTeams=new Set(s.visited||[]);
+  seenTeams=new Set(s.seen||[]);
+  matchHistory=s.matches||[];
+  save();saveMatches();
+  localStorage.setItem('stadium_updated',String(s.updated||Date.now()));
+  syncApplying=false;
+  renderAll();renderMatchHistory();
+}
+function mergeSnapshots(a,b){
+  const ids=new Set((a.matches||[]).map(m=>m.id));
+  return {
+    v:1,
+    visited:[...new Set([...(a.visited||[]),...(b.visited||[])])],
+    seen:[...new Set([...(a.seen||[]),...(b.seen||[])])],
+    matches:[...(a.matches||[]),...(b.matches||[]).filter(m=>!ids.has(m.id))]
+  };
+}
+// Pull cloud copy; newest side wins
+async function syncNow(){
+  const id=getSyncId();if(!id||syncBusy)return;
+  syncBusy=true;
+  try{
+    setSyncStatus('syncing');
+    const r=await fetch(`${SYNC_API}/${encodeURIComponent(id)}`,{headers:{'Accept':'application/json'}});
+    if(!r.ok)throw new Error(r.status===404?'Sync ID not found':'HTTP '+r.status);
+    const remote=await r.json();
+    const lu=getLocalUpdated(),ru=remote.updated||0;
+    if(ru>lu){applySnapshot(remote);setSyncStatus('ok');}
+    else if(lu>ru){await syncPush();}
+    else setSyncStatus('ok');
+  }catch(e){setSyncStatus('error',e.message);}
+  syncBusy=false;
+}
+async function syncEnable(){
+  try{
+    setSyncStatus('syncing');
+    if(!getLocalUpdated())localStorage.setItem('stadium_updated',String(Date.now()));
+    const r=await fetch(SYNC_API,{method:'POST',headers:SYNC_HEADERS,body:JSON.stringify(snapshot())});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const loc=r.headers.get('Location')||r.headers.get('X-jsonblob')||'';
+    const id=loc.split('/').filter(Boolean).pop();
+    if(!id)throw new Error('The sync service did not return an ID to the browser');
+    localStorage.setItem('stadium_sync_id',id);
+    setSyncStatus('ok');
+  }catch(e){setSyncStatus('error',e.message);}
+  renderSyncModal();
+}
+async function syncConnect(){
+  const raw=(document.getElementById('sync-id-input').value||'').trim();
+  const id=raw.split('/').filter(Boolean).pop();
+  if(!id){alert('Paste your sync ID first.');return;}
+  try{
+    setSyncStatus('syncing');
+    const r=await fetch(`${SYNC_API}/${encodeURIComponent(id)}`,{headers:{'Accept':'application/json'}});
+    if(!r.ok)throw new Error(r.status===404?'Sync ID not found':'HTTP '+r.status);
+    const remote=await r.json();
+    const localHas=visitedTeams.size||seenTeams.size||matchHistory.length;
+    const merged=localHas?mergeSnapshots(snapshot(),remote):remote;
+    localStorage.setItem('stadium_sync_id',id);
+    applySnapshot({...merged,updated:Date.now()});
+    await syncPush();
+  }catch(e){setSyncStatus('error',e.message);}
+  renderSyncModal();
+}
+function syncDisconnect(){
+  if(!confirm('Disconnect this device? Your data stays here and in the cloud copy.'))return;
+  localStorage.removeItem('stadium_sync_id');
+  setSyncStatus('none');
+  renderSyncModal();
+}
+function syncNowManual(){syncNow().then(renderSyncModal);}
+function copySyncId(){
+  const id=getSyncId();
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(id).then(()=>alert('ID copied.'),()=>prompt('Copy your ID:',id));
+  else prompt('Copy your ID:',id);
+}
+function exportBackup(){
+  const a=document.createElement('a');
+  a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(snapshot(),null,2));
+  a.download='stadium_tracker_backup.json';
+  a.click();
+}
+function importBackup(input){
+  const f=input.files&&input.files[0];if(!f)return;
+  const rd=new FileReader();
+  rd.onload=()=>{
+    try{
+      const d=JSON.parse(rd.result);
+      const visited=d.visited||d.visited_teams,seen=d.seen||d.seen_teams;
+      if(!Array.isArray(visited)||!Array.isArray(seen))throw new Error('Not a Stadium Tracker backup');
+      if(!confirm('Replace the current data on this device with this backup?'))return;
+      applySnapshot({visited,seen,matches:Array.isArray(d.matches)?d.matches:[],updated:Date.now()});
+      scheduleSyncPush();
+      alert('Backup imported.');
+    }catch(e){alert('Import failed: '+e.message);}
+    input.value='';
+  };
+  rd.readAsText(f);
+}
+function openSync(){renderSyncModal();document.getElementById('sync-modal').classList.add('open');}
+function closeSync(){document.getElementById('sync-modal').classList.remove('open');}
+function renderSyncModal(){
+  const id=getSyncId();
+  const top=id?`
+    <div class="sync-status" id="sync-status-line">${statusText()}</div>
+    <div class="mfield-label">Your sync ID</div>
+    <div class="sync-id">${id}</div>
+    <button class="sync-btn" onclick="copySyncId()">📋 Copy ID</button>
+    <button class="sync-btn primary" onclick="syncNowManual()">↻ Sync now</button>
+    <button class="sync-btn danger" onclick="syncDisconnect()">Disconnect this device</button>`:`
+    <div class="sync-status" id="sync-status-line">${statusText()}</div>
+    <button class="sync-btn primary" onclick="syncEnable()">☁ Enable sync (create my ID)</button>
+    <div class="sync-sep"></div>
+    <div class="mfield-label">Already have an ID from another device?</div>
+    <input class="mfield-input" id="sync-id-input" placeholder="Paste your sync ID">
+    <button class="sync-btn" onclick="syncConnect()">Connect (merges with data on this device)</button>`;
+  document.getElementById('sync-body').innerHTML=top+`
+    <div class="sync-sep"></div>
+    <div class="mfield-label">Manual backup</div>
+    <button class="sync-btn" onclick="exportBackup()">⬇ Export JSON</button>
+    <button class="sync-btn" onclick="document.getElementById('import-file').click()">⬆ Import JSON</button>
+    <input type="file" id="import-file" accept="application/json,.json" style="display:none" onchange="importBackup(this)">
+    <div class="sync-note">Anyone who has your ID can read your data — keep it private. Data is always kept locally too, so the tracker works offline.</div>`;
+}
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible'&&getSyncId()&&Date.now()-lastPull>15000){lastPull=Date.now();syncNow();}
+});
+if(getSyncId()){lastPull=Date.now();syncNow();}
+
 </script>
 </body>
 </html>
