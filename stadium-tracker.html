@@ -1769,7 +1769,66 @@ function importBackup(input){
 }
 function openSync(){renderSyncModal();document.getElementById('sync-modal').classList.add('open');}
 function closeSync(){document.getElementById('sync-modal').classList.remove('open');}
-const BUILD='sync-v3.2';
+
+// ── Transfer link: all data packed into the URL (no third-party service) ──
+async function encodeTransfer(){
+  const bytes=new TextEncoder().encode(JSON.stringify(snapshot()));
+  let out=bytes,prefix='r';
+  if(window.CompressionStream){
+    const cs=new CompressionStream('gzip');
+    const w=cs.writable.getWriter();w.write(bytes);w.close();
+    out=new Uint8Array(await new Response(cs.readable).arrayBuffer());prefix='z';
+  }
+  let bin='';out.forEach(b=>bin+=String.fromCharCode(b));
+  return prefix+btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+async function decodeTransfer(code){
+  const prefix=code.charAt(0);
+  let b=code.slice(1).replace(/-/g,'+').replace(/_/g,'/');
+  while(b.length%4)b+='=';
+  const bytes=Uint8Array.from(atob(b),c=>c.charCodeAt(0));
+  let buf=bytes;
+  if(prefix==='z'){
+    const ds=new DecompressionStream('gzip');
+    const w=ds.writable.getWriter();w.write(bytes);w.close();
+    buf=new Uint8Array(await new Response(ds.readable).arrayBuffer());
+  }
+  return JSON.parse(new TextDecoder().decode(buf));
+}
+var transferLink='';
+async function buildTransfer(){
+  const box=document.getElementById('transfer-box');if(!box)return;
+  try{
+    const code=await encodeTransfer();
+    transferLink=location.href.split('#')[0]+'#sync='+code;
+    const qr=transferLink.length<1800
+      ?`<img alt="QR code" style="display:block;margin:10px auto;width:200px;height:200px;background:#fff;padding:6px;border-radius:6px" src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=4&data=${encodeURIComponent(transferLink)}">
+         <div class="sync-note" style="text-align:center">Scan with your phone camera.</div>`
+      :`<div class="sync-note">Too much data for a QR code — use the link button below.</div>`;
+    const warn=location.protocol==='file:'?`<div class="sync-note">⚠ You opened the tracker as a local file. Open it from its website address (GitHub Pages) first, otherwise the link won't work on your phone.</div>`:'';
+    box.innerHTML=qr+warn+`<button class="sync-btn primary" onclick="copyTransferLink()">📋 Copy transfer link</button>`;
+  }catch(e){box.textContent='Could not build the link: '+e.message;}
+}
+function copyTransferLink(){
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(transferLink).then(()=>alert('Link copied. Send it to yourself (message, email, AirDrop) and open it on the other device.'),()=>prompt('Copy this link:',transferLink));
+  else prompt('Copy this link:',transferLink);
+}
+async function checkTransferHash(){
+  if(location.hash.indexOf('#sync=')!==0)return;
+  const code=location.hash.slice(6);
+  history.replaceState(null,'',location.pathname+location.search);
+  try{
+    const remote=await decodeTransfer(code);
+    const nv=(remote.visited||[]).length,ns=(remote.seen||[]).length,nm=(remote.matches||[]).length;
+    const localHas=visitedTeams.size||seenTeams.size||matchHistory.length;
+    if(!confirm('Import data from this transfer link?\n\n'+nv+' visited · '+ns+' seen · '+nm+' matches'+(localHas?'\n\nIt will be MERGED with the data already on this device.':'')))return;
+    const merged=localHas?mergeSnapshots(snapshot(),remote):remote;
+    applySnapshot({...merged,updated:Date.now()});
+    scheduleSyncPush();
+    alert('Imported ✓');
+  }catch(e){alert('This transfer link is invalid or incomplete.');}
+}
+const BUILD='sync-v3.3 (transfer link)';
 async function syncTest(){
   const out=document.getElementById('sync-test-out');if(!out)return;
   out.textContent='Testing…';
@@ -1797,22 +1856,29 @@ function renderSyncModal(){
     <div class="mfield-label">Already have an ID from another device?</div>
     <input class="mfield-input" id="sync-id-input" placeholder="Paste your sync ID">
     <button class="sync-btn" onclick="syncConnect()">Connect (merges with data on this device)</button>`;
-  document.getElementById('sync-body').innerHTML=top+`
+  document.getElementById('sync-body').innerHTML=`
+    <div class="mfield-label">Move your data to another device</div>
+    <div class="sync-note" style="margin-top:0">Open this on your computer, scan / open the link on your phone (or the reverse). Data is merged — nothing is lost. Works without any account or external service.</div>
+    <div id="transfer-box" class="sync-note">Preparing link…</div>
     <div class="sync-sep"></div>
     <div class="mfield-label">Manual backup</div>
     <button class="sync-btn" onclick="exportBackup()">⬇ Export JSON</button>
     <button class="sync-btn" onclick="document.getElementById('import-file').click()">⬆ Import JSON</button>
     <input type="file" id="import-file" accept="application/json,.json" style="display:none" onchange="importBackup(this)">
-    <div class="sync-note">Anyone who has your ID can read your data — keep it private. Data is always kept locally too, so the tracker works offline.</div>
     <div class="sync-sep"></div>
+    <details ${id?'open':''}><summary style="cursor:pointer;font-size:12px;opacity:.8">☁ Cloud auto-sync (experimental — free services are often blocked)</summary>
+    <div style="margin-top:10px">${top}</div>
     <button class="sync-btn" onclick="syncTest()">🔍 Test connection</button>
     <pre id="sync-test-out" style="font-size:11px;white-space:pre-wrap;margin:6px 0 0"></pre>
+    </details>
     <div class="sync-note">Version: ${BUILD}</div>`;
+  buildTransfer();
 }
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='visible'&&getSyncId()&&Date.now()-lastPull>15000){lastPull=Date.now();syncNow();}
 });
 if(getSyncId()){lastPull=Date.now();syncNow();}
+checkTransferHash();
 
 </script>
 </body>
