@@ -1004,6 +1004,72 @@ function exportImage() {
     </div>`;
   };
 
+  // ── Match stats block for the export card (hard-coded colours: html2canvas can't read CSS variables) ──
+  const matchBlock = (()=>{
+    const total=matchHistory.length;
+    if(!total) return '';
+    const SPS=['MLB','NBA','NHL','NFL'];
+    const col={MLB:'#22c55e',NBA:'#f97316',NHL:'#ef4444',NFL:'#3b82f6'};
+    const emo={MLB:'⚾',NBA:'🏀',NHL:'🏒',NFL:'🏈'};
+    const sportOf=name=>{for(const v of VENUES){const x=v.teams.find(x=>x.team===name);if(x)return x.sport;}return '';};
+    const hasScore=m=>m.homeScore!==''&&m.homeScore!=null&&m.awayScore!==''&&m.awayScore!=null;
+    const bs={};SPS.forEach(s=>bs[s]={total:0,played:0,w:0,l:0,d:0});
+    matchHistory.forEach(m=>{
+      const s=(m.sport||'').toUpperCase();if(!bs[s])return;
+      bs[s].total++;
+      if(hasScore(m)){bs[s].played++;const h=+m.homeScore,a=+m.awayScore;if(h>a)bs[s].w++;else if(a>h)bs[s].l++;else bs[s].d++;}
+    });
+    const played=matchHistory.filter(hasScore);
+    const W=played.filter(m=>+m.homeScore>+m.awayScore).length;
+    const L=played.filter(m=>+m.awayScore>+m.homeScore).length;
+    const wPct=played.length?Math.round(W/played.length*100):null;
+    const lPct=played.length?Math.round(L/played.length*100):null;
+    const freq={},homeF={};
+    matchHistory.forEach(m=>{
+      if(m.home){freq[m.home]=(freq[m.home]||0)+1;homeF[m.home]=(homeF[m.home]||0)+1;}
+      if(m.away)freq[m.away]=(freq[m.away]||0)+1;
+    });
+    const top=o=>Object.entries(o).sort((a,b)=>b[1]-a[1]).slice(0,5);
+    const bySeason={};
+    matchHistory.forEach(m=>{const y=m.date?m.date.split('-')[0]:'?';bySeason[y]=(bySeason[y]||0)+1;});
+    const seasons=Object.entries(bySeason).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,6);
+    const maxSeason=Math.max(...seasons.map(s=>s[1]));
+
+    // pie
+    const withData=SPS.filter(s=>bs[s].total>0);
+    let slices='',ang=-Math.PI/2;
+    withData.forEach(s=>{
+      const a=bs[s].total/total*2*Math.PI,e=ang+a,cx=60,cy=60,r=54;
+      if(withData.length===1)slices+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${col[s]}"/>`;
+      else slices+=`<path d="M${cx},${cy} L${cx+r*Math.cos(ang)},${cy+r*Math.sin(ang)} A${r},${r} 0 ${a>Math.PI?1:0},1 ${cx+r*Math.cos(e)},${cy+r*Math.sin(e)} Z" fill="${col[s]}" stroke="#1a1d27" stroke-width="2"/>`;
+      if(bs[s].total/total>0.08){const m=ang+a/2;slices+=`<text x="${cx+r*.62*Math.cos(m)}" y="${cy+r*.62*Math.sin(m)+4}" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">${bs[s].total}</text>`;}
+      ang=e;
+    });
+    const tile=(num,lbl,c)=>`<div style="background:#0f1117;border:1px solid #2e3350;border-radius:8px;padding:10px 6px;text-align:center"><div style="font-size:20px;font-weight:900;color:${c};line-height:1">${num}</div><div style="font-size:8px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#8b90b0;margin-top:4px">${lbl}</div></div>`;
+    const list=(title,arr)=>`<div style="margin-bottom:12px"><div style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#8b90b0;margin-bottom:6px">${title}</div>${arr.map(([n,c])=>`<div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#f0f2ff;padding:3px 0;border-bottom:1px solid #2e3350"><span>${emo[sportOf(n)]||''}</span><span style="flex:1">${n}</span><span style="font-weight:800;color:#6366f1">${c}</span></div>`).join('')}</div>`;
+
+    return `
+    <div style="background:#1a1d27;border:1px solid #2e3350;border-radius:8px;padding:16px;margin-top:10px;">
+      <div style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#f0f2ff;margin-bottom:12px">📊 Match Stats</div>
+      <div style="display:grid;grid-template-columns:150px 1fr;gap:16px;align-items:center;margin-bottom:14px">
+        <svg width="130" height="130" viewBox="0 0 120 120">${slices}</svg>
+        <div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px">
+            ${tile(total,'Games','#6366f1')}
+            ${wPct!==null?tile(W+'W',wPct+'% home win','#22c55e')+tile(L+'L',lPct+'% home loss','#ef4444'):''}
+          </div>
+          ${withData.map(s=>{const b=bs[s];return `<div style="display:flex;align-items:center;gap:8px;font-size:11px;padding:3px 0"><span>${emo[s]}</span><span style="font-weight:700;color:${col[s]};width:34px">${s}</span><span style="font-weight:700;color:#f0f2ff">${b.total}G</span>${b.played?`<span style="color:#22c55e;font-weight:700">${b.w}W</span><span style="color:#ef4444;font-weight:700">${b.l}L</span>${b.d?`<span style="color:#8b90b0;font-weight:700">${b.d}D</span>`:''}<span style="margin-left:auto;color:#8b90b0;font-size:10px">${Math.round(b.w/b.played*100)}% W</span>`:''}</div>`;}).join('')}
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div>${list('Most Seen (Home + Away)',top(freq))}${list('Most Seen at Home',top(homeF))}</div>
+        <div><div style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#8b90b0;margin-bottom:6px">Games by Season</div>
+          ${seasons.map(([y,n])=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:10px;font-weight:700;color:#f0f2ff;width:34px">${y}</span><div style="flex:1;height:8px;background:#2e3350;border-radius:4px;overflow:hidden"><div style="width:${Math.round(n/maxSeason*100)}%;height:100%;background:#6366f1"></div></div><span style="font-size:10px;font-weight:700;color:#8b90b0;width:20px;text-align:right">${n}</span></div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+  })();
+
   const card = document.getElementById('export-card');
   card.innerHTML = `
   <div style="background:#0f1117;padding:32px;width:760px;">
@@ -1039,6 +1105,8 @@ function exportImage() {
       <div>${sportBlock('NBA')}${sportBlock('NHL')}</div>
       <div>${sportBlock('NFL')}${sportBlock('MLB')}</div>
     </div>
+
+    ${matchBlock}
 
   </div>`;
 
@@ -1854,7 +1922,7 @@ async function buildTransfer(){
   const box=document.getElementById('transfer-box');if(!box)return;
   try{
     const code=await encodeTransfer();
-    transferLink=location.href.split('#')[0]+'#sync='+code;
+    transferLink=(location.protocol==='file:'?location.href.split(/[?#]/)[0]:location.origin+location.pathname)+'?t='+Date.now().toString(36)+'#sync='+code; // unique ?t= forces the phone to fetch the latest page instead of a cached copy
     const qr=transferLink.length<1800
       ?`<img alt="QR code" style="display:block;margin:10px auto;width:200px;height:200px;background:#fff;padding:6px;border-radius:6px" src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=4&data=${encodeURIComponent(transferLink)}">
          <div class="sync-note" style="text-align:center">Scan with your phone camera.</div>`
@@ -1884,7 +1952,7 @@ async function checkTransferHash(){
     alert('Imported ✓');
   }catch(e){alert('Import failed: '+e.message);}
 }
-const BUILD='sync-v3.4 (short link)';
+const BUILD='v3.6 (export match stats)';
 async function syncTest(){
   const out=document.getElementById('sync-test-out');if(!out)return;
   out.textContent='Testing…';
