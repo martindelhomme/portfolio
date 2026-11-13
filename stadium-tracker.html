@@ -1681,12 +1681,13 @@ function applySnapshot(s){
   renderAll();renderMatchHistory();
 }
 function mergeSnapshots(a,b){
-  const ids=new Set((a.matches||[]).map(m=>m.id));
+  const mk=m=>[m.sport,m.home,m.away||'',m.date||'',m.homeScore,m.awayScore].join('|');
+  const ids=new Set((a.matches||[]).map(mk));
   return {
     v:1,
     visited:[...new Set([...(a.visited||[]),...(b.visited||[])])],
     seen:[...new Set([...(a.seen||[]),...(b.seen||[])])],
-    matches:[...(a.matches||[]),...(b.matches||[]).filter(m=>!ids.has(m.id))]
+    matches:[...(a.matches||[]),...(b.matches||[]).filter(m=>!ids.has(mk(m)))]
   };
 }
 // Pull cloud copy; newest side wins
@@ -1771,28 +1772,81 @@ function openSync(){renderSyncModal();document.getElementById('sync-modal').clas
 function closeSync(){document.getElementById('sync-modal').classList.remove('open');}
 
 // ── Transfer link: all data packed into the URL (no third-party service) ──
-async function encodeTransfer(){
-  const bytes=new TextEncoder().encode(JSON.stringify(snapshot()));
-  let out=bytes,prefix='r';
-  if(window.CompressionStream){
-    const cs=new CompressionStream('gzip');
-    const w=cs.writable.getWriter();w.write(bytes);w.close();
-    out=new Uint8Array(await new Response(cs.readable).arrayBuffer());prefix='z';
+// Compact binary format: team/sport names -> indices into a table built from VENUES (same on every device running the same file).
+function xferBase(){
+  const T=[...new Set(VENUES.flatMap(v=>v.teams.map(x=>x.team)))].sort();
+  const P=[...new Set(VENUES.flatMap(v=>v.teams.map(x=>x.sport)))].sort();
+  return T.concat(P);
+}
+function xferChk(tbl){let h=0;tbl.forEach(s=>{for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;h=(h*31+7)>>>0;});return h&0xFFFF;}
+function xferDay(d){const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(d||'');if(!m)return 0xFFFF;const v=Math.round((Date.UTC(+m[1],+m[2]-1,+m[3])-Date.UTC(2000,0,1))/864e5);return(v>=0&&v<0xFFFE)?v:0xFFFF;}
+function xferDate(v){return new Date(Date.UTC(2000,0,1)+v*864e5).toISOString().slice(0,10);}
+function b64u(bytes){let s='';for(let i=0;i<bytes.length;i+=8192)s+=String.fromCharCode.apply(null,bytes.subarray(i,i+8192));return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
+function unb64u(str){let b=str.replace(/-/g,'+').replace(/_/g,'/');while(b.length%4)b+='=';return Uint8Array.from(atob(b),c=>c.charCodeAt(0));}
+function packSnapshot(){
+  const base=xferBase(),chk=xferChk(base),extras=[],idx=new Map(base.map((s,i)=>[s,i]));
+  const ix=s=>{s=String(s);if(!idx.has(s)){idx.set(s,base.length+extras.length);extras.push(s);}return idx.get(s);};
+  const vis=[...visitedTeams].map(ix),see=[...seenTeams].map(ix);
+  const ms=matchHistory.map(m=>[ix(m.sport||''),ix(m.home||''),m.away?ix(m.away):0xFFFF,
+    (m.homeScore===undefined||m.homeScore===''||m.homeScore===null)?0xFFFF:Math.min(0xFFFE,+m.homeScore||0),
+    (m.awayScore===undefined||m.awayScore===''||m.awayScore===null)?0xFFFF:Math.min(0xFFFE,+m.awayScore||0),
+    xferDay(m.date)]);
+  const n=base.length+extras.length,bs=Math.ceil(n/8);
+  const ex=new TextEncoder().encode(extras.length?JSON.stringify(extras):'');
+  const out=new Uint8Array(3+2+ex.length+bs*2+2+ms.length*12);
+  const dv=new DataView(out.buffer);let o=0;
+  out[o++]=2;dv.setUint16(o,chk);o+=2;dv.setUint16(o,ex.length);o+=2;out.set(ex,o);o+=ex.length;
+  vis.forEach(i=>out[o+(i>>3)]|=1<<(i&7));o+=bs;
+  see.forEach(i=>out[o+(i>>3)]|=1<<(i&7));o+=bs;
+  dv.setUint16(o,ms.length);o+=2;
+  ms.forEach(m=>m.forEach(v=>{dv.setUint16(o,v);o+=2;}));
+  return out;
+}
+function unpackSnapshot(bytes){
+  const dv=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength);let o=0;
+  if(bytes[o++]!==2)throw new Error('unknown format');
+  const base=xferBase();
+  if(dv.getUint16(o)!==xferChk(base))throw new Error('The two devices run different versions of the tracker (update both to the latest file)');
+  o+=2;const exl=dv.getUint16(o);o+=2;
+  const extras=exl?JSON.parse(new TextDecoder().decode(bytes.subarray(o,o+exl))):[];o+=exl;
+  const tbl=base.concat(extras),bs=Math.ceil(tbl.length/8);
+  const bits=()=>{const r=[];for(let i=0;i<tbl.length;i++)if(bytes[o+(i>>3)]&(1<<(i&7)))r.push(tbl[i]);o+=bs;return r;};
+  const visited=bits(),seen=bits();
+  const nm=dv.getUint16(o);o+=2;const matches=[],now=Date.now();
+  for(let k=0;k<nm;k++){
+    const g=()=>{const v=dv.getUint16(o);o+=2;return v;};
+    const sp=g(),h=g(),a=g(),hs=g(),as=g(),d=g();
+    const m={sport:tbl[sp],home:tbl[h],status:'Final',id:String(now+k),savedAt:new Date(now+k).toISOString()};
+    if(a!==0xFFFF)m.away=tbl[a];
+    if(hs!==0xFFFF)m.homeScore=hs;if(as!==0xFFFF)m.awayScore=as;
+    if(d!==0xFFFF)m.date=xferDate(d);
+    const ve=VENUES.find(v=>v.teams.some(x=>x.team===m.home&&x.sport===m.sport));if(ve)m.venue=ve.venue;
+    matches.push(m);
   }
-  let bin='';out.forEach(b=>bin+=String.fromCharCode(b));
-  return prefix+btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  return {v:1,visited,seen,matches};
+}
+async function encodeTransfer(){
+  const bytes=packSnapshot();
+  if(window.CompressionStream){
+    try{
+      const cs=new CompressionStream('deflate-raw');
+      const w=cs.writable.getWriter();w.write(bytes);w.close();
+      return 'd'+b64u(new Uint8Array(await new Response(cs.readable).arrayBuffer()));
+    }catch(e){}
+  }
+  return 'b'+b64u(bytes);
 }
 async function decodeTransfer(code){
-  const prefix=code.charAt(0);
-  let b=code.slice(1).replace(/-/g,'+').replace(/_/g,'/');
-  while(b.length%4)b+='=';
-  const bytes=Uint8Array.from(atob(b),c=>c.charCodeAt(0));
-  let buf=bytes;
-  if(prefix==='z'){
-    const ds=new DecompressionStream('gzip');
+  const prefix=code.charAt(0),bytes=unb64u(code.slice(1));
+  if(prefix==='d'){
+    const ds=new DecompressionStream('deflate-raw');
     const w=ds.writable.getWriter();w.write(bytes);w.close();
-    buf=new Uint8Array(await new Response(ds.readable).arrayBuffer());
+    return unpackSnapshot(new Uint8Array(await new Response(ds.readable).arrayBuffer()));
   }
+  if(prefix==='b')return unpackSnapshot(bytes);
+  // legacy JSON links
+  let buf=bytes;
+  if(prefix==='z'){const ds=new DecompressionStream('gzip');const w=ds.writable.getWriter();w.write(bytes);w.close();buf=new Uint8Array(await new Response(ds.readable).arrayBuffer());}
   return JSON.parse(new TextDecoder().decode(buf));
 }
 var transferLink='';
@@ -1817,8 +1871,10 @@ async function checkTransferHash(){
   if(location.hash.indexOf('#sync=')!==0)return;
   const code=location.hash.slice(6);
   history.replaceState(null,'',location.pathname+location.search);
+  let remote;
+  try{remote=await decodeTransfer(code);}
+  catch(e){alert('Transfer link unreadable ('+code.length+' characters received): '+e.message+'\n\nThe link was probably cut off when copied or sent — try again, or use the JSON export.');return;}
   try{
-    const remote=await decodeTransfer(code);
     const nv=(remote.visited||[]).length,ns=(remote.seen||[]).length,nm=(remote.matches||[]).length;
     const localHas=visitedTeams.size||seenTeams.size||matchHistory.length;
     if(!confirm('Import data from this transfer link?\n\n'+nv+' visited · '+ns+' seen · '+nm+' matches'+(localHas?'\n\nIt will be MERGED with the data already on this device.':'')))return;
@@ -1826,9 +1882,9 @@ async function checkTransferHash(){
     applySnapshot({...merged,updated:Date.now()});
     scheduleSyncPush();
     alert('Imported ✓');
-  }catch(e){alert('This transfer link is invalid or incomplete.');}
+  }catch(e){alert('Import failed: '+e.message);}
 }
-const BUILD='sync-v3.3 (transfer link)';
+const BUILD='sync-v3.4 (short link)';
 async function syncTest(){
   const out=document.getElementById('sync-test-out');if(!out)return;
   out.textContent='Testing…';
@@ -1878,7 +1934,7 @@ document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='visible'&&getSyncId()&&Date.now()-lastPull>15000){lastPull=Date.now();syncNow();}
 });
 if(getSyncId()){lastPull=Date.now();syncNow();}
-checkTransferHash();
+window.addEventListener('load',()=>setTimeout(checkTransferHash,900));
 
 </script>
 </body>
