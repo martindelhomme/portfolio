@@ -1590,8 +1590,43 @@ renderMatchHistory();
 // ═══════════════════════════════════════════════════
 // CLOUD SYNC — JSONBlob (no account, no key) + JSON backup
 // ═══════════════════════════════════════════════════
-const SYNC_API='https://jsonblob.com/api/jsonBlob';
+// Two keyless storage services. IDs are prefixed: "jb:" = JSONBlob, "ex:" = ExtendsClass. (Unprefixed = JSONBlob, legacy.)
 const SYNC_HEADERS={'Content-Type':'application/json','Accept':'application/json'};
+function syncParse(id){
+  if(id.indexOf('ex:')===0)return {kind:'ex',raw:id.slice(3)};
+  if(id.indexOf('jb:')===0)return {kind:'jb',raw:id.slice(3)};
+  return {kind:'jb',raw:id};
+}
+function syncUrl(id){
+  const p=syncParse(id);
+  return p.kind==='ex'?'https://json.extendsclass.com/bin/'+encodeURIComponent(p.raw):'https://jsonblob.com/api/jsonBlob/'+encodeURIComponent(p.raw);
+}
+function syncLabel(id){return syncParse(id).kind==='ex'?'ExtendsClass':'JSONBlob';}
+function netErr(e,id,step){
+  const m=(e&&e.message)||String(e);
+  return (m==='Failed to fetch'?'Could not reach '+syncLabel(id)+' (blocked by browser, ad-blocker or service down)':m)+' ['+step+']';
+}
+// Create a new cloud copy; try JSONBlob first, then ExtendsClass. Returns prefixed ID.
+async function syncCreate(data){
+  const body=JSON.stringify(data),errs=[];
+  try{
+    const r=await fetch('https://jsonblob.com/api/jsonBlob',{method:'POST',headers:SYNC_HEADERS,body});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const loc=r.headers.get('Location')||r.headers.get('X-jsonblob')||'';
+    const id=loc.split('/').filter(Boolean).pop();
+    if(!id)throw new Error('no ID returned');
+    return 'jb:'+id;
+  }catch(e){errs.push('JSONBlob: '+e.message);}
+  try{
+    const r=await fetch('https://json.extendsclass.com/bin',{method:'POST',headers:{'Content-Type':'application/json'},body});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const j=await r.json();
+    const id=j.id||((j.uri||'').split('/').filter(Boolean).pop());
+    if(!id)throw new Error('no ID returned');
+    return 'ex:'+id;
+  }catch(e){errs.push('ExtendsClass: '+e.message);}
+  throw new Error('No sync service reachable ('+errs.join(' · ')+')');
+}
 var syncPushTimer=null, syncBusy=false, syncApplying=false, syncState='none', syncMsg='', syncAt=0, lastPull=0;
 
 function getSyncId(){return localStorage.getItem('stadium_sync_id')||'';}
@@ -1630,10 +1665,10 @@ async function syncPush(){
   const id=getSyncId();if(!id)return;
   try{
     setSyncStatus('syncing');
-    const r=await fetch(`${SYNC_API}/${encodeURIComponent(id)}`,{method:'PUT',headers:SYNC_HEADERS,body:JSON.stringify(snapshot())});
+    const r=await fetch(syncUrl(id),{method:'PUT',headers:SYNC_HEADERS,body:JSON.stringify(snapshot())});
     if(!r.ok)throw new Error('HTTP '+r.status);
     setSyncStatus('ok');
-  }catch(e){setSyncStatus('error',e.message);}
+  }catch(e){setSyncStatus('error',netErr(e,id,'upload'));}
 }
 function applySnapshot(s){
   syncApplying=true;
@@ -1660,37 +1695,33 @@ async function syncNow(){
   syncBusy=true;
   try{
     setSyncStatus('syncing');
-    const r=await fetch(`${SYNC_API}/${encodeURIComponent(id)}`,{headers:{'Accept':'application/json'}});
+    const r=await fetch(syncUrl(id),{headers:{'Accept':'application/json'}});
     if(!r.ok)throw new Error(r.status===404?'Sync ID not found':'HTTP '+r.status);
     const remote=await r.json();
     const lu=getLocalUpdated(),ru=remote.updated||0;
     if(ru>lu){applySnapshot(remote);setSyncStatus('ok');}
     else if(lu>ru){await syncPush();}
     else setSyncStatus('ok');
-  }catch(e){setSyncStatus('error',e.message);}
+  }catch(e){setSyncStatus('error',netErr(e,id,'download'));}
   syncBusy=false;
 }
 async function syncEnable(){
   try{
     setSyncStatus('syncing');
     if(!getLocalUpdated())localStorage.setItem('stadium_updated',String(Date.now()));
-    const r=await fetch(SYNC_API,{method:'POST',headers:SYNC_HEADERS,body:JSON.stringify(snapshot())});
-    if(!r.ok)throw new Error('HTTP '+r.status);
-    const loc=r.headers.get('Location')||r.headers.get('X-jsonblob')||'';
-    const id=loc.split('/').filter(Boolean).pop();
-    if(!id)throw new Error('The sync service did not return an ID to the browser');
+    const id=await syncCreate(snapshot());
     localStorage.setItem('stadium_sync_id',id);
     setSyncStatus('ok');
-  }catch(e){setSyncStatus('error',e.message);}
+  }catch(e){setSyncStatus('error',e.message+' [create]');}
   renderSyncModal();
 }
 async function syncConnect(){
   const raw=(document.getElementById('sync-id-input').value||'').trim();
-  const id=raw.split('/').filter(Boolean).pop();
+  const id=/^(jb|ex):/.test(raw)?raw:raw.split('/').filter(Boolean).pop();
   if(!id){alert('Paste your sync ID first.');return;}
   try{
     setSyncStatus('syncing');
-    const r=await fetch(`${SYNC_API}/${encodeURIComponent(id)}`,{headers:{'Accept':'application/json'}});
+    const r=await fetch(syncUrl(id),{headers:{'Accept':'application/json'}});
     if(!r.ok)throw new Error(r.status===404?'Sync ID not found':'HTTP '+r.status);
     const remote=await r.json();
     const localHas=visitedTeams.size||seenTeams.size||matchHistory.length;
@@ -1698,7 +1729,7 @@ async function syncConnect(){
     localStorage.setItem('stadium_sync_id',id);
     applySnapshot({...merged,updated:Date.now()});
     await syncPush();
-  }catch(e){setSyncStatus('error',e.message);}
+  }catch(e){setSyncStatus('error',netErr(e,id,'connect'));}
   renderSyncModal();
 }
 function syncDisconnect(){
@@ -1738,6 +1769,19 @@ function importBackup(input){
 }
 function openSync(){renderSyncModal();document.getElementById('sync-modal').classList.add('open');}
 function closeSync(){document.getElementById('sync-modal').classList.remove('open');}
+const BUILD='sync-v3.2';
+async function syncTest(){
+  const out=document.getElementById('sync-test-out');if(!out)return;
+  out.textContent='Testing…';
+  const tests=[['JSONBlob','https://jsonblob.com/api/jsonBlob/00000000-0000-0000-0000-000000000000'],['ExtendsClass','https://json.extendsclass.com/bin/000000000000'],['ESPN','https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard']];
+  const lines=[];
+  for(const [n,u] of tests){
+    try{const r=await fetch(u,{headers:{'Accept':'application/json'}});lines.push('✓ '+n+' reachable (HTTP '+r.status+')');}
+    catch(e){lines.push('✗ '+n+' blocked: '+e.message);}
+    out.textContent=lines.join('\n');
+  }
+  out.textContent=lines.join('\n')+'\n(page: '+location.protocol+'//'+(location.host||'local file')+')';
+}
 function renderSyncModal(){
   const id=getSyncId();
   const top=id?`
@@ -1759,7 +1803,11 @@ function renderSyncModal(){
     <button class="sync-btn" onclick="exportBackup()">⬇ Export JSON</button>
     <button class="sync-btn" onclick="document.getElementById('import-file').click()">⬆ Import JSON</button>
     <input type="file" id="import-file" accept="application/json,.json" style="display:none" onchange="importBackup(this)">
-    <div class="sync-note">Anyone who has your ID can read your data — keep it private. Data is always kept locally too, so the tracker works offline.</div>`;
+    <div class="sync-note">Anyone who has your ID can read your data — keep it private. Data is always kept locally too, so the tracker works offline.</div>
+    <div class="sync-sep"></div>
+    <button class="sync-btn" onclick="syncTest()">🔍 Test connection</button>
+    <pre id="sync-test-out" style="font-size:11px;white-space:pre-wrap;margin:6px 0 0"></pre>
+    <div class="sync-note">Version: ${BUILD}</div>`;
 }
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='visible'&&getSyncId()&&Date.now()-lastPull>15000){lastPull=Date.now();syncNow();}
